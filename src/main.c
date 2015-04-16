@@ -10,26 +10,31 @@ int main(int argc, char *argv[])
   double t1, t2;      // timers
   double keff;        // k_effective
   double H;           // shannon entropy
+  Parameters *params; // user defined parameters
+  Geometry *g;
+  Material *m;
+  Bank *source_bank;
+  Bank *fission_bank;
 
   // Get inputs
-  Input *input = set_default_input();
-  read_CLI(argc, argv, input);
-  print_inputs(input);
+  params = set_default_params();
+  parse_params("parameters", params);
+  print_params(params);
 
   // Set up geometry
-  Geometry *g = init_geometry(input->bc);
+  g = init_geometry(params);
 
   // Set up material
-  Material *m = init_material(input->n_nuclides);
+  m = init_material(params);
 
   // Initialize source bank
-  Bank *source_bank = init_bank(input->n_particles);
+  source_bank = init_bank(params->n_particles);
 
   // Initialize fission bank
-  Bank *fission_bank = init_bank(input->n_particles);
+  fission_bank = init_bank(params->n_particles);
 
   // Sample source particles
-  for(i_p=0; i_p<input->n_particles; i_p++){
+  for(i_p=0; i_p<params->n_particles; i_p++){
     sample_source_particle(&(source_bank->p[i_p]), g);
     source_bank->n++;
   }
@@ -38,12 +43,12 @@ int main(int argc, char *argv[])
   t1 = timer();
 
   // Loop over batches
-  for(i_b=0; i_b<input->n_batches; i_b++){
+  for(i_b=0; i_b<params->n_batches; i_b++){
 
     keff = 0.0;
 
     // Loop over generations
-    for(i_g=0; i_g<input->n_generations; i_g++){
+    for(i_g=0; i_g<params->n_generations; i_g++){
 
       // Loop over particles
       for(i_p=0; i_p<source_bank->n; i_p++){
@@ -65,7 +70,7 @@ int main(int argc, char *argv[])
     }
 
     // Calculate k_effective
-    keff /= input->n_generations;
+    keff /= params->n_generations;
     printf("keff: %f\n", keff);
 
   }

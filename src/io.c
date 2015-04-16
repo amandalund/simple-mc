@@ -1,70 +1,97 @@
 #include "simple_transport_header.h"
 
-// Reads command line inputs and applies options
-void read_CLI(int argc, char *argv[], Input *input)
+// Read in parameters from file
+void parse_params(char *filename, Parameters *params)
 {
-  int opt;
-  while((opt = getopt(argc, argv, ":n:b:g:a:c:s:")) != -1){
-    switch(opt){
-      case 'n': input->n_particles = atol(optarg);   break;
-      case 'b': input->n_batches = atoi(optarg);     break;
-      case 'g': input->n_generations = atoi(optarg); break;
-      case 'a': input->n_active = atoi(optarg);      break;
-      case 'c': 
-        if       (strcasecmp(optarg, "vacuum") == 0) input->bc = 0;
-        else if (strcasecmp(optarg, "reflect") == 0) input->bc = 1;
-        else if(strcasecmp(optarg, "periodic") == 0) input->bc = 2;
-        else print_CLI_error();
-        break;
-      case 's': 
-        if       (strcasecmp(optarg, "small") == 0) input->n_nuclides = 1;
-        else if (strcasecmp(optarg, "medium") == 0) input->n_nuclides = 60;
-        else if  (strcasecmp(optarg, "large") == 0) input->n_nuclides = 400;
-        else print_CLI_error();
-        break;
-      default:  print_CLI_error();
-    }
-  } 
+  char line[256], *s;
+  FILE *fp = fopen(filename, "r");
 
-  // Validate inputs
-  if((input->n_particles < 1) | (input->n_batches < 1 && input->n_generations < 1) |
-     (input->n_batches < 0) | (input->n_generations < 0) | (input->n_active > input->n_batches)){
-    print_CLI_error();
+  while((s = fgets(line, sizeof(line), fp)) != NULL){
+
+    if(line[0] == '#') continue;
+    s = strtok(line, "=");
+    if(s == NULL) continue;
+
+    // Set parameters
+    else if(strcmp(s, "particles") == 0){
+      long long n_particles = atoll(strtok(NULL, "=\n"));
+      if(n_particles < 1)
+        print_error("Number of particles must be greater than 0");
+      params->n_particles = n_particles;
+    }
+    else if(strcmp(s, "batches") == 0)
+      params->n_batches = atoi(strtok(NULL, "=\n"));
+    else if(strcmp(s, "generations") == 0)
+      params->n_generations = atoi(strtok(NULL, "=\n"));
+    else if(strcmp(s, "active") == 0)
+      params->n_active = atoi(strtok(NULL, "=\n"));
+    else if(strcmp(s, "nuclides") == 0)
+      params->n_nuclides = atoi(strtok(NULL, "=\n"));
+    else if(strcmp(s, "macro_xs_f") == 0)
+      params->macro_xs_f = atof(strtok(NULL, "=\n"));
+    else if(strcmp(s, "macro_xs_a") == 0)
+      params->macro_xs_a = atof(strtok(NULL, "=\n"));
+    else if(strcmp(s, "macro_xs_e") == 0)
+      params->macro_xs_e = atof(strtok(NULL, "=\n"));
+    else if(strcmp(s, "x") == 0)
+      params->gx = atof(strtok(NULL, "=\n"));
+    else if(strcmp(s, "y") == 0)
+      params->gy = atof(strtok(NULL, "=\n"));
+    else if(strcmp(s, "z") == 0)
+      params->gz = atof(strtok(NULL, "=\n"));
+    else if(strcmp(s, "bc") == 0){
+      s = strtok(NULL, "=\n");
+      if(strcasecmp(s, "vacuum") == 0)
+        params->bc = 0;
+      else if(strcasecmp(s, "reflective") == 0)
+        params->bc = 1;
+      else if(strcasecmp(s, "periodic") == 0)
+        params->bc = 2;
+      else
+        print_error("Invalid boundary condition");
+    }
+    else
+      printf("Unknown value '%s' in config file.\n", s);
   }
 
-  return;
+  fclose(fp);
+
+  // Validate inputs
+  if(params->n_batches < 1 && params->n_generations < 1)
+    print_error("Must have at least one batch or one generation");
+  if(params->n_batches < 0)
+    print_error("Number of batches cannot be negative");
+  if(params->n_generations < 0)
+    print_error("Number of generations cannot be negative");
+  if(params->n_active > params->n_batches)
+    print_error("Number of active batches cannot be greater than number of batches");
+  if(params->gx <= 0 || params->gy <= 0 || params->gz <= 0)
+    print_error("Length of domain must be positive in x, y, and z dimension");
+  if(params->macro_xs_f < 0 || params->macro_xs_a < 0 || params->macro_xs_e < 0)
+    print_error("Macroscopic cross section values cannot be negative");
 }
 
-// print error to screen, inform program options
-void print_CLI_error(void)
+void print_error(char *message)
 {
-  printf("Usage: ./simple_transport <options>\n");
-  printf("Options include:\n");
-  printf("  -n <particles>              Number of particles to simulate per fission source iteration\n");
-  printf("  -b <batches>                Number of batches\n");
-  printf("  -g <generations per batch>  Number of fission source iterations per batch\n");
-  printf("  -a <active batches>         Number of batches which contribute to tallies\n");
-  printf("  -c <boundary condition>     Boundary conditions (vacuum, reflect, periodic)\n");
-  printf("  -s <material size>          Determines number of nuclides in the material (small, medium, large)\n");
-  printf("See readme for full description of default run values\n");
+  printf("ERROR: %s\n", message);
   exit(1);
 }
 
-void print_inputs(Input *input)
+void print_params(Parameters *params)
 {
   char *bc = NULL;
-  if(input->bc == 0) bc = "Vacuum";
-  else if(input->bc == 1) bc = "Reflective";
-  else if(input->bc == 2) bc = "Periodic";
+  if(params->bc == 0) bc = "Vacuum";
+  else if(params->bc == 1) bc = "Reflective";
+  else if(params->bc == 2) bc = "Periodic";
   border_print();
   center_print("INPUT SUMMARY", 79);
   border_print();
-  printf("Number of particles:            "); fancy_int(input->n_particles);
-  printf("Number of batches:              %d\n", input->n_batches);
-  printf("Number of generations:          %d\n", input->n_generations);
-  printf("Number of active batches:       %d\n", input->n_active);
+  printf("Number of particles:            "); fancy_int(params->n_particles);
+  printf("Number of batches:              %d\n", params->n_batches);
+  printf("Number of generations:          %d\n", params->n_generations);
+  printf("Number of active batches:       %d\n", params->n_active);
   printf("Boundary conditions:            %s\n", bc);
-  printf("Number of nuclides in material: %d\n", input->n_nuclides);
+  printf("Number of nuclides in material: %d\n", params->n_nuclides);
   border_print();
 }
 
@@ -100,26 +127,4 @@ void center_print(const char *s, int width)
   }
   fputs(s, stdout);
   fputs("\n", stdout);
-}
-
-void print_particle(Particle *p)
-{
-  printf("alive: %-10dE: %-10.5fmu: %-10.5fphi: %-10.5fu: %-10.5f"
-     "v: %-10.5fw: %-10.5fx: %-10.5fy: %-10.5fz: %-10.5f\n",
-     p->alive, p->energy, p->mu, p->phi, p->u, p->v, p->w, p->x, p->y, p->z);
-
-  return;
-}
-
-void print_bank(Bank *b)
-{
-  int i;
-  Particle *p;
-
-  for(i=0; i<b->n; i++){
-    p = &(b->p[i]);
-    print_particle(p);
-  }
-
-  return;
 }

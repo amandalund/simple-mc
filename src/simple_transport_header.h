@@ -27,15 +27,21 @@
 #define Y 1
 #define Z 2
 
-// Inputs
-typedef struct Input_{
+// User defined parameters
+typedef struct Parameters_{
   unsigned long n_particles; // number of particles
   int n_batches;             // number of batches
   int n_generations;         // number of generations per batch
   int n_active;              // number of active batches
   int bc;                    // boundary conditions
   int n_nuclides;            // number of nuclides in material
-} Input;
+  double macro_xs_a;         // absorption macro xs
+  double macro_xs_e;         // elastic macro xs
+  double macro_xs_f;         // fission macro xs
+  double gx;                 // geometry size in x
+  double gy;                 // geometry size in y
+  double gz;                 // geometry size in z
+} Parameters;
 
 // Particle
 typedef struct Particle_{
@@ -88,14 +94,12 @@ typedef struct Bank_{
 } Bank;
 
 // io.c function prototypes
-void read_CLI(int argc, char *argv[], Input *input);
-void print_CLI_error(void);
-void print_inputs(Input *input);
+void parse_params(char *filename, Parameters *p);
+void print_error(char *message);
+void print_params(Parameters *params);
 void border_print(void);
 void fancy_int(long a);
 void center_print(const char *s, int width);
-void print_particle(Particle *p);
-void print_bank(Bank *b);
 
 // utils.c funtion prototypes
 //double rn(unsigned long * seed);
@@ -103,9 +107,9 @@ double rn(void);
 double timer(void);
 
 // initialize.c function prototypes
-Input *set_default_input(void);
-Geometry *init_geometry(int bc);
-Material *init_material(int n_nuclides);
+Parameters *set_default_params(void);
+Geometry *init_geometry(Parameters *params);
+Material *init_material(Parameters *params);
 Bank *init_bank(unsigned long n_particles);
 void sample_source_particle(Particle *p, Geometry *g);
 void resize_particles(Bank *b);
