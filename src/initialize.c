@@ -69,7 +69,6 @@ Tally *init_tally(Parameters *params)
 {
   Tally *t = malloc(sizeof(Tally));
 
-  // Determine an appropriate number of grid boxes in each dimension
   t->tallies_on = FALSE;
   t->n = params->n_bins;
   t->dx = params->gx/t->n;

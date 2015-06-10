@@ -129,7 +129,7 @@ void fancy_int(long a);
 void center_print(const char *s, int width);
 void write_tally(Tally *t, FILE *fp, char *filename);
 void write_entropy(double H, FILE *fp, char *filename);
-void write_keff(double keff, FILE *fp, char *filename);
+void write_keff(double *keff, int n, FILE *fp, char *filename);
 
 // utils.c funtion prototypes
 //double rn(unsigned long *seed);
@@ -160,6 +160,7 @@ void collision(Particle *p, Material *m, Bank *fission_bank);
 // eigenvalue.c function prototypes
 void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g);
 double shannon_entropy(Geometry *g, Bank *b, Parameters *params);
+void calculate_keff(double *keff, double *mean, double *std, int n);
 
 // tally.c function prototypes
 void score_tally(Tally *t, Particle *p);

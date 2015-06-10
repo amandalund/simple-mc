@@ -151,8 +151,8 @@ void print_params(Parameters *params)
   border_print();
   printf("Number of particles:            "); fancy_int(params->n_particles);
   printf("Number of batches:              %d\n", params->n_batches);
-  printf("Number of generations:          %d\n", params->n_generations);
   printf("Number of active batches:       %d\n", params->n_active);
+  printf("Number of generations:          %d\n", params->n_generations);
   printf("Boundary conditions:            %s\n", bc);
   printf("Number of nuclides in material: %d\n", params->n_nuclides);
   border_print();
@@ -221,10 +221,15 @@ void write_entropy(double H, FILE *fp, char *filename)
   return;
 }
 
-void write_keff(double keff, FILE *fp, char *filename)
+void write_keff(double *keff, int n, FILE *fp, char *filename)
 {
+  int i;
   fp = fopen(filename, "a");
-  fprintf(fp, "%.10f\n", keff);
+
+  for(i=0; i<n; i++){
+    fprintf(fp, "%.10f\n", keff[i]);
+  }
+
   fclose(fp);
 
   return;

@@ -3,11 +3,15 @@
 int main(int argc, char *argv[])
 {
   int i_b;            // index over batches
+  int i_a=-1;         // index over active batches
   int i_g;            // index over generations
   unsigned long i_p;  // index over particles
   FILE *fp = NULL;    // file pointer for output
   double t1, t2;      // timers
-  double keff;        // effective multiplication factor
+  double *keff;       // effective multiplication factor
+  double keff_batch;  // keff of batch
+  double keff_mean;   // keff mean over active batches
+  double keff_std;    // keff standard deviation over active batches
   double H;           // shannon entropy
   Parameters *params; // user defined parameters
   Geometry *g;
@@ -21,11 +25,14 @@ int main(int argc, char *argv[])
   parse_params("parameters", params);
   print_params(params);
 
-  // Setup output files
+  // Set up output files
   init_output(params, fp);
 
   // Seed RNG
   srand(params->seed);
+
+  // Set up array for keff
+  keff = calloc(params->n_active, sizeof(double));
 
   // Set up geometry
   g = init_geometry(params);
@@ -48,17 +55,24 @@ int main(int argc, char *argv[])
     source_bank->n++;
   }
 
+  center_print("SIMULATION", 79);
+  border_print();
+  printf("%-15s %-15s %-15s %-15s\n", "BATCH", "ENTROPY", "KEFF", "MEAN KEFF");
+
   // Start time
   t1 = timer();
 
   // Loop over batches
   for(i_b=0; i_b<params->n_batches; i_b++){
 
-    keff = 0.0;
+    keff_batch = 0;
 
-    // Turn on tallying
-    if(params->tally == TRUE && i_b == params->n_batches - params->n_active){
-      t->tallies_on = TRUE;
+    // Turn on tallying and increment index in active batches
+    if(i_b >= params->n_batches - params->n_active){
+      i_a++;
+      if(params->tally == TRUE){
+        t->tallies_on = TRUE;
+      }
     }
 
     // Loop over generations
@@ -72,7 +86,7 @@ int main(int argc, char *argv[])
       }
 
       // Accumulate generation k_effective
-      keff += (double) fission_bank->n / source_bank->n;
+      keff_batch += (double) fission_bank->n / source_bank->n;
 
       // Sample new source particles from the particles that were added to the
       // fission bank during this generation
@@ -86,9 +100,9 @@ int main(int argc, char *argv[])
     }
 
     // Calculate k_effective
-    keff /= params->n_generations;
-    if(params->write_keff == TRUE){
-      write_keff(keff, fp, params->keff_file);
+    keff_batch /= params->n_generations;
+    if(i_a >= 0){
+      keff[i_a] = keff_batch;
     }
 
     // Tallies for this realization
@@ -99,15 +113,27 @@ int main(int argc, char *argv[])
       }
     }
 
+    // Calculate keff mean and standard deviation
+    calculate_keff(keff, &keff_mean, &keff_std, i_a+1);
+
     // Status text
-    printf("\rBatch %d/%d: keff = %f", i_b+1, params->n_batches, keff);
-    fflush(stdout);
+    if(i_a < 0){
+      printf("%-15d %-15f %-15f\n", i_b+1, H, keff_batch);
+    }
+    else{
+      printf("%-15d %-15f %-15f %f +/- %-15f\n", i_b+1, H, keff_batch, keff_mean, keff_std);
+    }
+  }
+
+  // Write out keff
+  if(params->write_keff == TRUE){
+    write_keff(keff, params->n_active, fp, params->keff_file);
   }
 
   // Stop time
   t2 = timer();
 
-  printf("\nSimulation time: %f secs\n", t2-t1);
+  printf("Simulation time: %f secs\n", t2-t1);
 
   // Free memory
   free_bank(fission_bank);
@@ -115,6 +141,7 @@ int main(int argc, char *argv[])
   free_tally(t);
   free_material(m);
   free(g);
+  free(keff);
   free(params);
 
   return 0;

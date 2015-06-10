@@ -88,3 +88,25 @@ if((ix*n*n + iy*n + iz) >= b->n) printf("Error: idx = %lu, ix = %lu, dx = %f, gx
 
   return H;
 }
+
+void calculate_keff(double *keff, double *mean, double *std, int n)
+{
+  int i;
+
+  *mean = 0;
+  *std = 0;
+
+  // Calculate mean
+  for(i=0; i<n; i++){
+    *mean += keff[i];
+  }
+  *mean /= n;
+
+  // Calculate standard deviation
+  for(i=0; i<n; i++){
+    *std += pow(keff[i] - *mean, 2);
+  }
+  *std = sqrt(*std/(n-1));
+
+  return;
+}

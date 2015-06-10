@@ -15,6 +15,7 @@ void score_tally(Tally *t, Particle *p)
   return;
 }
 
+// Simple flux tally
 void batch_tally(Tally *t, Parameters *params)
 {
   int i, n;
