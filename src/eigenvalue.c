@@ -45,18 +45,18 @@ void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g)
 
 // Calculates the shannon entropy of the source distribution to assess
 // convergence
-double shannon_entropy(Geometry *g, Bank *b)
+double shannon_entropy(Geometry *g, Bank *b, Parameters *params)
 {
   unsigned long i;
   double H = 0.0;
   double dx, dy, dz;
-  int ix, iy, iz;
-  int n;
-  int *count;
+  unsigned long ix, iy, iz;
+  unsigned long n;
+  unsigned long *count;
   Particle *p;
 
   // Determine an appropriate number of grid boxes in each dimension
-  n = ceil(pow(b->n/20, 1.0/3.0));
+  n = params->n_bins; //ceil(pow(b->n/20, 1.0/3.0));
 
   // Find grid spacing
   dx = g->x/n;
@@ -64,7 +64,7 @@ double shannon_entropy(Geometry *g, Bank *b)
   dz = g->z/n;
 
   // Allocate array to keep track of number of sites in each grid box
-  count = calloc(n*n*n, sizeof(int));
+  count = calloc(n*n*n, sizeof(unsigned long));
 
   for(i=0; i<b->n; i++){
     p = &(b->p[i]);
@@ -73,8 +73,8 @@ double shannon_entropy(Geometry *g, Bank *b)
     ix = p->x/dx;
     iy = p->y/dy;
     iz = p->z/dz;
-
-    count[ix + iy*n + iz*n*n]++;
+if((ix*n*n + iy*n + iz) >= b->n) printf("Error: idx = %lu, ix = %lu, dx = %f, gx = %f, px = %f\n", ix*n*n + iy*n + iz, ix, dx, g->x, p->x);
+    count[ix*n*n + iy*n + iz]++;
   }
 
   // Calculate the shannon entropy

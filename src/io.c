@@ -27,6 +27,19 @@ void parse_params(char *filename, Parameters *params)
       params->n_active = atoi(strtok(NULL, "=\n"));
     else if(strcmp(s, "nuclides") == 0)
       params->n_nuclides = atoi(strtok(NULL, "=\n"));
+    else if(strcmp(s, "tally") == 0){
+      s = strtok(NULL, "=\n");
+      if(strcasecmp(s, "true") == 0)
+        params->tally = TRUE;
+      else if(strcasecmp(s, "false") == 0)
+        params->tally = FALSE;
+      else
+        print_error("Invalid option for parameter 'tally': must be 'true' or 'false'");
+    }
+    else if(strcmp(s, "n_bins") == 0)
+      params->n_bins = atoi(strtok(NULL, "=\n"));
+    else if(strcmp(s, "seed") == 0)
+      params->seed = atoi(strtok(NULL, "=\n"));
     else if(strcmp(s, "macro_xs_f") == 0)
       params->macro_xs_f = atof(strtok(NULL, "=\n"));
     else if(strcmp(s, "macro_xs_a") == 0)
@@ -50,6 +63,48 @@ void parse_params(char *filename, Parameters *params)
       else
         print_error("Invalid boundary condition");
     }
+    else if(strcmp(s, "write_tally") == 0){
+      s = strtok(NULL, "=\n");
+      if(strcasecmp(s, "true") == 0)
+        params->write_tally = TRUE;
+      else if(strcasecmp(s, "false") == 0)
+        params->write_tally = FALSE;
+      else
+        print_error("Invalid option for parameter 'write_tally': must be 'true' or 'false'");
+    }
+    else if(strcmp(s, "write_entropy") == 0){
+      s = strtok(NULL, "=\n");
+      if(strcasecmp(s, "true") == 0)
+        params->write_entropy = TRUE;
+      else if(strcasecmp(s, "false") == 0)
+        params->write_entropy = FALSE;
+      else
+        print_error("Invalid option for parameter 'write_entropy': must be 'true' or 'false'");
+    }
+    else if(strcmp(s, "write_keff") == 0){
+      s = strtok(NULL, "=\n");
+      if(strcasecmp(s, "true") == 0)
+        params->write_keff = TRUE;
+      else if(strcasecmp(s, "false") == 0)
+        params->write_keff = FALSE;
+      else
+        print_error("Invalid option for parameter 'write_keff': must be 'true' or 'false'");
+    }
+    else if(strcmp(s, "tally_file") == 0){
+      s = strtok(NULL, "=\n");
+      params->tally_file = malloc(strlen(s)*sizeof(char)+1);
+      strcpy(params->tally_file, s);
+    }
+    else if(strcmp(s, "entropy_file") == 0){
+      s = strtok(NULL, "=\n");
+      params->entropy_file = malloc(strlen(s)*sizeof(char)+1);
+      strcpy(params->entropy_file, s);
+    }
+    else if(strcmp(s, "keff_file") == 0){
+      s = strtok(NULL, "=\n");
+      params->keff_file = malloc(strlen(s)*sizeof(char)+1);
+      strcpy(params->keff_file, s);
+    }
     else
       printf("Unknown value '%s' in config file.\n", s);
   }
@@ -57,6 +112,12 @@ void parse_params(char *filename, Parameters *params)
   fclose(fp);
 
   // Validate inputs
+  if(params->write_tally == TRUE && params->tally_file == NULL)
+    params->tally_file = "tally.dat";
+  if(params->write_entropy == TRUE && params->entropy_file == NULL)
+    params->entropy_file = "entropy.dat";
+  if(params->write_keff == TRUE && params->keff_file == NULL)
+    params->keff_file = "keff.dat";
   if(params->n_batches < 1 && params->n_generations < 1)
     print_error("Must have at least one batch or one generation");
   if(params->n_batches < 0)
@@ -65,6 +126,8 @@ void parse_params(char *filename, Parameters *params)
     print_error("Number of generations cannot be negative");
   if(params->n_active > params->n_batches)
     print_error("Number of active batches cannot be greater than number of batches");
+  if(params->n_bins < 0)
+    print_error("Number of bins cannot be negative");
   if(params->gx <= 0 || params->gy <= 0 || params->gz <= 0)
     print_error("Length of domain must be positive in x, y, and z dimension");
   if(params->macro_xs_f < 0 || params->macro_xs_a < 0 || params->macro_xs_e < 0)
@@ -127,4 +190,42 @@ void center_print(const char *s, int width)
   }
   fputs(s, stdout);
   fputs("\n", stdout);
+}
+
+void write_tally(Tally *t, FILE *fp, char *filename)
+{
+  int i, j, k;
+
+  fp = fopen(filename, "a");
+
+  for(i=0; i<t->n; i++){
+    for(j=0; j<t->n; j++){
+      for(k=0; k<t->n; k++){
+        fprintf(fp, "%e ", t->mean[i + t->n*j + t->n*t->n*k]);
+      }
+      fprintf(fp, "\n");
+    }
+  }
+
+  fclose(fp);
+
+  return;
+}
+
+void write_entropy(double H, FILE *fp, char *filename)
+{
+  fp = fopen(filename, "a");
+  fprintf(fp, "%.10f\n", H);
+  fclose(fp);
+
+  return;
+}
+
+void write_keff(double keff, FILE *fp, char *filename)
+{
+  fp = fopen(filename, "a");
+  fprintf(fp, "%.10f\n", keff);
+  fclose(fp);
+
+  return;
 }

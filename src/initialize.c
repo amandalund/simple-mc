@@ -10,14 +10,46 @@ Parameters *set_default_params(void)
   params->n_active = 10;
   params->bc = REFLECT;
   params->n_nuclides = 60;
+  params->tally = FALSE;
+  params->n_bins = 10;
+  params->seed = 1;
   params->macro_xs_f = 2.29;
   params->macro_xs_a = 3.42;
   params->macro_xs_e = 2.29;
   params->gx = 1000;
   params->gy = 1000;
   params->gz = 1000;
+  params->write_tally = FALSE;
+  params->write_entropy = FALSE;
+  params->write_keff = FALSE;
+  params->tally_file = NULL;
+  params->entropy_file = NULL;
+  params->keff_file = NULL;
 
   return params;
+}
+
+void init_output(Parameters *params, FILE *fp)
+{
+  // Set up file to output tallies
+  if(params->write_tally == TRUE){
+    fp = fopen(params->tally_file, "w");
+    fclose(fp);
+  }
+
+  // Set up file to output shannon entropy to assess source convergence
+  if(params->write_tally == TRUE){
+    fp = fopen(params->entropy_file, "w");
+    fclose(fp);
+  }
+
+  // Set up file to output keff
+  if(params->write_keff == TRUE){
+    fp = fopen(params->keff_file, "w");
+    fclose(fp);
+  }
+
+  return;
 }
 
 Geometry *init_geometry(Parameters *params)
@@ -31,6 +63,22 @@ Geometry *init_geometry(Parameters *params)
   g->surface_crossed = -1;
 
   return g;
+}
+
+Tally *init_tally(Parameters *params)
+{
+  Tally *t = malloc(sizeof(Tally));
+
+  // Determine an appropriate number of grid boxes in each dimension
+  t->tallies_on = FALSE;
+  t->n = params->n_bins;
+  t->dx = params->gx/t->n;
+  t->dy = params->gy/t->n;
+  t->dz = params->gz/t->n;
+  t->sum = calloc(t->n*t->n*t->n, sizeof(int));
+  t->mean = malloc(t->n*t->n*t->n*sizeof(double));
+
+  return t;
 }
 
 Material *init_material(Parameters *params)
@@ -127,6 +175,18 @@ void free_material(Material *m)
   m->nuclides = NULL;
   free(m);
   m = NULL;
+
+  return;
+}
+
+void free_tally(Tally *t)
+{
+  free(t->sum);
+  t->sum = NULL;
+  free(t->mean);
+  t->mean = NULL;
+  free(t);
+  t = NULL;
 
   return;
 }

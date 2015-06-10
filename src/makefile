@@ -14,6 +14,7 @@ initialize.c \
 utils.c \
 io.c \
 transport.c \
+tally.c \
 eigenvalue.c
 
 OBJECTS = $(SOURCE:.c=.o)

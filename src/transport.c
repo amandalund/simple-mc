@@ -1,7 +1,7 @@
 #include "simple_transport_header.h"
 
 // Main logic to move particle
-void transport(Particle *p, Geometry *g, Material *m, Bank *fission_bank)
+void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank)
 {
   while(p->alive){
 
@@ -31,6 +31,11 @@ void transport(Particle *p, Geometry *g, Material *m, Bank *fission_bank)
     // Case where particle has collision
     else{
       collision(p, m, fission_bank);
+
+      // Score tallies
+      if(t->tallies_on == TRUE){
+        score_tally(t, p);
+      }
     }
   }
   return;
@@ -108,7 +113,7 @@ double distance_to_collision(Material *m)
     d = D_INF;
   }
   else{
-    d = -log(rn()/m->xs_t);
+    d = -log(rn())/m->xs_t;
   }
 
   return d;
@@ -126,17 +131,20 @@ void cross_surface(Particle *p, Geometry *g)
   else if(g->bc == REFLECT){
     if(g->surface_crossed == X){
       p->u = -p->u;
+      p->x = fabs(p->x);
     }
     else if(g->surface_crossed == Y){
       p->v = -p->v;
+      p->y = fabs(p->y);
     }
     else if(g->surface_crossed == Z){
       p->w = -p->w;
+      p->z = fabs(p->z);
     }
   }
   
   // Handle periodic boundary conditions
-  else{
+  else if(g->bc == PERIODIC){
     if(g->surface_crossed == X){
       p->x = g->x - p->x;
     }
@@ -200,11 +208,13 @@ void collision(Particle *p, Material *m, Bank *fission_bank)
       fission_bank->n++;
     }
     p->alive = FALSE;
+    p->event = FISSION;
   }
 
   // Sample absorption (disappearance)
   else if(nuc.xs_a > cutoff){
     p->alive = FALSE;
+    p->event = ABSORPTION;
   }
 
   // Sample scattering
@@ -214,6 +224,7 @@ void collision(Particle *p, Material *m, Bank *fission_bank)
     p->u = p->mu;
     p->v = sqrt(1 - p->mu*p->mu) * cos(p->phi);
     p->w = sqrt(1 - p->mu*p->mu) * sin(p->phi);
+    p->event = SCATTER;
   }
 
   return;

@@ -5,20 +5,32 @@
 # batches: number of batches
 # generations: number of generations per batch
 # active: number of active batches
-# bc: boundary conditions (vacuum, reflective, periodic)
 # nuclides: number of nuclides in material
+# tally: whether to tally
+# n_bins: number of bins in each dimension of mesh
+# seed: RNG seed
 # macro_xs_f: fission macroscopic cross section of material
 # macro_xs_a: absorption macroscopic cross section of material
 # macro_xs_e: elastic macroscopic cross section of material
+# bc: boundary conditions (vacuum, reflective, periodic)
 # gx: length of domain in x dimension
 # gy: length of domain in y dimension
 # gz: length of domain in z dimension
+# write_tally: whether to output tallies
+# write_entropy: whether to output entropy
+# write_keff: whether to output keff
+# tally_file: path to tally output
+# entropy_file: path to entropy output
+# keff_file: path to keff output
 ###################################################################
-particles=10000
-batches=20
+particles=1000000
+batches=10
 generations=1
 active=10
-nuclides=100
+nuclides=1
+tally=true
+n_bins=20
+seed=106
 ###################################################################
 # Material Parameters
 ###################################################################
@@ -28,7 +40,16 @@ macro_xs_e=2.29
 ###################################################################
 # Geometry Parameters
 ###################################################################
-bc=reflective
-x=1000
-y=1000
-z=1000
+bc=vacuum
+x=10
+y=10
+z=10
+###################################################################
+# Output Parameters
+###################################################################
+write_tally=true
+write_entropy=true
+write_keff=true
+tally_file=tally.dat
+entropy_file=entropy.dat
+keff_file=keff.dat
