@@ -1,7 +1,7 @@
 #include "simple_transport_header.h"
 
 // Main logic to move particle
-void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank)
+void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, double keff)
 {
   while(p->alive){
 
@@ -30,7 +30,7 @@ void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_ba
     }
     // Case where particle has collision
     else{
-      collision(p, m, fission_bank);
+      collision(p, m, fission_bank, keff);
 
       // Score tallies
       if(t->tallies_on == TRUE){
@@ -80,7 +80,7 @@ double distance_to_boundary(Particle *p, Geometry *g)
   int i;
   double dist;
   double d = D_INF;
-  int    surfaces[6] = {X, X, Y, Y, Z, Z};
+  int    surfaces[6] = {X0, X1, Y0, Y1, Z0, Z1};
   double p_angles[6] = {p->u, p->u, p->v, p->v, p->w, p->w};
   double p_coords[6] = {p->x, p->x, p->y, p->y, p->z, p->z};
   double s_coords[6] = {0, g->x, 0, g->y, 0, g->z};
@@ -129,29 +129,41 @@ void cross_surface(Particle *p, Geometry *g)
 
   // Handle reflective boundary conditions
   else if(g->bc == REFLECT){
-    if(g->surface_crossed == X){
+    if(g->surface_crossed == X0){
       p->u = -p->u;
-      p->x = fabs(p->x);
+      p->x = 0.0;
     }
-    else if(g->surface_crossed == Y){
+    else if(g->surface_crossed == X1){
+      p->u = -p->u;
+      p->x = g->x;
+    }
+    else if(g->surface_crossed == Y0){
       p->v = -p->v;
-      p->y = fabs(p->y);
+      p->y = 0.0;
     }
-    else if(g->surface_crossed == Z){
+    else if(g->surface_crossed == Y1){
+      p->v = -p->v;
+      p->y = g->y;
+    }
+    else if(g->surface_crossed == Z0){
       p->w = -p->w;
-      p->z = fabs(p->z);
+      p->z = 0.0;
+    }
+    else if(g->surface_crossed == Z1){
+      p->w = -p->w;
+      p->z = g->z;
     }
   }
   
   // Handle periodic boundary conditions
   else if(g->bc == PERIODIC){
-    if(g->surface_crossed == X){
+    if(g->surface_crossed == X0 || g->surface_crossed == X1){
       p->x = g->x - p->x;
     }
-    else if(g->surface_crossed == Y){
+    else if(g->surface_crossed == Y0 || g->surface_crossed == Y1){
       p->y = g->y - p->y;
     }
-    else if(g->surface_crossed == Z){
+    else if(g->surface_crossed == Z0 || g->surface_crossed == Z1){
       p->z = g->z - p->z;
     }
   }
@@ -159,9 +171,11 @@ void cross_surface(Particle *p, Geometry *g)
   return;
 }
 
-void collision(Particle *p, Material *m, Bank *fission_bank)
+void collision(Particle *p, Material *m, Bank *fission_bank, double keff)
 {
   int n;
+  double n_x;
+  double nu = 2.5;
   int i = 0;
   double prob = 0.0;
   double cutoff;
@@ -187,6 +201,18 @@ void collision(Particle *p, Material *m, Bank *fission_bank)
     // Sample expected number of fission particles produced (arbitrary)
     n = rand() % 4;
 
+    // Expected number of fission neutrons produced
+    //n_x = nu*nuc.xs_f/(keff*nuc.xs_t);
+/*    n_x = nu*nuc.xs_f/nuc.xs_t;
+
+    // Sample number of fission neutrons produced
+    if(rn() > n_x - (int)n_x){
+      n = n_x;
+    }
+    else{
+      n = n_x + 1;
+    }
+*/
     // Sample n new particles from the source distribution but at the current
     // particle's location
     for(i=0; i<n; i++){

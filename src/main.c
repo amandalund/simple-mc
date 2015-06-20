@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
   FILE *fp = NULL;    // file pointer for output
   double t1, t2;      // timers
   double *keff;       // effective multiplication factor
+  double keff_gen = 1;// keff of generation
   double keff_batch;  // keff of batch
   double keff_mean;   // keff mean over active batches
   double keff_std;    // keff standard deviation over active batches
@@ -82,11 +83,12 @@ int main(int argc, char *argv[])
       for(i_p=0; i_p<source_bank->n; i_p++){
 
         // Transport the next particle from source bank
-        transport(&(source_bank->p[i_p]), g, m, t, fission_bank);
+        transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen);
       }
 
-      // Accumulate generation k_effective
-      keff_batch += (double) fission_bank->n / source_bank->n;
+      // Calculate generation k_effective and accumulate batch k_effective
+      keff_gen = (double) fission_bank->n / source_bank->n;
+      keff_batch += keff_gen;
 
       // Sample new source particles from the particles that were added to the
       // fission bank during this generation

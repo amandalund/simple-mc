@@ -29,9 +29,12 @@
 #define FISSION 3
 
 // Surfaces
-#define X 0
-#define Y 1
-#define Z 2
+#define X0 0
+#define X1 1
+#define Y0 2
+#define Y1 3
+#define Z0 4
+#define Z1 5
 
 // User defined parameters
 typedef struct Parameters_{
@@ -150,12 +153,12 @@ void free_material(Material *m);
 void free_tally(Tally *t);
 
 // transport.c function prototypes
-void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank);
+void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, double keff);
 void calculate_xs(Particle *p, Material *m);
 double distance_to_boundary(Particle *p, Geometry *g);
 double distance_to_collision(Material *m);
 void cross_surface(Particle *p, Geometry *g);
-void collision(Particle *p, Material *m, Bank *fission_bank);
+void collision(Particle *p, Material *m, Bank *fission_bank, double keff);
 
 // eigenvalue.c function prototypes
 void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g);

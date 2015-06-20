@@ -56,7 +56,7 @@ double shannon_entropy(Geometry *g, Bank *b, Parameters *params)
   Particle *p;
 
   // Determine an appropriate number of grid boxes in each dimension
-  n = params->n_bins; //ceil(pow(b->n/20, 1.0/3.0));
+  n = ceil(pow(b->n/20, 1.0/3.0));
 
   // Find grid spacing
   dx = g->x/n;
@@ -73,7 +73,7 @@ double shannon_entropy(Geometry *g, Bank *b, Parameters *params)
     ix = p->x/dx;
     iy = p->y/dy;
     iz = p->z/dz;
-if((ix*n*n + iy*n + iz) >= b->n) printf("Error: idx = %lu, ix = %lu, dx = %f, gx = %f, px = %f\n", ix*n*n + iy*n + iz, ix, dx, g->x, p->x);
+
     count[ix*n*n + iy*n + iz]++;
   }
 
