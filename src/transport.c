@@ -157,14 +157,23 @@ void cross_surface(Particle *p, Geometry *g)
   
   // Handle periodic boundary conditions
   else if(g->bc == PERIODIC){
-    if(g->surface_crossed == X0 || g->surface_crossed == X1){
-      p->x = g->x - p->x;
+    if(g->surface_crossed == X0){
+      p->x = g->x;
     }
-    else if(g->surface_crossed == Y0 || g->surface_crossed == Y1){
-      p->y = g->y - p->y;
+    else if(g->surface_crossed == X1){
+      p->x = 0;
     }
-    else if(g->surface_crossed == Z0 || g->surface_crossed == Z1){
-      p->z = g->z - p->z;
+    else if(g->surface_crossed == Y0){
+      p->y = g->y;
+    }
+    else if(g->surface_crossed == Y1){
+      p->y = 0;
+    }
+    else if(g->surface_crossed == Z0){
+      p->z = g->z;
+    }
+    else if(g->surface_crossed == Z1){
+      p->z = 0;
     }
   }
 
