@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
   // Get inputs
   params = set_default_params();
   parse_params("parameters", params);
+  read_CLI(argc, argv, params);
   print_params(params);
 
   // Set up output files

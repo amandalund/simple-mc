@@ -111,7 +111,208 @@ void parse_params(char *filename, Parameters *params)
 
   fclose(fp);
 
-  // Validate inputs
+  return;
+}
+
+void read_CLI(int argc, char *argv[], Parameters *params)
+{
+  int i;
+  char *arg;
+
+  // Collect raw input
+  for(i=1; i<argc; i++){
+    arg = argv[i];
+
+    // Number of particles (-p)
+    if(strcmp(arg, "-p") == 0){
+      if(++i < argc){
+        long long n_particles = atoll(argv[i]);
+        if(n_particles < 1)
+          print_error("Number of particles must be greater than 0");
+        params->n_particles = n_particles;
+      }
+      else print_error("Error reading command line input '-p'");
+    }
+
+    // Number of batches (-b)
+    else if(strcmp(arg, "-b") == 0){
+      if(++i < argc) params->n_batches = atoi(argv[i]);
+      else print_error("Error reading command line input '-b'");
+    }
+
+    // Number of active batches (-a)
+    else if(strcmp(arg, "-a") == 0){
+      if(++i < argc) params->n_active = atoi(argv[i]);
+      else print_error("Error reading command line input '-a'");
+    }
+
+    // Number of generations (-g)
+    else if(strcmp(arg, "-g") == 0){
+      if(++i < argc) params->n_generations = atoi(argv[i]);
+      else print_error("Error reading command line input '-g'");
+    }
+
+    // Boundary conditions (-c)
+    else if(strcmp(arg, "-c") == 0){
+      if(++i < argc){
+        if(strcasecmp(argv[i], "vacuum") == 0)
+          params->bc = 0;
+        else if(strcasecmp(argv[i], "reflective") == 0)
+          params->bc = 1;
+        else if(strcasecmp(argv[i], "periodic") == 0)
+          params->bc = 2;
+        else
+          print_error("Invalid boundary condition");
+      }
+      else print_error("Error reading command line input '-c'");
+    }
+
+    // Number of nuclides in material (-n)
+    else if(strcmp(arg, "-n") == 0){
+      if(++i < argc) params->n_nuclides = atoi(argv[i]);
+      else print_error("Error reading command line input '-n'");
+    }
+
+    // Whether to tally (-t)
+    else if(strcmp(arg, "-t") == 0){
+      if(++i < argc){
+        if(strcasecmp(argv[i], "true") == 0)
+          params->tally = TRUE;
+        else if(strcasecmp(argv[i], "false") == 0)
+          params->tally = FALSE;
+        else
+          print_error("Invalid option for parameter 'tally': must be 'true' or 'false'");
+      }
+      else print_error("Error reading command line input '-t'");
+    }
+
+    // Number of bins in each dimension (-m)
+    else if(strcmp(arg, "-m") == 0){
+      if(++i < argc) params->n_bins = atoi(argv[i]);
+      else print_error("Error reading command line input '-m'");
+    }
+
+    // RNG seed (-s)
+    else if(strcmp(arg, "-s") == 0){
+      if(++i < argc) params->seed = atoi(argv[i]);
+      else print_error("Error reading command line input '-s'");
+    }
+
+    // Number of batches (-b)
+    else if(strcmp(arg, "-b") == 0){
+      if(++i < argc) params->n_batches = atoi(argv[i]);
+      else print_error("Error reading command line input '-b'");
+    }
+
+    // Absorption macro xs (-d)
+    else if(strcmp(arg, "-d") == 0){
+      if(++i < argc) params->macro_xs_a = atof(argv[i]);
+      else print_error("Error reading command line input '-d'");
+    }
+
+    // Elastic macro xs (-e)
+    else if(strcmp(arg, "-e") == 0){
+      if(++i < argc) params->macro_xs_e = atof(argv[i]);
+      else print_error("Error reading command line input '-e'");
+    }
+
+    // Fission macro xs (-f)
+    else if(strcmp(arg, "-f") == 0){
+      if(++i < argc) params->macro_xs_f = atof(argv[i]);
+      else print_error("Error reading command line input '-f'");
+    }
+
+    // Geometry size in x (-x)
+    else if(strcmp(arg, "-x") == 0){
+      if(++i < argc) params->gx = atof(argv[i]);
+      else print_error("Error reading command line input '-x'");
+    }
+
+    // Geometry size in y (-y)
+    else if(strcmp(arg, "-y") == 0){
+      if(++i < argc) params->gy = atof(argv[i]);
+      else print_error("Error reading command line input '-y'");
+    }
+
+    // Geometry size in z (-z)
+    else if(strcmp(arg, "-z") == 0){
+      if(++i < argc) params->gz = atof(argv[i]);
+      else print_error("Error reading command line input '-z'");
+    }
+
+    // Whether to output tally (-i)
+    else if(strcmp(arg, "-i") == 0){
+      if(++i < argc){
+        if(strcasecmp(argv[i], "true") == 0)
+          params->write_tally = TRUE;
+        else if(strcasecmp(argv[i], "false") == 0)
+          params->write_tally = FALSE;
+        else
+          print_error("Invalid option for parameter 'write_tally': must be 'true' or 'false'");
+      }
+      else print_error("Error reading command line input '-i'");
+    }
+
+    // Whether to output shannon entropy (-j)
+    else if(strcmp(arg, "-j") == 0){
+      if(++i < argc){
+        if(strcasecmp(argv[i], "true") == 0)
+          params->write_entropy = TRUE;
+        else if(strcasecmp(argv[i], "false") == 0)
+          params->write_entropy = FALSE;
+        else
+          print_error("Invalid option for parameter 'write_entropy': must be 'true' or 'false'");
+      }
+      else print_error("Error reading command line input '-j'");
+    }
+
+    // Whether to output keff (-k)
+    else if(strcmp(arg, "-k") == 0){
+      if(++i < argc){
+        if(strcasecmp(argv[i], "true") == 0)
+          params->write_keff = TRUE;
+        else if(strcasecmp(argv[i], "false") == 0)
+          params->write_keff = FALSE;
+        else
+          print_error("Invalid option for parameter 'write_keff': must be 'true' or 'false'");
+      }
+      else print_error("Error reading command line input '-k'");
+    }
+
+    // Path to write tallies to (-u)
+    else if(strcmp(arg, "-u") == 0){
+      if(++i < argc){
+        if(params->tally_file != NULL) free(params->tally_file);
+        params->tally_file = malloc(strlen(argv[i])*sizeof(char)+1);
+        strcpy(params->tally_file, argv[i]);
+      }
+      else print_error("Error reading command line input '-u'");
+    }
+
+    // Path to write shannon entropy to (-v)
+    else if(strcmp(arg, "-v") == 0){
+      if(++i < argc){
+        if(params->entropy_file != NULL) free(params->entropy_file);
+        params->entropy_file = malloc(strlen(argv[i])*sizeof(char)+1);
+        strcpy(params->entropy_file, argv[i]);
+      }
+      else print_error("Error reading command line input '-v'");
+    }
+
+    // Path to write keff to (-w)
+    else if(strcmp(arg, "-w") == 0){
+      if(++i < argc){
+        if(params->keff_file != NULL) free(params->keff_file);
+        params->keff_file = malloc(strlen(argv[i])*sizeof(char)+1);
+        strcpy(params->keff_file, argv[i]);
+      }
+      else print_error("Error reading command line input '-w'");
+    }
+
+    else print_error("Error reading command line input");
+  }
+
+  // Validate Inputs
   if(params->write_tally == TRUE && params->tally_file == NULL)
     params->tally_file = "tally.dat";
   if(params->write_entropy == TRUE && params->entropy_file == NULL)
@@ -132,6 +333,8 @@ void parse_params(char *filename, Parameters *params)
     print_error("Length of domain must be positive in x, y, and z dimension");
   if(params->macro_xs_f < 0 || params->macro_xs_a < 0 || params->macro_xs_e < 0)
     print_error("Macroscopic cross section values cannot be negative");
+
+  return;
 }
 
 void print_error(char *message)

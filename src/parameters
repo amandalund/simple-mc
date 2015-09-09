@@ -1,27 +1,28 @@
 ###################################################################
 # Simple Transport User Defined Parameters
 ###################################################################
-# particles: number of particles to simulate
-# batches: number of batches
-# generations: number of generations per batch
-# active: number of active batches
-# nuclides: number of nuclides in material
-# tally: whether to tally
-# n_bins: number of bins in each dimension of mesh
-# seed: RNG seed
-# macro_xs_f: fission macroscopic cross section of material
-# macro_xs_a: absorption macroscopic cross section of material
-# macro_xs_e: elastic macroscopic cross section of material
-# bc: boundary conditions (vacuum, reflective, periodic)
-# gx: length of domain in x dimension
-# gy: length of domain in y dimension
-# gz: length of domain in z dimension
-# write_tally: whether to output tallies
-# write_entropy: whether to output entropy
-# write_keff: whether to output keff
-# tally_file: path to tally output
-# entropy_file: path to entropy output
-# keff_file: path to keff output
+# <name> (<CLI argument>): <description>
+# particles (-p): number of particles to simulate
+# batches (-b): number of batches
+# generations (-g): number of generations per batch
+# active (-a): number of active batches
+# nuclides (-n): number of nuclides in material
+# tally (-t): whether to tally
+# n_bins (-m): number of bins in each dimension of mesh
+# seed (-s): RNG seed
+# macro_xs_f (-f): fission macroscopic cross section of material
+# macro_xs_a (-d): absorption macroscopic cross section of material
+# macro_xs_e (-e): elastic macroscopic cross section of material
+# bc (-c): boundary conditions (vacuum, reflective, periodic)
+# gx (-x): length of domain in x dimension
+# gy (-y): length of domain in y dimension
+# gz (-z): length of domain in z dimension
+# write_tally (-i): whether to output tallies
+# write_entropy (-j): whether to output entropy
+# write_keff (-k): whether to output keff
+# tally_file (-u): path to tally output
+# entropy_file (-v): path to entropy output
+# keff_file (-w): path to keff output
 ###################################################################
 particles=1000000
 batches=10

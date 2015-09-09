@@ -125,6 +125,7 @@ typedef struct Bank_{
 
 // io.c function prototypes
 void parse_params(char *filename, Parameters *params);
+void read_CLI(int argc, char *argv[], Parameters *params);
 void print_error(char *message);
 void print_params(Parameters *params);
 void border_print(void);
