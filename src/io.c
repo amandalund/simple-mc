@@ -90,6 +90,15 @@ void parse_params(char *filename, Parameters *params)
       else
         print_error("Invalid option for parameter 'write_keff': must be 'true' or 'false'");
     }
+    else if(strcmp(s, "write_bank") == 0){
+      s = strtok(NULL, "=\n");
+      if(strcasecmp(s, "true") == 0)
+        params->write_bank = TRUE;
+      else if(strcasecmp(s, "false") == 0)
+        params->write_bank = FALSE;
+      else
+        print_error("Invalid option for parameter 'write_bank': must be 'true' or 'false'");
+    }
     else if(strcmp(s, "tally_file") == 0){
       s = strtok(NULL, "=\n");
       params->tally_file = malloc(strlen(s)*sizeof(char)+1);
@@ -104,6 +113,11 @@ void parse_params(char *filename, Parameters *params)
       s = strtok(NULL, "=\n");
       params->keff_file = malloc(strlen(s)*sizeof(char)+1);
       strcpy(params->keff_file, s);
+    }
+    else if(strcmp(s, "bank_file") == 0){
+      s = strtok(NULL, "=\n");
+      params->bank_file = malloc(strlen(s)*sizeof(char)+1);
+      strcpy(params->bank_file, s);
     }
     else
       printf("Unknown value '%s' in config file.\n", s);
@@ -279,6 +293,19 @@ void read_CLI(int argc, char *argv[], Parameters *params)
       else print_error("Error reading command line input '-k'");
     }
 
+    // Whether to output particle bank (-q)
+    else if(strcmp(arg, "-q") == 0){
+      if(++i < argc){
+        if(strcasecmp(argv[i], "true") == 0)
+          params->write_bank = TRUE;
+        else if(strcasecmp(argv[i], "false") == 0)
+          params->write_bank = FALSE;
+        else
+          print_error("Invalid option for parameter 'write_bank': must be 'true' or 'false'");
+      }
+      else print_error("Error reading command line input '-q'");
+    }
+
     // Path to write tallies to (-u)
     else if(strcmp(arg, "-u") == 0){
       if(++i < argc){
@@ -309,6 +336,16 @@ void read_CLI(int argc, char *argv[], Parameters *params)
       else print_error("Error reading command line input '-w'");
     }
 
+    // Path to write bank to (-r)
+    else if(strcmp(arg, "-r") == 0){
+      if(++i < argc){
+        if(params->bank_file != NULL) free(params->bank_file);
+        params->bank_file = malloc(strlen(argv[i])*sizeof(char)+1);
+        strcpy(params->bank_file, argv[i]);
+      }
+      else print_error("Error reading command line input '-r'");
+    }
+
     else print_error("Error reading command line input");
   }
 
@@ -319,6 +356,8 @@ void read_CLI(int argc, char *argv[], Parameters *params)
     params->entropy_file = "entropy.dat";
   if(params->write_keff == TRUE && params->keff_file == NULL)
     params->keff_file = "keff.dat";
+  if(params->write_bank == TRUE && params->bank_file == NULL)
+    params->bank_file = "bank.dat";
   if(params->n_batches < 1 && params->n_generations < 1)
     print_error("Must have at least one batch or one generation");
   if(params->n_batches < 0)
@@ -358,6 +397,7 @@ void print_params(Parameters *params)
   printf("Number of generations:          %d\n", params->n_generations);
   printf("Boundary conditions:            %s\n", bc);
   printf("Number of nuclides in material: %d\n", params->n_nuclides);
+  printf("RNG seed:                       %d\n", params->seed);
   border_print();
 }
 
@@ -435,5 +475,20 @@ void write_keff(double *keff, int n, FILE *fp, char *filename)
 
   fclose(fp);
 
+  return;
+}
+
+void write_bank(Bank *b, FILE *fp, char *filename)
+{
+  int i;
+
+  fp = fopen(filename, "a");
+
+  for(i=0; i<b->n; i++){
+    fprintf(fp, "%.10f %.10f %.10f ", b->p[i].x, b->p[i].y, b->p[i].z);
+  }
+  fprintf(fp, "\n");
+
+  fclose(fp);
   return;
 }

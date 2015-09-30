@@ -22,9 +22,11 @@ Parameters *set_default_params(void)
   params->write_tally = FALSE;
   params->write_entropy = FALSE;
   params->write_keff = FALSE;
+  params->write_bank = FALSE;
   params->tally_file = NULL;
   params->entropy_file = NULL;
   params->keff_file = NULL;
+  params->bank_file = NULL;
 
   return params;
 }
@@ -46,6 +48,12 @@ void init_output(Parameters *params, FILE *fp)
   // Set up file to output keff
   if(params->write_keff == TRUE){
     fp = fopen(params->keff_file, "w");
+    fclose(fp);
+  }
+
+  // Set up file to output particle bank
+  if(params->write_bank == TRUE){
+    fp = fopen(params->bank_file, "w");
     fclose(fp);
   }
 

@@ -80,6 +80,9 @@ int main(int argc, char *argv[])
     // Loop over generations
     for(i_g=0; i_g<params->n_generations; i_g++){
 
+      // Write coordinates of particles in source bank
+      write_bank(source_bank, fp, params->bank_file);
+
       // Loop over particles
       for(i_p=0; i_p<source_bank->n; i_p++){
 

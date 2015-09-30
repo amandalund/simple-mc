@@ -56,9 +56,11 @@ typedef struct Parameters_{
   int write_tally;           // whether to output tallies
   int write_entropy;         // whether to output shannon entropy
   int write_keff;            // whether to output keff
+  int write_bank;            // whether to output particle bank
   char *tally_file;          // path to write tallies to
   char *entropy_file;        // path to write shannon entropy to
   char *keff_file;           // path to write keff to
+  char *bank_file;           // path to write particle bank to
 } Parameters;
 
 // Particle
@@ -134,6 +136,7 @@ void center_print(const char *s, int width);
 void write_tally(Tally *t, FILE *fp, char *filename);
 void write_entropy(double H, FILE *fp, char *filename);
 void write_keff(double *keff, int n, FILE *fp, char *filename);
+void write_bank(Bank *b, FILE *fp, char *filename);
 
 // utils.c funtion prototypes
 //double rn(unsigned long *seed);
