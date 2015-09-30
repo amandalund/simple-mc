@@ -50,8 +50,6 @@ void parse_params(char *filename, Parameters *params)
       params->gx = atof(strtok(NULL, "=\n"));
     else if(strcmp(s, "y") == 0)
       params->gy = atof(strtok(NULL, "=\n"));
-    else if(strcmp(s, "z") == 0)
-      params->gz = atof(strtok(NULL, "=\n"));
     else if(strcmp(s, "bc") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "vacuum") == 0)
@@ -248,12 +246,6 @@ void read_CLI(int argc, char *argv[], Parameters *params)
       else print_error("Error reading command line input '-y'");
     }
 
-    // Geometry size in z (-z)
-    else if(strcmp(arg, "-z") == 0){
-      if(++i < argc) params->gz = atof(argv[i]);
-      else print_error("Error reading command line input '-z'");
-    }
-
     // Whether to output tally (-i)
     else if(strcmp(arg, "-i") == 0){
       if(++i < argc){
@@ -368,8 +360,8 @@ void read_CLI(int argc, char *argv[], Parameters *params)
     print_error("Number of active batches cannot be greater than number of batches");
   if(params->n_bins < 0)
     print_error("Number of bins cannot be negative");
-  if(params->gx <= 0 || params->gy <= 0 || params->gz <= 0)
-    print_error("Length of domain must be positive in x, y, and z dimension");
+  if(params->gx <= 0 || params->gy <= 0)
+    print_error("Length of domain must be positive in x and y dimension");
   if(params->macro_xs_f < 0 || params->macro_xs_a < 0 || params->macro_xs_e < 0)
     print_error("Macroscopic cross section values cannot be negative");
 
@@ -437,17 +429,15 @@ void center_print(const char *s, int width)
 
 void write_tally(Tally *t, FILE *fp, char *filename)
 {
-  int i, j, k;
+  int i, j;
 
   fp = fopen(filename, "a");
 
   for(i=0; i<t->n; i++){
     for(j=0; j<t->n; j++){
-      for(k=0; k<t->n; k++){
-        fprintf(fp, "%e ", t->mean[i + t->n*j + t->n*t->n*k]);
-      }
-      fprintf(fp, "\n");
+      fprintf(fp, "%e ", t->mean[i + t->n*j]);
     }
+    fprintf(fp, "\n");
   }
 
   fclose(fp);
@@ -485,7 +475,7 @@ void write_bank(Bank *b, FILE *fp, char *filename)
   fp = fopen(filename, "a");
 
   for(i=0; i<b->n; i++){
-    fprintf(fp, "%.10f %.10f %.10f ", b->p[i].x, b->p[i].y, b->p[i].z);
+    fprintf(fp, "%.10f %.10f ", b->p[i].x, b->p[i].y);
   }
   fprintf(fp, "\n");
 

@@ -2,15 +2,14 @@
 
 void score_tally(Tally *t, Particle *p)
 {
-  int ix, iy, iz;
+  int ix, iy;
 
   // Find the indices of the grid box of the particle
   ix = p->x/t->dx;
   iy = p->y/t->dy;
-  iz = p->z/t->dz;
 
   // Increment number of collisions in this mesh element
-  t->sum[ix + t->n*iy + t->n*t->n*iz]++;
+  t->sum[ix + t->n*iy]++;
 
   return;
 }
@@ -24,13 +23,13 @@ void batch_tally(Tally *t, Parameters *params)
   double scale;
 
   // Number of grid boxes
-  n = t->n * t->n * t->n;
+  n = t->n * t->n;
 
   // Total cross section of material
   macro_xs_t = params->macro_xs_a + params->macro_xs_f + params->macro_xs_e;
 
   // Volume
-  vol = t->dx * t->dy * t->dz;
+  vol = t->dx * t->dy;
 
   // For calculating sample estimate of scalar flux
   scale = 1./(vol * macro_xs_t * params->n_particles);

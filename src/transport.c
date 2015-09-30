@@ -20,9 +20,8 @@ void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_ba
     double d = d_b < d_c ? d_b : d_c;
 
     // Advance particle
-    p->x = p->x + d*p->u;
-    p->y = p->y + d*p->v;
-    p->z = p->z + d*p->w;
+    p->x = p->x + d*p->v;
+    p->y = p->y + d*p->w;
 
     // Case where particle crosses boundary
     if(d_b < d_c){
@@ -80,12 +79,12 @@ double distance_to_boundary(Particle *p, Geometry *g)
   int i;
   double dist;
   double d = D_INF;
-  int    surfaces[6] = {X0, X1, Y0, Y1, Z0, Z1};
-  double p_angles[6] = {p->u, p->u, p->v, p->v, p->w, p->w};
-  double p_coords[6] = {p->x, p->x, p->y, p->y, p->z, p->z};
-  double s_coords[6] = {0, g->x, 0, g->y, 0, g->z};
+  int    surfaces[4] = {X0, X1, Y0, Y1};
+  double p_angles[4] = {p->v, p->v, p->w, p->w};
+  double p_coords[4] = {p->x, p->x, p->y, p->y};
+  double s_coords[4] = {0, g->x, 0, g->y};
   
-  for(i=0; i<6; i++){
+  for(i=0; i<4; i++){
     if(p_angles[i] == 0){
       dist = D_INF;
     }
@@ -130,28 +129,20 @@ void cross_surface(Particle *p, Geometry *g)
   // Handle reflective boundary conditions
   else if(g->bc == REFLECT){
     if(g->surface_crossed == X0){
-      p->u = -p->u;
+      p->v = -p->v;
       p->x = 0.0;
     }
     else if(g->surface_crossed == X1){
-      p->u = -p->u;
+      p->v = -p->v;
       p->x = g->x;
     }
     else if(g->surface_crossed == Y0){
-      p->v = -p->v;
+      p->w = -p->w;
       p->y = 0.0;
     }
     else if(g->surface_crossed == Y1){
-      p->v = -p->v;
+      p->w = -p->w;
       p->y = g->y;
-    }
-    else if(g->surface_crossed == Z0){
-      p->w = -p->w;
-      p->z = 0.0;
-    }
-    else if(g->surface_crossed == Z1){
-      p->w = -p->w;
-      p->z = g->z;
     }
   }
   
@@ -169,12 +160,6 @@ void cross_surface(Particle *p, Geometry *g)
     else if(g->surface_crossed == Y1){
       p->y = 0;
     }
-    else if(g->surface_crossed == Z0){
-      p->z = g->z;
-    }
-    else if(g->surface_crossed == Z1){
-      p->z = 0;
-    }
   }
 
   return;
@@ -183,8 +168,8 @@ void cross_surface(Particle *p, Geometry *g)
 void collision(Particle *p, Material *m, Bank *fission_bank, double keff)
 {
   int n;
-  double n_x;
-  double nu = 2.5;
+  //double n_x;
+  //double nu = 2.5;
   int i = 0;
   double prob = 0.0;
   double cutoff;
@@ -212,7 +197,7 @@ void collision(Particle *p, Material *m, Bank *fission_bank, double keff)
 
     // Expected number of fission neutrons produced
     //n_x = nu*nuc.xs_f/(keff*nuc.xs_t);
-/*    n_x = nu*nuc.xs_f/nuc.xs_t;
+    /*n_x = nu*nuc.xs_f/nuc.xs_t;
 
     // Sample number of fission neutrons produced
     if(rn() > n_x - (int)n_x){
@@ -220,8 +205,8 @@ void collision(Particle *p, Material *m, Bank *fission_bank, double keff)
     }
     else{
       n = n_x + 1;
-    }
-*/
+    }*/
+
     // Sample n new particles from the source distribution but at the current
     // particle's location
     for(i=0; i<n; i++){
@@ -232,14 +217,11 @@ void collision(Particle *p, Material *m, Bank *fission_bank, double keff)
       p_new->alive = TRUE;
       p_new->energy = 1;
       p_new->last_energy = 0;
-      p_new->mu = rn()*2 - 1;
       p_new->phi = rn()*2*PI;
-      p_new->u = p_new->mu;
-      p_new->v = sqrt(1 - p_new->mu*p_new->mu)*cos(p_new->phi);
-      p_new->w = sqrt(1 - p_new->mu*p_new->mu)*sin(p_new->phi);
+      p_new->v = cos(p_new->phi);
+      p_new->w = sin(p_new->phi);
       p_new->x = p->x;
       p_new->y = p->y;
-      p_new->z = p->z;
       fission_bank->n++;
     }
     p->alive = FALSE;
@@ -254,11 +236,9 @@ void collision(Particle *p, Material *m, Bank *fission_bank, double keff)
 
   // Sample scattering
   else{
-    p->mu = rn()*2 - 1;
     p->phi = rn()*2*PI;
-    p->u = p->mu;
-    p->v = sqrt(1 - p->mu*p->mu) * cos(p->phi);
-    p->w = sqrt(1 - p->mu*p->mu) * sin(p->phi);
+    p->v = cos(p->phi);
+    p->w = sin(p->phi);
     p->event = SCATTER;
   }
 

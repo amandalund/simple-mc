@@ -49,22 +49,21 @@ double shannon_entropy(Geometry *g, Bank *b, Parameters *params)
 {
   unsigned long i;
   double H = 0.0;
-  double dx, dy, dz;
-  unsigned long ix, iy, iz;
+  double dx, dy;
+  unsigned long ix, iy;
   unsigned long n;
   unsigned long *count;
   Particle *p;
 
   // Determine an appropriate number of grid boxes in each dimension
-  n = ceil(pow(b->n/20, 1.0/3.0));
+  n = ceil(pow(b->n/20, 1.0/2.0));
 
   // Find grid spacing
   dx = g->x/n;
   dy = g->y/n;
-  dz = g->z/n;
 
   // Allocate array to keep track of number of sites in each grid box
-  count = calloc(n*n*n, sizeof(unsigned long));
+  count = calloc(n*n, sizeof(unsigned long));
 
   for(i=0; i<b->n; i++){
     p = &(b->p[i]);
@@ -72,13 +71,12 @@ double shannon_entropy(Geometry *g, Bank *b, Parameters *params)
     // Find the indices of the grid box of the particle
     ix = p->x/dx;
     iy = p->y/dy;
-    iz = p->z/dz;
 
-    count[ix*n*n + iy*n + iz]++;
+    count[ix*n + iy]++;
   }
 
   // Calculate the shannon entropy
-  for(i=0; i<n*n*n; i++){
+  for(i=0; i<n*n; i++){
     if(count[i] > 0){
       H -= ((double)count[i]/b->n) * log2((double)count[i]/b->n);
     }

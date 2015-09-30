@@ -18,7 +18,6 @@ Parameters *set_default_params(void)
   params->macro_xs_e = 2.29;
   params->gx = 1000;
   params->gy = 1000;
-  params->gz = 1000;
   params->write_tally = FALSE;
   params->write_entropy = FALSE;
   params->write_keff = FALSE;
@@ -66,7 +65,6 @@ Geometry *init_geometry(Parameters *params)
 
   g->x = params->gx;
   g->y = params->gy;
-  g->z = params->gz;
   g->bc = params->bc;
   g->surface_crossed = -1;
 
@@ -81,7 +79,6 @@ Tally *init_tally(Parameters *params)
   t->n = params->n_bins;
   t->dx = params->gx/t->n;
   t->dy = params->gy/t->n;
-  t->dz = params->gz/t->n;
   t->sum = calloc(t->n*t->n*t->n, sizeof(int));
   t->mean = malloc(t->n*t->n*t->n*sizeof(double));
 
@@ -146,14 +143,11 @@ void sample_source_particle(Particle *p, Geometry *g)
   p->alive = TRUE;
   p->energy = 1;
   p->last_energy = 0;
-  p->mu = rn()*2 - 1;
   p->phi = rn()*2*PI;
-  p->u = p->mu;
-  p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
-  p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);
+  p->v = cos(p->phi);
+  p->w = sin(p->phi);
   p->x = rn()*g->x;
   p->y = rn()*g->y;
-  p->z = rn()*g->z;
 
   return;
 }

@@ -14,43 +14,45 @@
 # macro_xs_a (-d): absorption macroscopic cross section of material
 # macro_xs_e (-e): elastic macroscopic cross section of material
 # bc (-c): boundary conditions (vacuum, reflective, periodic)
-# gx (-x): length of domain in x dimension
-# gy (-y): length of domain in y dimension
-# gz (-z): length of domain in z dimension
+# x (-x): length of domain in x dimension
+# y (-y): length of domain in y dimension
 # write_tally (-i): whether to output tallies
 # write_entropy (-j): whether to output entropy
 # write_keff (-k): whether to output keff
+# write_bank (-q) whether to output particle bank
 # tally_file (-u): path to tally output
 # entropy_file (-v): path to entropy output
 # keff_file (-w): path to keff output
+# bank_file (-r): path to particle bank output
 ###################################################################
-particles=1000000
-batches=10
+particles=10000
+batches=1000
 generations=1
-active=10
+active=1000
 nuclides=1
 tally=true
-n_bins=20
-seed=106
+n_bins=16
+seed=101
 ###################################################################
 # Material Parameters
 ###################################################################
-macro_xs_f=2.29
-macro_xs_a=3.42
-macro_xs_e=2.29
+macro_xs_f=12.54
+macro_xs_a=18.784
+macro_xs_e=8.692
 ###################################################################
 # Geometry Parameters
 ###################################################################
-bc=vacuum
+bc=reflective
 x=10
 y=10
-z=10
 ###################################################################
 # Output Parameters
 ###################################################################
 write_tally=true
 write_entropy=true
-write_keff=true
+write_keff=false
+write_bank=false
 tally_file=tally.dat
 entropy_file=entropy.dat
 keff_file=keff.dat
+bank_file=bank.dat
