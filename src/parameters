@@ -25,7 +25,7 @@
 # keff_file (-w): path to keff output
 # bank_file (-r): path to particle bank output
 ###################################################################
-particles=10000
+particles=50000
 batches=1000
 generations=1
 active=1000
@@ -36,13 +36,16 @@ seed=101
 ###################################################################
 # Material Parameters
 ###################################################################
-macro_xs_f=12.54
-macro_xs_a=18.784
-macro_xs_e=8.692
+#macro_xs_f=12.54
+#macro_xs_a=18.784
+#macro_xs_e=8.692
+macro_xs_f=5.8869
+macro_xs_a=14.6199
+macro_xs_e=19.4932
 ###################################################################
 # Geometry Parameters
 ###################################################################
-bc=reflective
+bc=vacuum
 x=10
 y=10
 ###################################################################
@@ -50,8 +53,8 @@ y=10
 ###################################################################
 write_tally=true
 write_entropy=true
-write_keff=false
-write_bank=false
+write_keff=true
+write_bank=true
 tally_file=tally.dat
 entropy_file=entropy.dat
 keff_file=keff.dat

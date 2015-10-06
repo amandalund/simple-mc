@@ -168,7 +168,7 @@ void cross_surface(Particle *p, Geometry *g)
 void collision(Particle *p, Material *m, Bank *fission_bank, double keff)
 {
   int n;
-  //double n_x;
+  double n_x;
   //double nu = 2.5;
   int i = 0;
   double prob = 0.0;
@@ -193,11 +193,12 @@ void collision(Particle *p, Material *m, Bank *fission_bank, double keff)
   if(nuc.xs_f > cutoff){
 
     // Sample expected number of fission particles produced (arbitrary)
-    n = rand() % 4;
+    //n = rand() % 4;
 
     // Expected number of fission neutrons produced
     //n_x = nu*nuc.xs_f/(keff*nuc.xs_t);
-    /*n_x = nu*nuc.xs_f/nuc.xs_t;
+    //n_x = nu*nuc.xs_f/nuc.xs_t;
+    n_x = 2.5;
 
     // Sample number of fission neutrons produced
     if(rn() > n_x - (int)n_x){
@@ -205,7 +206,7 @@ void collision(Particle *p, Material *m, Bank *fission_bank, double keff)
     }
     else{
       n = n_x + 1;
-    }*/
+    }
 
     // Sample n new particles from the source distribution but at the current
     // particle's location
