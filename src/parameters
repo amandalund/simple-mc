@@ -50,10 +50,10 @@ z=10
 ###################################################################
 # Output Parameters
 ###################################################################
-write_tally=true
-write_entropy=true
-write_keff=true
-write_bank=true
+write_tally=false
+write_entropy=false
+write_keff=false
+write_bank=false
 tally_file=tally.dat
 entropy_file=entropy.dat
 keff_file=keff.dat
