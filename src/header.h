@@ -1,5 +1,5 @@
-#ifndef SIMPLE_TRANSPORT_HEADER
-#define SIMPLE_TRANSPORT_HEADER
+#ifndef HEADER
+#define HEADER
 
 #include<stdio.h>
 #include<stdlib.h>

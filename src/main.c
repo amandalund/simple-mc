@@ -1,4 +1,4 @@
-#include "simple_transport_header.h"
+#include "header.h"
 
 int main(int argc, char *argv[])
 {
@@ -69,6 +69,11 @@ int main(int argc, char *argv[])
 
     keff_batch = 0;
 
+    // Write coordinates of particles in source bank
+    if(params->write_bank == TRUE){
+      write_bank(source_bank, fp, params->bank_file);
+    }
+
     // Turn on tallying and increment index in active batches
     if(i_b >= params->n_batches - params->n_active){
       i_a++;
@@ -79,9 +84,6 @@ int main(int argc, char *argv[])
 
     // Loop over generations
     for(i_g=0; i_g<params->n_generations; i_g++){
-
-      // Write coordinates of particles in source bank
-      write_bank(source_bank, fp, params->bank_file);
 
       // Loop over particles
       for(i_p=0; i_p<source_bank->n; i_p++){

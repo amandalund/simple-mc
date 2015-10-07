@@ -1,4 +1,4 @@
-#include "simple_transport_header.h"
+#include "header.h"
 
 void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g)
 {
