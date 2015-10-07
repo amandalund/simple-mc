@@ -4,9 +4,9 @@ COMPILER = gnu
 
 # Program and source code
 
-PROGRAM = simple-transport
+PROGRAM = transport
 
-HEADERS = simple_transport_header.h
+HEADERS = header.h
 
 SOURCE = \
 main.c \

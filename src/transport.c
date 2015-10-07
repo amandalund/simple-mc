@@ -1,4 +1,4 @@
-#include "simple_transport_header.h"
+#include "header.h"
 
 // Main logic to move particle
 void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, double keff)
@@ -168,8 +168,7 @@ void cross_surface(Particle *p, Geometry *g)
 void collision(Particle *p, Material *m, Bank *fission_bank, double keff)
 {
   int n;
-  double n_x;
-  //double nu = 2.5;
+  double nu = 1.5;
   int i = 0;
   double prob = 0.0;
   double cutoff;
@@ -192,20 +191,12 @@ void collision(Particle *p, Material *m, Bank *fission_bank, double keff)
   // Sample fission
   if(nuc.xs_f > cutoff){
 
-    // Sample expected number of fission particles produced (arbitrary)
-    //n = rand() % 4;
-
-    // Expected number of fission neutrons produced
-    //n_x = nu*nuc.xs_f/(keff*nuc.xs_t);
-    //n_x = nu*nuc.xs_f/nuc.xs_t;
-    n_x = 2.5;
-
     // Sample number of fission neutrons produced
-    if(rn() > n_x - (int)n_x){
-      n = n_x;
+    if(rn() > nu - (int)nu){
+      n = nu;
     }
     else{
-      n = n_x + 1;
+      n = nu + 1;
     }
 
     // Sample n new particles from the source distribution but at the current

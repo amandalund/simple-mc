@@ -1,4 +1,4 @@
-#include "simple_transport_header.h"
+#include "header.h"
 
 // Read in parameters from file
 void parse_params(char *filename, Parameters *params)

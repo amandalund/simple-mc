@@ -1,4 +1,4 @@
-#include "simple_transport_header.h"
+#include "header.h"
 
 void score_tally(Tally *t, Particle *p)
 {
