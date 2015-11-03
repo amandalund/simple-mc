@@ -36,7 +36,6 @@
 #define Z0 4
 #define Z1 5
 
-// User defined parameters
 typedef struct Parameters_{
   unsigned long n_particles; // number of particles
   int n_batches;             // number of batches
@@ -47,9 +46,9 @@ typedef struct Parameters_{
   int tally;                 // whether to tally
   int n_bins;                // number of bins in each dimension of mesh
   int seed;                  // RNG seed
-  double macro_xs_a;         // absorption macro xs
-  double macro_xs_e;         // elastic macro xs
-  double macro_xs_f;         // fission macro xs
+  double xs_a;               // absorption macro xs
+  double xs_s;               // scattering macro xs
+  double xs_f;               // fission macro xs
   double gx;                 // geometry size in x
   double gy;                 // geometry size in y
   double gz;                 // geometry size in z
@@ -63,23 +62,21 @@ typedef struct Parameters_{
   char *bank_file;           // path to write particle bank to
 } Parameters;
 
-// Particle
 typedef struct Particle_{
   int alive;
   double energy;
   double last_energy;
-  double mu;          // cosine of polar angle
-  double phi;         // azimuthal angle
-  double u;           // direction
+  double mu;                 // cosine of polar angle
+  double phi;                // azimuthal angle
+  double u;                  // direction
   double v;
   double w;
-  double x;           // position
+  double x;                  // position
   double y;
   double z;
   int event;
 } Particle;
 
-// Box geometry
 typedef struct Geometry_{
   int bc;
   double x;
@@ -89,39 +86,36 @@ typedef struct Geometry_{
 } Geometry;
 
 typedef struct Nuclide_{
-  double xs_f;         // Fission micro xs
-  double xs_a;         // Absorption micro xs
-  double xs_e;         // Elastic micro xs
-  double xs_t;         // Total micro xs
-  double atom_density; // Atomic density of nuclide in material
+  double xs_f;               // fission micro xs
+  double xs_a;               // absorption micro xs
+  double xs_s;               // scattering micro xs
+  double xs_t;               // total micro xs
+  double atom_density;       // atomic density of nuclide in material
 } Nuclide;
 
-// Material
 typedef struct Material_{
-  double xs_f; // Fission macro xs
-  double xs_a; // Absorption macro xs
-  double xs_e; // Elastic macro xs
-  double xs_t; // Total macro xs
+  double xs_f;               // fission macro xs
+  double xs_a;               // absorption macro xs
+  double xs_s;               // scattering macro xs
+  double xs_t;               // total macro xs
   int n_nuclides;
   Nuclide *nuclides;
 } Material;
 
-// Tallies
 typedef struct Tally_{
-  int tallies_on; // Whether tallying is currently turned on
-  int n;          // Number of grid boxes in each dimension 
-  double dx;      // Grid spacing
+  int tallies_on;            // whether tallying is currently turned on
+  int n;                     // mumber of grid boxes in each dimension 
+  double dx;                 // grid spacing
   double dy;
   double dz;
   int *sum;
   double *mean;
 } Tally;
 
-// Particle bank
 typedef struct Bank_{
-  unsigned long n;  // number of particles
-  unsigned long sz; // size of bank
-  Particle *p;      // particle array
+  unsigned long n;           // number of particles
+  unsigned long sz;          // size of bank
+  Particle *p;               // particle array
   void (*resize)(struct Bank_ *b);
 } Bank;
 

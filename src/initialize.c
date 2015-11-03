@@ -13,9 +13,9 @@ Parameters *set_default_params(void)
   params->tally = FALSE;
   params->n_bins = 10;
   params->seed = 1;
-  params->macro_xs_f = 2.29;
-  params->macro_xs_a = 3.42;
-  params->macro_xs_e = 2.29;
+  params->xs_f = 2.29;
+  params->xs_a = 3.42;
+  params->xs_s = 2.29;
   params->gx = 1000;
   params->gy = 1000;
   params->gz = 1000;
@@ -94,9 +94,9 @@ Material *init_material(Parameters *params)
   Nuclide sum = {0, 0, 0, 0, 0};
 
   // Hardwire the material macroscopic cross sections for now to produce a keff
-  // close to 1 (fission, absorption, elastic, total, atomic density)
-  Nuclide macro = {params->macro_xs_f, params->macro_xs_a, params->macro_xs_e,
-     params->macro_xs_f + params->macro_xs_a + params->macro_xs_e, 1.0};
+  // close to 1 (fission, absorption, scattering, total, atomic density)
+  Nuclide macro = {params->xs_f, params->xs_a, params->xs_s,
+     params->xs_f + params->xs_a + params->xs_s, 1.0};
 
   Material *m = malloc(sizeof(Material));
   m->n_nuclides = params->n_nuclides;
@@ -117,14 +117,14 @@ Material *init_material(Parameters *params)
     sum.xs_a += m->nuclides[i].xs_a * m->nuclides[i].atom_density;
     m->nuclides[i].xs_f = rn();
     sum.xs_f += m->nuclides[i].xs_f * m->nuclides[i].atom_density;
-    m->nuclides[i].xs_e = rn();
-    sum.xs_e += m->nuclides[i].xs_e * m->nuclides[i].atom_density;
+    m->nuclides[i].xs_s = rn();
+    sum.xs_s += m->nuclides[i].xs_s * m->nuclides[i].atom_density;
   }
   for(i=0; i<m->n_nuclides; i++){
     m->nuclides[i].xs_a /= sum.xs_a/macro.xs_a;
     m->nuclides[i].xs_f /= sum.xs_f/macro.xs_f;
-    m->nuclides[i].xs_e /= sum.xs_e/macro.xs_e;
-    m->nuclides[i].xs_t = m->nuclides[i].xs_a + m->nuclides[i].xs_f + m->nuclides[i].xs_e;
+    m->nuclides[i].xs_s /= sum.xs_s/macro.xs_s;
+    m->nuclides[i].xs_t = m->nuclides[i].xs_a + m->nuclides[i].xs_f + m->nuclides[i].xs_s;
   }
 
   return m;

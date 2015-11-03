@@ -51,7 +51,7 @@ void calculate_xs(Particle *p, Material *m)
   m->xs_t = 0.0;
   m->xs_f = 0.0;
   m->xs_a = 0.0;
-  m->xs_e = 0.0;
+  m->xs_s = 0.0;
 
   for(i=0; i<m->n_nuclides; i++){
 
@@ -66,8 +66,8 @@ void calculate_xs(Particle *p, Material *m)
     // Add contribution from this nuclide to absorption macro xs
     m->xs_a += nuc.atom_density * nuc.xs_a;
 
-    // Add contribution from this nuclide to elastic macro xs
-    m->xs_e += nuc.atom_density * nuc.xs_e;
+    // Add contribution from this nuclide to scattering macro xs
+    m->xs_s += nuc.atom_density * nuc.xs_s;
   }
 
   return;
