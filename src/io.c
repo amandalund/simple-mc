@@ -40,12 +40,12 @@ void parse_params(char *filename, Parameters *params)
       params->n_bins = atoi(strtok(NULL, "=\n"));
     else if(strcmp(s, "seed") == 0)
       params->seed = atoi(strtok(NULL, "=\n"));
-    else if(strcmp(s, "macro_xs_f") == 0)
-      params->macro_xs_f = atof(strtok(NULL, "=\n"));
-    else if(strcmp(s, "macro_xs_a") == 0)
-      params->macro_xs_a = atof(strtok(NULL, "=\n"));
-    else if(strcmp(s, "macro_xs_e") == 0)
-      params->macro_xs_e = atof(strtok(NULL, "=\n"));
+    else if(strcmp(s, "xs_f") == 0)
+      params->xs_f = atof(strtok(NULL, "=\n"));
+    else if(strcmp(s, "xs_a") == 0)
+      params->xs_a = atof(strtok(NULL, "=\n"));
+    else if(strcmp(s, "xs_s") == 0)
+      params->xs_s = atof(strtok(NULL, "=\n"));
     else if(strcmp(s, "x") == 0)
       params->gx = atof(strtok(NULL, "=\n"));
     else if(strcmp(s, "y") == 0)
@@ -218,19 +218,19 @@ void read_CLI(int argc, char *argv[], Parameters *params)
 
     // Absorption macro xs (-d)
     else if(strcmp(arg, "-d") == 0){
-      if(++i < argc) params->macro_xs_a = atof(argv[i]);
+      if(++i < argc) params->xs_a = atof(argv[i]);
       else print_error("Error reading command line input '-d'");
     }
 
-    // Elastic macro xs (-e)
+    // Scattering macro xs (-e)
     else if(strcmp(arg, "-e") == 0){
-      if(++i < argc) params->macro_xs_e = atof(argv[i]);
+      if(++i < argc) params->xs_s = atof(argv[i]);
       else print_error("Error reading command line input '-e'");
     }
 
     // Fission macro xs (-f)
     else if(strcmp(arg, "-f") == 0){
-      if(++i < argc) params->macro_xs_f = atof(argv[i]);
+      if(++i < argc) params->xs_f = atof(argv[i]);
       else print_error("Error reading command line input '-f'");
     }
 
@@ -362,7 +362,7 @@ void read_CLI(int argc, char *argv[], Parameters *params)
     print_error("Number of bins cannot be negative");
   if(params->gx <= 0 || params->gy <= 0)
     print_error("Length of domain must be positive in x and y dimension");
-  if(params->macro_xs_f < 0 || params->macro_xs_a < 0 || params->macro_xs_e < 0)
+  if(params->xs_f < 0 || params->xs_a < 0 || params->xs_s < 0)
     print_error("Macroscopic cross section values cannot be negative");
 
   return;

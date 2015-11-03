@@ -18,7 +18,7 @@ void score_tally(Tally *t, Particle *p)
 void batch_tally(Tally *t, Parameters *params)
 {
   int i, n;
-  double macro_xs_t;
+  double xs_t;
   double vol;
   double scale;
 
@@ -26,13 +26,13 @@ void batch_tally(Tally *t, Parameters *params)
   n = t->n * t->n;
 
   // Total cross section of material
-  macro_xs_t = params->macro_xs_a + params->macro_xs_f + params->macro_xs_e;
+  xs_t = params->xs_a + params->xs_f + params->xs_s;
 
   // Volume
   vol = t->dx * t->dy;
 
   // For calculating sample estimate of scalar flux
-  scale = 1./(vol * macro_xs_t * params->n_particles);
+  scale = 1./(vol * xs_t * params->n_particles);
 
   // Estimate of scalar flux
   for(i=0; i<n; i++){

@@ -10,9 +10,9 @@
 # tally (-t): whether to tally
 # n_bins (-m): number of bins in each dimension of mesh
 # seed (-s): RNG seed
-# macro_xs_f (-f): fission macroscopic cross section of material
-# macro_xs_a (-d): absorption macroscopic cross section of material
-# macro_xs_e (-e): elastic macroscopic cross section of material
+# xs_f (-f): fission macroscopic cross section of material
+# xs_a (-d): absorption macroscopic cross section of material
+# xs_s (-e): scattering macroscopic cross section of material
 # bc (-c): boundary conditions (vacuum, reflective, periodic)
 # x (-x): length of domain in x dimension
 # y (-y): length of domain in y dimension
@@ -36,9 +36,9 @@ seed=1
 ###################################################################
 # Material Parameters
 ###################################################################
-macro_xs_f=2.29
-macro_xs_a=3.42
-macro_xs_e=2.29
+xs_f=2.29
+xs_a=3.42
+xs_s=2.29
 ###################################################################
 # Geometry Parameters
 ###################################################################
