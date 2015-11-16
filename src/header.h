@@ -49,6 +49,8 @@ typedef struct Parameters_{
   double xs_f;               // fission macro xs
   double gx;                 // geometry size in x
   double gy;                 // geometry size in y
+  int load_source;           // load the source bank from source.dat
+  int save_source;           // save the source bank at end of simulation
   int write_tally;           // whether to output tallies
   int write_entropy;         // whether to output shannon entropy
   int write_keff;            // whether to output keff
@@ -123,6 +125,8 @@ void write_tally(Tally *t, FILE *fp, char *filename);
 void write_entropy(double H, FILE *fp, char *filename);
 void write_keff(double *keff, int n, FILE *fp, char *filename);
 void write_bank(Bank *b, FILE *fp, char *filename);
+void load_source(Bank *b);
+void save_source(Bank *b);
 
 // utils.c funtion prototypes
 //double rn(unsigned long *seed);
