@@ -63,6 +63,24 @@ void parse_params(char *filename, Parameters *params)
       else
         print_error("Invalid boundary condition");
     }
+    else if(strcmp(s, "load_source") == 0){
+      s = strtok(NULL, "=\n");
+      if(strcasecmp(s, "true") == 0)
+        params->load_source = TRUE;
+      else if(strcasecmp(s, "false") == 0)
+        params->load_source = FALSE;
+      else
+        print_error("Invalid option for parameter 'load_source': must be 'true' or 'false'");
+    }
+    else if(strcmp(s, "save_source") == 0){
+      s = strtok(NULL, "=\n");
+      if(strcasecmp(s, "true") == 0)
+        params->save_source = TRUE;
+      else if(strcasecmp(s, "false") == 0)
+        params->save_source = FALSE;
+      else
+        print_error("Invalid option for parameter 'save_source': must be 'true' or 'false'");
+    }
     else if(strcmp(s, "write_tally") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "true") == 0)
@@ -252,6 +270,32 @@ void read_CLI(int argc, char *argv[], Parameters *params)
     else if(strcmp(arg, "-z") == 0){
       if(++i < argc) params->gz = atof(argv[i]);
       else print_error("Error reading command line input '-z'");
+    }
+
+    // Whether to load source (-l)
+    else if(strcmp(arg, "-l") == 0){
+      if(++i < argc){
+        if(strcasecmp(argv[i], "true") == 0)
+          params->load_source = TRUE;
+        else if(strcasecmp(argv[i], "false") == 0)
+          params->load_source = FALSE;
+        else
+          print_error("Invalid option for parameter 'load_source': must be 'true' or 'false'");
+      }
+      else print_error("Error reading command line input '-l'");
+    }
+
+    // Whether to save source (-o)
+    else if(strcmp(arg, "-o") == 0){
+      if(++i < argc){
+        if(strcasecmp(argv[i], "true") == 0)
+          params->save_source = TRUE;
+        else if(strcasecmp(argv[i], "false") == 0)
+          params->save_source = FALSE;
+        else
+          print_error("Invalid option for parameter 'save_source': must be 'true' or 'false'");
+      }
+      else print_error("Error reading command line input '-o'");
     }
 
     // Whether to output tally (-i)
@@ -490,5 +534,40 @@ void write_bank(Bank *b, FILE *fp, char *filename)
   fprintf(fp, "\n");
 
   fclose(fp);
+  return;
+}
+
+void load_source(Bank *b)
+{
+  unsigned long stat;
+  FILE *fp;
+
+  fp = fopen("source.dat", "rb");
+  if(fp == NULL){
+    print_error("Couldn't open source file.");
+  }
+  stat = fread(b->p, sizeof(Particle), b->sz, fp);
+printf("num read = %lu\n", stat);
+  if(stat != b->sz){
+    print_error("Error loading source.");
+  }
+  fclose(fp);
+
+  return;
+}
+
+void save_source(Bank *b)
+{
+  unsigned long stat;
+  FILE *fp;
+
+  fp = fopen("source.dat", "wb");
+  stat = fwrite(b->p, sizeof(Particle), b->n, fp);
+printf("num written = %lu\n", stat);
+  if(stat != b->n){
+    print_error("Error saving source.");
+  }
+  fclose(fp);
+
   return;
 }

@@ -17,6 +17,8 @@
 # gx (-x): length of domain in x dimension
 # gy (-y): length of domain in y dimension
 # gz (-z): length of domain in z dimension
+# load_source (-l) load the source from binary file source.dat
+# save_source (-o) output the source to binary file source.dat
 # write_tally (-i): whether to output tallies
 # write_entropy (-j): whether to output entropy
 # write_keff (-k): whether to output keff
@@ -50,6 +52,8 @@ z=10
 ###################################################################
 # Output Parameters
 ###################################################################
+load_source=false
+save_source=false
 write_tally=false
 write_entropy=false
 write_keff=false

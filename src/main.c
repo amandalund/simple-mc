@@ -51,10 +51,16 @@ int main(int argc, char *argv[])
   // Initialize fission bank
   fission_bank = init_bank(params->n_particles);
 
-  // Sample source particles
-  for(i_p=0; i_p<params->n_particles; i_p++){
-    sample_source_particle(&(source_bank->p[i_p]), g);
-    source_bank->n++;
+  // Sample source particles or load a source
+  if(params->load_source == TRUE){
+    load_source(source_bank);
+    source_bank->n = params->n_particles;
+  }
+  else{
+    for(i_p=0; i_p<params->n_particles; i_p++){
+      sample_source_particle(&(source_bank->p[i_p]), g);
+      source_bank->n++;
+    }
   }
 
   center_print("SIMULATION", 79);
@@ -136,6 +142,10 @@ int main(int argc, char *argv[])
   // Write out keff
   if(params->write_keff == TRUE){
     write_keff(keff, params->n_active, fp, params->keff_file);
+  }
+
+  if(params->save_source == TRUE){
+    save_source(source_bank);
   }
 
   // Stop time

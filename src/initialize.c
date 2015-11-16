@@ -19,6 +19,8 @@ Parameters *set_default_params(void)
   params->gx = 1000;
   params->gy = 1000;
   params->gz = 1000;
+  params->load_source = FALSE;
+  params->save_source = FALSE;
   params->write_tally = FALSE;
   params->write_entropy = FALSE;
   params->write_keff = FALSE;
