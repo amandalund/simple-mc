@@ -547,7 +547,6 @@ void load_source(Bank *b)
     print_error("Couldn't open source file.");
   }
   stat = fread(b->p, sizeof(Particle), b->sz, fp);
-printf("num read = %lu\n", stat);
   if(stat != b->sz){
     print_error("Error loading source.");
   }
@@ -563,7 +562,6 @@ void save_source(Bank *b)
 
   fp = fopen("source.dat", "wb");
   stat = fwrite(b->p, sizeof(Particle), b->n, fp);
-printf("num written = %lu\n", stat);
   if(stat != b->n){
     print_error("Error saving source.");
   }
