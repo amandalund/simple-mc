@@ -1,7 +1,7 @@
 #include "header.h"
 
 // Main logic to move particle
-void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, double keff)
+void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, double keff, Parameters *params)
 {
   while(p->alive){
 
@@ -34,7 +34,7 @@ void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_ba
 
       // Score tallies
       if(t->tallies_on == TRUE){
-        score_tally(t, p);
+        score_tally(t, p, m, params);
       }
     }
   }

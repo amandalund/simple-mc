@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
       for(i_p=0; i_p<source_bank->n; i_p++){
 
         // Transport the next particle from source bank
-        transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen);
+        transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params);
       }
 
       // Calculate generation k_effective and accumulate batch k_effective
@@ -121,10 +121,10 @@ int main(int argc, char *argv[])
 
     // Tallies for this realization
     if(t->tallies_on == TRUE){
-      batch_tally(t, params);
       if(params->write_tally == TRUE){
         write_tally(t, fp, params->tally_file);
       }
+      memset(t->flux, 0, t->n*t->n*t->n*sizeof(double));
     }
 
     // Calculate keff mean and standard deviation

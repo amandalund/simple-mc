@@ -1,47 +1,21 @@
 #include "header.h"
 
-void score_tally(Tally *t, Particle *p)
+// Simple flux tally
+void score_tally(Tally *t, Particle *p, Material *m, Parameters *params)
 {
   int ix, iy, iz;
+  double vol;
+
+  // Volume
+  vol = t->dx * t->dy * t->dz;
 
   // Find the indices of the grid box of the particle
   ix = p->x/t->dx;
   iy = p->y/t->dy;
   iz = p->z/t->dz;
 
-  // Increment number of collisions in this mesh element
-  t->sum[ix + t->n*iy + t->n*t->n*iz]++;
-
-  return;
-}
-
-// Simple flux tally
-void batch_tally(Tally *t, Parameters *params)
-{
-  int i, n;
-  double xs_t;
-  double vol;
-  double scale;
-
-  // Number of grid boxes
-  n = t->n * t->n * t->n;
-
-  // Total cross section of material
-  xs_t = params->xs_a + params->xs_f + params->xs_s;
-
-  // Volume
-  vol = t->dx * t->dy * t->dz;
-
-  // For calculating sample estimate of scalar flux
-  scale = 1./(vol * xs_t * params->n_particles);
-
-  // Estimate of scalar flux
-  for(i=0; i<n; i++){
-    t->mean[i] = t->sum[i] * scale;
-  }
-
-  // Zero out for next batch
-  memset(t->sum, 0, n*sizeof(int));
+  // Scalar flux
+  t->flux[ix + t->n*iy + t->n*t->n*iz] += 1./(vol * m->xs_t * params->n_particles);
 
   return;
 }

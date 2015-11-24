@@ -42,7 +42,7 @@ void init_output(Parameters *params, FILE *fp)
   }
 
   // Set up file to output shannon entropy to assess source convergence
-  if(params->write_tally == TRUE){
+  if(params->write_entropy == TRUE){
     fp = fopen(params->entropy_file, "w");
     fclose(fp);
   }
@@ -84,8 +84,7 @@ Tally *init_tally(Parameters *params)
   t->dx = params->gx/t->n;
   t->dy = params->gy/t->n;
   t->dz = params->gz/t->n;
-  t->sum = calloc(t->n*t->n*t->n, sizeof(int));
-  t->mean = malloc(t->n*t->n*t->n*sizeof(double));
+  t->flux = calloc(t->n*t->n*t->n, sizeof(double));
 
   return t;
 }
@@ -128,6 +127,11 @@ Material *init_material(Parameters *params)
     m->nuclides[i].xs_s /= sum.xs_s/macro.xs_s;
     m->nuclides[i].xs_t = m->nuclides[i].xs_a + m->nuclides[i].xs_f + m->nuclides[i].xs_s;
   }
+
+  m->xs_f = params->xs_f;
+  m->xs_a = params->xs_a;
+  m->xs_s = params->xs_s;
+  m->xs_t = params->xs_f + params->xs_a + params->xs_f;
 
   return m;
 }
@@ -190,10 +194,8 @@ void free_material(Material *m)
 
 void free_tally(Tally *t)
 {
-  free(t->sum);
-  t->sum = NULL;
-  free(t->mean);
-  t->mean = NULL;
+  free(t->flux);
+  t->flux = NULL;
   free(t);
   t = NULL;
 

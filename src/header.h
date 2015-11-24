@@ -110,8 +110,7 @@ typedef struct Tally_{
   double dx;                 // grid spacing
   double dy;
   double dz;
-  int *sum;
-  double *mean;
+  double *flux;
 } Tally;
 
 typedef struct Bank_{
@@ -155,7 +154,7 @@ void free_material(Material *m);
 void free_tally(Tally *t);
 
 // transport.c function prototypes
-void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, double keff);
+void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, double keff, Parameters *params);
 void calculate_xs(Particle *p, Material *m);
 double distance_to_boundary(Particle *p, Geometry *g);
 double distance_to_collision(Material *m);
@@ -168,7 +167,6 @@ double shannon_entropy(Geometry *g, Bank *b, Parameters *params);
 void calculate_keff(double *keff, double *mean, double *std, int n);
 
 // tally.c function prototypes
-void score_tally(Tally *t, Particle *p);
-void batch_tally(Tally *t, Parameters *params);
+void score_tally(Tally *t, Particle *p, Material *m, Parameters *params);
 
 #endif
