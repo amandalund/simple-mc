@@ -46,6 +46,7 @@ typedef struct Parameters_{
   int tally;                 // whether to tally
   int n_bins;                // number of bins in each dimension of mesh
   int seed;                  // RNG seed
+  double nu;                 // average number of fission neutrons produced
   double xs_a;               // absorption macro xs
   double xs_s;               // scattering macro xs
   double xs_f;               // fission macro xs
@@ -159,7 +160,7 @@ void calculate_xs(Particle *p, Material *m);
 double distance_to_boundary(Particle *p, Geometry *g);
 double distance_to_collision(Material *m);
 void cross_surface(Particle *p, Geometry *g);
-void collision(Particle *p, Material *m, Bank *fission_bank, double keff);
+void collision(Particle *p, Material *m, Bank *fission_bank, double keff, double nu);
 
 // eigenvalue.c function prototypes
 void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g);

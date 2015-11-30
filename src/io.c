@@ -9,24 +9,39 @@ void parse_params(char *filename, Parameters *params)
   while((s = fgets(line, sizeof(line), fp)) != NULL){
 
     if(line[0] == '#') continue;
+    if(line[0] == '\n') continue;
     s = strtok(line, "=");
     if(s == NULL) continue;
 
-    // Set parameters
+    // Number of particles
     else if(strcmp(s, "particles") == 0){
       long long n_particles = atoll(strtok(NULL, "=\n"));
       if(n_particles < 1)
         print_error("Number of particles must be greater than 0");
       params->n_particles = n_particles;
     }
-    else if(strcmp(s, "batches") == 0)
+
+    // Number of batches
+    else if(strcmp(s, "batches") == 0){
       params->n_batches = atoi(strtok(NULL, "=\n"));
-    else if(strcmp(s, "generations") == 0)
+    }
+
+    // Number of generations
+    else if(strcmp(s, "generations") == 0){
       params->n_generations = atoi(strtok(NULL, "=\n"));
-    else if(strcmp(s, "active") == 0)
+    }
+
+    // Number of active batches
+    else if(strcmp(s, "active") == 0){
       params->n_active = atoi(strtok(NULL, "=\n"));
-    else if(strcmp(s, "nuclides") == 0)
+    }
+
+    // Number of nuclides in material
+    else if(strcmp(s, "nuclides") == 0){
       params->n_nuclides = atoi(strtok(NULL, "=\n"));
+    }
+
+    // Whether to tally
     else if(strcmp(s, "tally") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "true") == 0)
@@ -36,22 +51,53 @@ void parse_params(char *filename, Parameters *params)
       else
         print_error("Invalid option for parameter 'tally': must be 'true' or 'false'");
     }
-    else if(strcmp(s, "n_bins") == 0)
+
+    // Number of bins in each dimension
+    else if(strcmp(s, "bins") == 0){
       params->n_bins = atoi(strtok(NULL, "=\n"));
-    else if(strcmp(s, "seed") == 0)
+    }
+
+    // RNG seed
+    else if(strcmp(s, "seed") == 0){
       params->seed = atoi(strtok(NULL, "=\n"));
-    else if(strcmp(s, "xs_f") == 0)
+    }
+
+    // Average number of fission neutrons produced
+    else if(strcmp(s, "nu") == 0){
+      params->nu = atof(strtok(NULL, "=\n"));
+    }
+
+    // Fission macro xs
+    else if(strcmp(s, "xs_f") == 0){
       params->xs_f = atof(strtok(NULL, "=\n"));
-    else if(strcmp(s, "xs_a") == 0)
+    }
+
+    // Absorption macro xs
+    else if(strcmp(s, "xs_a") == 0){
       params->xs_a = atof(strtok(NULL, "=\n"));
-    else if(strcmp(s, "xs_s") == 0)
+    }
+
+    // Scattering macro xs
+    else if(strcmp(s, "xs_s") == 0){
       params->xs_s = atof(strtok(NULL, "=\n"));
-    else if(strcmp(s, "x") == 0)
+    }
+
+    // Geometry size in x
+    else if(strcmp(s, "x") == 0){
       params->gx = atof(strtok(NULL, "=\n"));
-    else if(strcmp(s, "y") == 0)
+    }
+
+    // Geometry size in y
+    else if(strcmp(s, "y") == 0){
       params->gy = atof(strtok(NULL, "=\n"));
-    else if(strcmp(s, "z") == 0)
+    }
+
+    // Geometry size in z
+    else if(strcmp(s, "z") == 0){
       params->gz = atof(strtok(NULL, "=\n"));
+    }
+
+    // Boundary conditions
     else if(strcmp(s, "bc") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "vacuum") == 0)
@@ -63,6 +109,8 @@ void parse_params(char *filename, Parameters *params)
       else
         print_error("Invalid boundary condition");
     }
+
+    // Whether to load source
     else if(strcmp(s, "load_source") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "true") == 0)
@@ -72,6 +120,8 @@ void parse_params(char *filename, Parameters *params)
       else
         print_error("Invalid option for parameter 'load_source': must be 'true' or 'false'");
     }
+
+    // Whether to save source
     else if(strcmp(s, "save_source") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "true") == 0)
@@ -81,6 +131,8 @@ void parse_params(char *filename, Parameters *params)
       else
         print_error("Invalid option for parameter 'save_source': must be 'true' or 'false'");
     }
+
+    // Whether to output tally
     else if(strcmp(s, "write_tally") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "true") == 0)
@@ -90,6 +142,8 @@ void parse_params(char *filename, Parameters *params)
       else
         print_error("Invalid option for parameter 'write_tally': must be 'true' or 'false'");
     }
+
+    // Whether to output shannon entropy
     else if(strcmp(s, "write_entropy") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "true") == 0)
@@ -99,6 +153,8 @@ void parse_params(char *filename, Parameters *params)
       else
         print_error("Invalid option for parameter 'write_entropy': must be 'true' or 'false'");
     }
+
+    // Whether to output keff
     else if(strcmp(s, "write_keff") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "true") == 0)
@@ -108,6 +164,8 @@ void parse_params(char *filename, Parameters *params)
       else
         print_error("Invalid option for parameter 'write_keff': must be 'true' or 'false'");
     }
+
+    // Whether to output particle bank
     else if(strcmp(s, "write_bank") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "true") == 0)
@@ -117,28 +175,37 @@ void parse_params(char *filename, Parameters *params)
       else
         print_error("Invalid option for parameter 'write_bank': must be 'true' or 'false'");
     }
+
+    // Path to write tallies to
     else if(strcmp(s, "tally_file") == 0){
       s = strtok(NULL, "=\n");
       params->tally_file = malloc(strlen(s)*sizeof(char)+1);
       strcpy(params->tally_file, s);
     }
+
+    // Path to write shannon entropy to
     else if(strcmp(s, "entropy_file") == 0){
       s = strtok(NULL, "=\n");
       params->entropy_file = malloc(strlen(s)*sizeof(char)+1);
       strcpy(params->entropy_file, s);
     }
+
+    // Path to write keff to
     else if(strcmp(s, "keff_file") == 0){
       s = strtok(NULL, "=\n");
       params->keff_file = malloc(strlen(s)*sizeof(char)+1);
       strcpy(params->keff_file, s);
     }
+
+    // Path to write bank to
     else if(strcmp(s, "bank_file") == 0){
       s = strtok(NULL, "=\n");
       params->bank_file = malloc(strlen(s)*sizeof(char)+1);
       strcpy(params->bank_file, s);
     }
-    else
-      printf("Unknown value '%s' in config file.\n", s);
+
+    // Unknown config file option
+    else print_error("Unknown option in config file.");
   }
 
   fclose(fp);
@@ -155,37 +222,37 @@ void read_CLI(int argc, char *argv[], Parameters *params)
   for(i=1; i<argc; i++){
     arg = argv[i];
 
-    // Number of particles (-p)
-    if(strcmp(arg, "-p") == 0){
+    // Number of particles (-particles)
+    if(strcmp(arg, "-particles") == 0){
       if(++i < argc){
         long long n_particles = atoll(argv[i]);
         if(n_particles < 1)
           print_error("Number of particles must be greater than 0");
         params->n_particles = n_particles;
       }
-      else print_error("Error reading command line input '-p'");
+      else print_error("Error reading command line input '-particles'");
     }
 
-    // Number of batches (-b)
-    else if(strcmp(arg, "-b") == 0){
+    // Number of batches (-batches)
+    else if(strcmp(arg, "-batches") == 0){
       if(++i < argc) params->n_batches = atoi(argv[i]);
-      else print_error("Error reading command line input '-b'");
+      else print_error("Error reading command line input '-batches'");
     }
 
-    // Number of active batches (-a)
-    else if(strcmp(arg, "-a") == 0){
+    // Number of active batches (-active)
+    else if(strcmp(arg, "-active") == 0){
       if(++i < argc) params->n_active = atoi(argv[i]);
-      else print_error("Error reading command line input '-a'");
+      else print_error("Error reading command line input '-active'");
     }
 
-    // Number of generations (-g)
-    else if(strcmp(arg, "-g") == 0){
+    // Number of generations (-generations)
+    else if(strcmp(arg, "-generations") == 0){
       if(++i < argc) params->n_generations = atoi(argv[i]);
-      else print_error("Error reading command line input '-g'");
+      else print_error("Error reading command line input '-generations'");
     }
 
-    // Boundary conditions (-c)
-    else if(strcmp(arg, "-c") == 0){
+    // Boundary conditions (-bc)
+    else if(strcmp(arg, "-bc") == 0){
       if(++i < argc){
         if(strcasecmp(argv[i], "vacuum") == 0)
           params->bc = 0;
@@ -196,17 +263,17 @@ void read_CLI(int argc, char *argv[], Parameters *params)
         else
           print_error("Invalid boundary condition");
       }
-      else print_error("Error reading command line input '-c'");
+      else print_error("Error reading command line input '-bc'");
     }
 
-    // Number of nuclides in material (-n)
-    else if(strcmp(arg, "-n") == 0){
+    // Number of nuclides in material (-nuclides)
+    else if(strcmp(arg, "-nuclides") == 0){
       if(++i < argc) params->n_nuclides = atoi(argv[i]);
-      else print_error("Error reading command line input '-n'");
+      else print_error("Error reading command line input '-nuclides'");
     }
 
-    // Whether to tally (-t)
-    else if(strcmp(arg, "-t") == 0){
+    // Whether to tally (-tally)
+    else if(strcmp(arg, "-tally") == 0){
       if(++i < argc){
         if(strcasecmp(argv[i], "true") == 0)
           params->tally = TRUE;
@@ -215,43 +282,43 @@ void read_CLI(int argc, char *argv[], Parameters *params)
         else
           print_error("Invalid option for parameter 'tally': must be 'true' or 'false'");
       }
-      else print_error("Error reading command line input '-t'");
+      else print_error("Error reading command line input '-tally'");
     }
 
-    // Number of bins in each dimension (-m)
-    else if(strcmp(arg, "-m") == 0){
+    // Number of bins in each dimension (-bins)
+    else if(strcmp(arg, "-bins") == 0){
       if(++i < argc) params->n_bins = atoi(argv[i]);
-      else print_error("Error reading command line input '-m'");
+      else print_error("Error reading command line input '-bins'");
     }
 
-    // RNG seed (-s)
-    else if(strcmp(arg, "-s") == 0){
+    // RNG seed (-seed)
+    else if(strcmp(arg, "-seed") == 0){
       if(++i < argc) params->seed = atoi(argv[i]);
-      else print_error("Error reading command line input '-s'");
+      else print_error("Error reading command line input '-seed'");
     }
 
-    // Number of batches (-b)
-    else if(strcmp(arg, "-b") == 0){
-      if(++i < argc) params->n_batches = atoi(argv[i]);
-      else print_error("Error reading command line input '-b'");
+    // Average number of fission neutrons produced (-nu)
+    else if(strcmp(arg, "-nu") == 0){
+      if(++i < argc) params->nu = atof(argv[i]);
+      else print_error("Error reading command line input '-nu'");
     }
 
-    // Absorption macro xs (-d)
-    else if(strcmp(arg, "-d") == 0){
+    // Absorption macro xs (-xs_a)
+    else if(strcmp(arg, "-xs_a") == 0){
       if(++i < argc) params->xs_a = atof(argv[i]);
-      else print_error("Error reading command line input '-d'");
+      else print_error("Error reading command line input '-xs_a'");
     }
 
-    // Scattering macro xs (-e)
-    else if(strcmp(arg, "-e") == 0){
+    // Scattering macro xs (-xs_s)
+    else if(strcmp(arg, "-xs_s") == 0){
       if(++i < argc) params->xs_s = atof(argv[i]);
-      else print_error("Error reading command line input '-e'");
+      else print_error("Error reading command line input '-xs_s'");
     }
 
-    // Fission macro xs (-f)
-    else if(strcmp(arg, "-f") == 0){
+    // Fission macro xs (-xs_f)
+    else if(strcmp(arg, "-xs_f") == 0){
       if(++i < argc) params->xs_f = atof(argv[i]);
-      else print_error("Error reading command line input '-f'");
+      else print_error("Error reading command line input '-xs_f'");
     }
 
     // Geometry size in x (-x)
@@ -272,8 +339,8 @@ void read_CLI(int argc, char *argv[], Parameters *params)
       else print_error("Error reading command line input '-z'");
     }
 
-    // Whether to load source (-l)
-    else if(strcmp(arg, "-l") == 0){
+    // Whether to load source (-load_source)
+    else if(strcmp(arg, "-load_source") == 0){
       if(++i < argc){
         if(strcasecmp(argv[i], "true") == 0)
           params->load_source = TRUE;
@@ -282,11 +349,11 @@ void read_CLI(int argc, char *argv[], Parameters *params)
         else
           print_error("Invalid option for parameter 'load_source': must be 'true' or 'false'");
       }
-      else print_error("Error reading command line input '-l'");
+      else print_error("Error reading command line input '-load_source'");
     }
 
-    // Whether to save source (-o)
-    else if(strcmp(arg, "-o") == 0){
+    // Whether to save source (-save_source)
+    else if(strcmp(arg, "-save_source") == 0){
       if(++i < argc){
         if(strcasecmp(argv[i], "true") == 0)
           params->save_source = TRUE;
@@ -295,11 +362,11 @@ void read_CLI(int argc, char *argv[], Parameters *params)
         else
           print_error("Invalid option for parameter 'save_source': must be 'true' or 'false'");
       }
-      else print_error("Error reading command line input '-o'");
+      else print_error("Error reading command line input '-save_source'");
     }
 
-    // Whether to output tally (-i)
-    else if(strcmp(arg, "-i") == 0){
+    // Whether to output tally (-write_tally)
+    else if(strcmp(arg, "-write_tally") == 0){
       if(++i < argc){
         if(strcasecmp(argv[i], "true") == 0)
           params->write_tally = TRUE;
@@ -308,11 +375,11 @@ void read_CLI(int argc, char *argv[], Parameters *params)
         else
           print_error("Invalid option for parameter 'write_tally': must be 'true' or 'false'");
       }
-      else print_error("Error reading command line input '-i'");
+      else print_error("Error reading command line input '-write_tally'");
     }
 
-    // Whether to output shannon entropy (-j)
-    else if(strcmp(arg, "-j") == 0){
+    // Whether to output shannon entropy (-write_entropy)
+    else if(strcmp(arg, "-write_entropy") == 0){
       if(++i < argc){
         if(strcasecmp(argv[i], "true") == 0)
           params->write_entropy = TRUE;
@@ -321,11 +388,11 @@ void read_CLI(int argc, char *argv[], Parameters *params)
         else
           print_error("Invalid option for parameter 'write_entropy': must be 'true' or 'false'");
       }
-      else print_error("Error reading command line input '-j'");
+      else print_error("Error reading command line input '-write_entropy'");
     }
 
-    // Whether to output keff (-k)
-    else if(strcmp(arg, "-k") == 0){
+    // Whether to output keff (-write_keff)
+    else if(strcmp(arg, "-write_keff") == 0){
       if(++i < argc){
         if(strcasecmp(argv[i], "true") == 0)
           params->write_keff = TRUE;
@@ -334,11 +401,11 @@ void read_CLI(int argc, char *argv[], Parameters *params)
         else
           print_error("Invalid option for parameter 'write_keff': must be 'true' or 'false'");
       }
-      else print_error("Error reading command line input '-k'");
+      else print_error("Error reading command line input '-write_keff'");
     }
 
-    // Whether to output particle bank (-q)
-    else if(strcmp(arg, "-q") == 0){
+    // Whether to output particle bank (-write_bank)
+    else if(strcmp(arg, "-write_bank") == 0){
       if(++i < argc){
         if(strcasecmp(argv[i], "true") == 0)
           params->write_bank = TRUE;
@@ -347,49 +414,50 @@ void read_CLI(int argc, char *argv[], Parameters *params)
         else
           print_error("Invalid option for parameter 'write_bank': must be 'true' or 'false'");
       }
-      else print_error("Error reading command line input '-q'");
+      else print_error("Error reading command line input '-write_bank'");
     }
 
-    // Path to write tallies to (-u)
-    else if(strcmp(arg, "-u") == 0){
+    // Path to write tallies to (-tally_file)
+    else if(strcmp(arg, "-tally_file") == 0){
       if(++i < argc){
         if(params->tally_file != NULL) free(params->tally_file);
         params->tally_file = malloc(strlen(argv[i])*sizeof(char)+1);
         strcpy(params->tally_file, argv[i]);
       }
-      else print_error("Error reading command line input '-u'");
+      else print_error("Error reading command line input '-tally_file'");
     }
 
-    // Path to write shannon entropy to (-v)
-    else if(strcmp(arg, "-v") == 0){
+    // Path to write shannon entropy to (-entropy_file)
+    else if(strcmp(arg, "-entropy_file") == 0){
       if(++i < argc){
         if(params->entropy_file != NULL) free(params->entropy_file);
         params->entropy_file = malloc(strlen(argv[i])*sizeof(char)+1);
         strcpy(params->entropy_file, argv[i]);
       }
-      else print_error("Error reading command line input '-v'");
+      else print_error("Error reading command line input '-entropy_file'");
     }
 
-    // Path to write keff to (-w)
-    else if(strcmp(arg, "-w") == 0){
+    // Path to write keff to (-keff_file)
+    else if(strcmp(arg, "-keff_file") == 0){
       if(++i < argc){
         if(params->keff_file != NULL) free(params->keff_file);
         params->keff_file = malloc(strlen(argv[i])*sizeof(char)+1);
         strcpy(params->keff_file, argv[i]);
       }
-      else print_error("Error reading command line input '-w'");
+      else print_error("Error reading command line input '-keff_file'");
     }
 
-    // Path to write bank to (-r)
-    else if(strcmp(arg, "-r") == 0){
+    // Path to write bank to (-bank_file)
+    else if(strcmp(arg, "-bank_file") == 0){
       if(++i < argc){
         if(params->bank_file != NULL) free(params->bank_file);
         params->bank_file = malloc(strlen(argv[i])*sizeof(char)+1);
         strcpy(params->bank_file, argv[i]);
       }
-      else print_error("Error reading command line input '-r'");
+      else print_error("Error reading command line input '-bank_file'");
     }
 
+    // Unknown command line option
     else print_error("Error reading command line input");
   }
 
@@ -412,6 +480,8 @@ void read_CLI(int argc, char *argv[], Parameters *params)
     print_error("Number of active batches cannot be greater than number of batches");
   if(params->n_bins < 0)
     print_error("Number of bins cannot be negative");
+  if(params->nu < 0)
+    print_error("Average number of fission neutrons produced cannot be negative");
   if(params->gx <= 0 || params->gy <= 0 || params->gz <= 0)
     print_error("Length of domain must be positive in x, y, and z dimension");
   if(params->xs_f < 0 || params->xs_a < 0 || params->xs_s < 0)

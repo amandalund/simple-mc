@@ -13,6 +13,7 @@ Parameters *set_default_params(void)
   params->tally = FALSE;
   params->n_bins = 10;
   params->seed = 1;
+  params->nu = 1.5;
   params->xs_f = 2.29;
   params->xs_a = 3.42;
   params->xs_s = 2.29;
