@@ -163,6 +163,8 @@ void cross_surface(Particle *p, Geometry *g);
 void collision(Particle *p, Material *m, Bank *fission_bank, double keff, double nu);
 
 // eigenvalue.c function prototypes
+void converge_source(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t);
+void run_eigenvalue(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t, double *keff);
 void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g);
 double shannon_entropy(Geometry *g, Bank *b, Parameters *params);
 void calculate_keff(double *keff, double *mean, double *std, int n);
