@@ -30,6 +30,10 @@ Parameters *set_default_params(void)
   params->entropy_file = NULL;
   params->keff_file = NULL;
   params->bank_file = NULL;
+  params->cnvg_n_bins = 0;
+  params->cnvg_n_stages = 0;
+  params->cnvg_n_particles = NULL;
+  params->cnvg_n_generations = NULL;
 
   return params;
 }
@@ -146,6 +150,23 @@ Bank *init_bank(unsigned long n_particles)
   b->resize = resize_particles;
 
   return b;
+}
+
+void sample_bounded_source_particle(Particle *p, double x_min, double x_max, double y_min, double y_max, double z_min, double z_max)
+{
+  p->alive = TRUE;
+  p->energy = 1;
+  p->last_energy = 0;
+  p->mu = rn()*2 - 1;
+  p->phi = rn()*2*PI;
+  p->u = p->mu;
+  p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
+  p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);
+  p->x = (x_max - x_min)*((double)rand() / (double)RAND_MAX) + x_min;
+  p->y = (y_max - y_min)*((double)rand() / (double)RAND_MAX) + y_min;
+  p->z = (z_max - z_min)*((double)rand() / (double)RAND_MAX) + z_min;
+
+  return;
 }
 
 void sample_source_particle(Particle *p, Geometry *g)

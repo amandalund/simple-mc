@@ -1,0 +1,11 @@
+# number of bins in each dimension of mesh
+20
+# number of stages
+5
+# total number of particles in stage | number of generations in stage
+# (number of particles in final stage must equal number of particles in first active batch)
+100 2
+1000 2
+10000 2
+100000 2
+1000000 2

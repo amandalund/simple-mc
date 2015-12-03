@@ -5,7 +5,6 @@ int main(int argc, char *argv[])
   FILE *fp = NULL;    // file pointer for output
   double t1, t2;      // timers
   double *keff;       // effective multiplication factor
-  unsigned long i_p;  // index over particles
   Parameters *params; // user defined parameters
   Geometry *g;
   Material *m;
@@ -43,18 +42,6 @@ int main(int argc, char *argv[])
   // Initialize fission bank
   fission_bank = init_bank(params->n_particles);
 
-  // Sample source particles or load a source
-  if(params->load_source == TRUE){
-    load_source(source_bank);
-    source_bank->n = params->n_particles;
-  }
-  else{
-    for(i_p=0; i_p<params->n_particles; i_p++){
-      sample_source_particle(&(source_bank->p[i_p]), g);
-      source_bank->n++;
-    }
-  }
-
   center_print("SIMULATION", 79);
   border_print();
   printf("%-15s %-15s %-15s %-15s\n", "BATCH", "ENTROPY", "KEFF", "MEAN KEFF");
@@ -63,7 +50,8 @@ int main(int argc, char *argv[])
   t1 = timer();
 
   // Converge source (inactive batches)
-  converge_source(params, source_bank, fission_bank, g, m, t);
+  //converge_source(params, source_bank, fission_bank, g, m, t);
+  ramp_up(params, source_bank, fission_bank, g, m, t);
 
   // Run eigenvalue problem (active batches)
   run_eigenvalue(params, source_bank, fission_bank, g, m, t, keff);

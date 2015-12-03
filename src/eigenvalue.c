@@ -1,5 +1,125 @@
 #include "header.h"
 
+void ramp_up(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t)
+{
+  int i_s;            // index over stages
+  int i_g;            // index over generations
+  int i_m;            // index over mesh
+  unsigned long i_p;  // index over particles
+  double keff_gen = 1;// keff of generation
+  double H;           // shannon entropy
+  FILE *fp = NULL;    // file pointer for output
+  int n_bins;         // number of bins in each dimension
+  int n;              // total number of bins
+  int n_particles;    // total number of particles in stage
+  int *count;         // fraction of particles in each bin
+  double dx, dy, dz;
+  int ix, iy, iz;
+  Particle *p;
+  double cutoff;
+  double prob = 0.0;
+  int i;
+
+  n_bins = params->cnvg_n_bins;
+  n = n_bins*n_bins*n_bins;
+  count = malloc(n*sizeof(int));
+
+  // Find grid spacing
+  dx = g->x/n_bins;
+  dy = g->y/n_bins;
+  dz = g->z/n_bins;
+
+  // Loop over stages
+  for(i_s=0; i_s<params->cnvg_n_stages; i_s++){
+
+    n_particles = params->cnvg_n_particles[i_s];
+
+    // At first stage sample initial source particles
+    if(i_s == 0){
+      for(i_p=0; i_p<n_particles; i_p++){
+        sample_source_particle(&(source_bank->p[i_p]), g);
+        source_bank->n++;
+      }
+    }
+
+    // At remaining stages add new particles -- count number of particles in
+    // each bin, add new uniformly sampled particles to each bin proportional
+    // to number of particles that bin contained
+    else{
+
+      memset(count, 0, n*sizeof(int));
+
+      // Count number of particles in each bin
+      for(i_p=0; i_p<params->cnvg_n_particles[i_s-1]; i_p++){
+        p = &(source_bank->p[i_p]);
+
+        // Find the indices of the grid box of the particle
+        ix = p->x/dx;
+        iy = p->y/dy;
+        iz = p->z/dz;
+
+        count[ix*n_bins*n_bins + iy*n_bins + iz]++;
+      }
+
+      // Iterate over particles, sample bin, then uniformly sample from within
+      // that bin
+      for(i_p=0; i_p<n_particles; i_p++){
+
+        i = 0;
+
+        // Cutoff for sampling bin
+        cutoff = rn()*params->cnvg_n_particles[i_s-1];
+
+        // Sample which bin particle goes in
+        while(prob < cutoff){
+          i_m = i;
+          prob += count[i];
+          i++;
+        }
+
+        iz = i_m % n_bins;
+        iy = (i_m/n_bins) % n_bins;
+        ix = i_m / (n_bins*n_bins);
+
+        // Sample particle uniformly from within bin
+        sample_bounded_source_particle(&(source_bank->p[i_p]), ix*dx, (ix+1)*dx, iy*dy, (iy+1)*dy, iz*dz, (iz+1)*dz);
+      }
+      source_bank->n = n_particles;
+    }
+
+    // Write coordinates of particles in source bank
+    if(params->write_bank == TRUE){
+      write_bank(source_bank, fp, params->bank_file);
+    }
+
+    // Loop over generations
+    for(i_g=0; i_g<params->cnvg_n_generations[i_s]; i_g++){
+
+      // Loop over particles
+      for(i_p=0; i_p<source_bank->n; i_p++){
+
+        // Transport the next particle from source bank
+        transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params);
+      }
+
+      // Calculate generation k_effective and accumulate batch k_effective
+      keff_gen = (double) fission_bank->n / source_bank->n;
+
+      // Sample new source particles from the particles that were added to the
+      // fission bank during this generation
+      synchronize_bank(source_bank, fission_bank, g);
+
+      // Calculate shannon entropy to assess source convergence
+      H = shannon_entropy(g, source_bank, params);
+      if(params->write_entropy == TRUE){
+        write_entropy(H, fp, params->entropy_file);
+      }
+    }
+  }
+
+  return;
+}
+
 void converge_source(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t)
 {
   int i_b;            // index over batches
@@ -9,6 +129,18 @@ void converge_source(Parameters *params, Bank *source_bank, Bank *fission_bank, 
   double keff_gen = 1;// keff of generation
   double H;           // shannon entropy
   FILE *fp = NULL;    // file pointer for output
+
+  // Sample source particles or load a source
+  if(params->load_source == TRUE){
+    load_source(source_bank);
+    source_bank->n = params->n_particles;
+  }
+  else{
+    for(i_p=0; i_p<params->n_particles; i_p++){
+      sample_source_particle(&(source_bank->p[i_p]), g);
+      source_bank->n++;
+    }
+  }
 
   // Loop over inactive batches
   for(i_b=0; i_b<params->n_batches - params->n_active; i_b++){

@@ -210,6 +210,8 @@ void parse_params(char *filename, Parameters *params)
 
   fclose(fp);
 
+  read_convergence_parameters(params);
+
   return;
 }
 
@@ -635,6 +637,60 @@ void save_source(Bank *b)
   if(stat != b->n){
     print_error("Error saving source.");
   }
+  fclose(fp);
+
+  return;
+}
+
+void read_convergence_parameters(Parameters *params)
+{
+  char line[512];
+  char *s;
+  FILE *fp;
+  int i = 0;
+
+  fp = fopen("convergence_parameters", "r");
+
+  while((s = fgets(line, sizeof(line), fp)) != NULL){
+
+    if(line[0] == '#' || line[0] == '\n') continue;
+
+    // Number of bins in mesh
+    s = strtok(line, " \n");
+    params->cnvg_n_bins = atoi(s);
+
+    break;
+  }
+
+  while((s = fgets(line, sizeof(line), fp)) != NULL){
+
+    if(line[0] == '#' || line[0] == '\n') continue;
+
+    // Number of stages
+    s = strtok(line, " \n");
+    params->cnvg_n_stages = atoi(s);
+
+    break;
+  }
+
+  params->cnvg_n_particles = malloc(params->cnvg_n_stages*sizeof(int));
+  params->cnvg_n_generations = malloc(params->cnvg_n_stages*sizeof(int));
+
+  while((s = fgets(line, sizeof(line), fp)) != NULL){
+
+    if(line[0] == '#' || line[0] == '\n') continue;
+
+    // Number of particles in stage
+    s = strtok(line, " ");
+    params->cnvg_n_particles[i] = atoi(s);
+
+    // Number of generations in stage
+    s = strtok(NULL, " ");
+    params->cnvg_n_generations[i] = atoi(s);
+
+    i++;
+  }
+
   fclose(fp);
 
   return;
