@@ -3,7 +3,7 @@
 ###################################################################
 
 # particles: number of particles to simulate
-particles=1000000
+particles=1024000
 
 # batches: number of batches
 batches=10
@@ -50,6 +50,11 @@ y=10
 # z: length of domain in z dimension
 z=10
 
+# entropy_bins: number of bins in each dimension of mesh for calculating
+# shannon entropy (setting this parameter to 0 will result in an appropriate
+# number of bins being determined at runtime)
+entropy_bins=0
+
 # load_source: load the source from binary file source.dat
 load_source=false
 
@@ -79,3 +84,6 @@ keff_file=keff.dat
 
 # bank_file: path to particle bank output
 bank_file=bank.dat
+
+# convergence method (default or accel)
+cnvg_method=default

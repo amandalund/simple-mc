@@ -53,6 +53,7 @@ typedef struct Parameters_{
   double gx;                 // geometry size in x
   double gy;                 // geometry size in y
   double gz;                 // geometry size in z
+  int entropy_bins;          // number of bins for calculating shannon entropy
   int load_source;           // load the source bank from source.dat
   int save_source;           // save the source bank at end of simulation
   int write_tally;           // whether to output tallies
@@ -63,6 +64,7 @@ typedef struct Parameters_{
   char *entropy_file;        // path to write shannon entropy to
   char *keff_file;           // path to write keff to
   char *bank_file;           // path to write particle bank to
+  int cnvg_method;
   int cnvg_n_bins;
   int cnvg_n_stages;
   int *cnvg_n_particles;
@@ -135,6 +137,7 @@ void border_print(void);
 void fancy_int(long a);
 void center_print(const char *s, int width);
 void write_tally(Tally *t, FILE *fp, char *filename);
+//void write_entropy(unsigned long histories, double H, FILE *fp, char *filename);
 void write_entropy(double H, FILE *fp, char *filename);
 void write_keff(double *keff, int n, FILE *fp, char *filename);
 void write_bank(Bank *b, FILE *fp, char *filename);

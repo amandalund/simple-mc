@@ -2,6 +2,8 @@
 
 COMPILER = gnu
 
+DEBUG = true
+
 # Program and source code
 
 PROGRAM = transport
@@ -21,11 +23,15 @@ OBJECTS = $(SOURCE:.c=.o)
 
 # Set flags
 
-CFLAGS = -Wall -g
+CFLAGS = -Wall
 LDFLAGS = -lm
 
 ifeq ($(COMPILER),gnu)
   CC = gcc
+endif
+
+ifeq ($(DEBUG),true)
+  CFLAGS += -g
 endif
 
 # Targets to build

@@ -97,15 +97,20 @@ void parse_params(char *filename, Parameters *params)
       params->gz = atof(strtok(NULL, "=\n"));
     }
 
+    // Number of bins in each dimension for shannon entropy
+    else if(strcmp(s, "entropy_bins") == 0){
+      params->n_bins = atoi(strtok(NULL, "=\n"));
+    }
+
     // Boundary conditions
     else if(strcmp(s, "bc") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "vacuum") == 0)
-        params->bc = 0;
+        params->bc = VACUUM;
       else if(strcasecmp(s, "reflective") == 0)
-        params->bc = 1;
+        params->bc = REFLECT;
       else if(strcasecmp(s, "periodic") == 0)
-        params->bc = 2;
+        params->bc = PERIODIC;
       else
         print_error("Invalid boundary condition");
     }
@@ -204,13 +209,22 @@ void parse_params(char *filename, Parameters *params)
       strcpy(params->bank_file, s);
     }
 
+    // Convergence method
+    else if(strcmp(s, "cnvg_method") == 0){
+      s = strtok(NULL, "=\n");
+      if(strcasecmp(s, "default") == 0)
+        params->cnvg_method = 0;
+      else if(strcasecmp(s, "accel") == 0)
+        params->cnvg_method = 1;
+      else
+        print_error("Invalid convergence method");
+    }
+
     // Unknown config file option
     else print_error("Unknown option in config file.");
   }
 
   fclose(fp);
-
-  read_convergence_parameters(params);
 
   return;
 }
@@ -257,11 +271,11 @@ void read_CLI(int argc, char *argv[], Parameters *params)
     else if(strcmp(arg, "-bc") == 0){
       if(++i < argc){
         if(strcasecmp(argv[i], "vacuum") == 0)
-          params->bc = 0;
+          params->bc = VACUUM;
         else if(strcasecmp(argv[i], "reflective") == 0)
-          params->bc = 1;
+          params->bc = REFLECT;
         else if(strcasecmp(argv[i], "periodic") == 0)
-          params->bc = 2;
+          params->bc = PERIODIC;
         else
           print_error("Invalid boundary condition");
       }
@@ -339,6 +353,12 @@ void read_CLI(int argc, char *argv[], Parameters *params)
     else if(strcmp(arg, "-z") == 0){
       if(++i < argc) params->gz = atof(argv[i]);
       else print_error("Error reading command line input '-z'");
+    }
+
+    // Number of bins in each dimension for shannon entropy  (-entropy_bins)
+    else if(strcmp(arg, "-entropy_bins") == 0){
+      if(++i < argc) params->entropy_bins = atoi(argv[i]);
+      else print_error("Error reading command line input '-entropy_bins'");
     }
 
     // Whether to load source (-load_source)
@@ -459,11 +479,34 @@ void read_CLI(int argc, char *argv[], Parameters *params)
       else print_error("Error reading command line input '-bank_file'");
     }
 
+    // Convergence method
+    else if(strcmp(arg, "-cnvg_method") == 0){
+      if(++i < argc){
+        if(strcasecmp(argv[i], "default") == 0)
+          params->cnvg_method = 0;
+        else if(strcasecmp(argv[i], "accel") == 0)
+          params->cnvg_method = 1;
+        else
+          print_error("Invalid convergence method");
+      }
+      else print_error("Error reading command line input '-cnvg_method'");
+    }
+
     // Unknown command line option
     else print_error("Error reading command line input");
   }
 
+  if(params->cnvg_method == 1){
+    read_convergence_parameters(params);
+    if(params->cnvg_n_particles[params->cnvg_n_stages-1] != params->n_particles){
+      printf("WARNING: Number of particles in ramp-up does not match number of particles in parameters file.\n");
+      params->n_particles = params->cnvg_n_particles[params->cnvg_n_stages-1];
+    }
+  }
+
   // Validate Inputs
+  if(params->entropy_bins <= 0)
+    params->entropy_bins = ceil(pow(params->n_particles/20, 1.0/3.0));
   if(params->write_tally == TRUE && params->tally_file == NULL)
     params->tally_file = "tally.dat";
   if(params->write_entropy == TRUE && params->entropy_file == NULL)
@@ -571,6 +614,7 @@ void write_tally(Tally *t, FILE *fp, char *filename)
   return;
 }
 
+//void write_entropy(unsigned long histories, double H, FILE *fp, char *filename)
 void write_entropy(double H, FILE *fp, char *filename)
 {
   fp = fopen(filename, "a");

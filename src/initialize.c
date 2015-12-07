@@ -20,6 +20,7 @@ Parameters *set_default_params(void)
   params->gx = 1000;
   params->gy = 1000;
   params->gz = 1000;
+  params->entropy_bins = 0;
   params->load_source = FALSE;
   params->save_source = FALSE;
   params->write_tally = FALSE;
@@ -30,6 +31,7 @@ Parameters *set_default_params(void)
   params->entropy_file = NULL;
   params->keff_file = NULL;
   params->bank_file = NULL;
+  params->cnvg_method = 0;
   params->cnvg_n_bins = 0;
   params->cnvg_n_stages = 0;
   params->cnvg_n_particles = NULL;
@@ -162,9 +164,13 @@ void sample_bounded_source_particle(Particle *p, double x_min, double x_max, dou
   p->u = p->mu;
   p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
   p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);
-  p->x = (x_max - x_min)*((double)rand() / (double)RAND_MAX) + x_min;
-  p->y = (y_max - y_min)*((double)rand() / (double)RAND_MAX) + y_min;
-  p->z = (z_max - z_min)*((double)rand() / (double)RAND_MAX) + z_min;
+//  p->x = (x_max - x_min)*((double)rand() / (double)RAND_MAX) + x_min;
+//  p->y = (y_max - y_min)*((double)rand() / (double)RAND_MAX) + y_min;
+//  p->z = (z_max - z_min)*((double)rand() / (double)RAND_MAX) + z_min;
+  // Point source at center of bin
+  p->x = (x_max - x_min)/2;
+  p->y = (y_max - y_min)/2;
+  p->z = (z_max - z_min)/2;
 
   return;
 }
@@ -179,16 +185,20 @@ void sample_source_particle(Particle *p, Geometry *g)
   p->u = p->mu;
   p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
   p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);
-  p->x = rn()*g->x;
-  p->y = rn()*g->y;
-  p->z = rn()*g->z;
+//  p->x = rn()*g->x;
+//  p->y = rn()*g->y;
+//  p->z = rn()*g->z;
+  // Point source at center
+  p->x = g->x/2;
+  p->y = g->y/2;
+  p->z = g->z/2;
 
   return;
 }
 
 void resize_particles(Bank *b)
 {
-  b->p = realloc(b->p, sizeof(Particle)*2*b->sz);
+  b->p = realloc(b->p, 2*b->sz*sizeof(Particle));
   b->sz = 2*b->sz;
 
   return;

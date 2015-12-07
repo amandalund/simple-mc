@@ -4,6 +4,180 @@ void ramp_up(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry
 {
   int i_s;            // index over stages
   int i_g;            // index over generations
+  unsigned long i_p;  // index over particles
+  double keff_gen = 1;// keff of generation
+  double H;           // shannon entropy
+  FILE *fp = NULL;    // file pointer for output
+  int n;              // total number of particles in stage
+  int n_prev;         // total number of particles in previousstage
+  int i;
+
+  // Loop over stages
+  for(i_s=0; i_s<params->cnvg_n_stages; i_s++){
+
+    n = params->cnvg_n_particles[i_s];
+
+    // At first stage sample initial source particles
+    if(i_s == 0){
+      for(i_p=0; i_p<n; i_p++){
+        sample_source_particle(&(source_bank->p[i_p]), g);
+        source_bank->n++;
+      }
+    }
+
+    // At remaining stages add new particles
+    else{
+
+      n_prev = params->cnvg_n_particles[i_s-1];
+
+      // If the number of particles in the previous stage is greater than the
+      // number to be added in this stage, randomly select n - n_prev sites from
+      // the previous stage
+      if(n_prev >= n - n_prev){
+
+        // Copy first n - n_prev sites from previous stage
+        memcpy(&(source_bank->p[n_prev]), source_bank->p, (n - n_prev)*sizeof(Particle));
+
+        // Replace elements with decreasing probability, such that after final
+        // iteration each particle from previous stage will have equal probability
+        // of being selected
+        for(i_p=n-n_prev; i_p<n_prev; i_p++){
+          i = rand() % (i_p+1);
+          if(i<n-n_prev){
+            memcpy(&(source_bank->p[n_prev+i]), &(source_bank->p[i_p]), sizeof(Particle));
+          }
+        }
+      }
+
+      // If the number of particles in the previous stage is less than the number
+      // to be added to this stage, use all particles from previous stage and
+      // randomly sample remaining particles from previous stage
+      else{
+
+        // First copy particles from previous stage
+        memcpy(&(source_bank->p[n_prev]), source_bank->p, n_prev*sizeof(Particle));
+
+        // Fill in remaining particles by sampling from previous stage
+        for(i_p=2*n_prev; i_p<n; i_p++){
+          i = rand() % n_prev;
+          memcpy(&(source_bank->p[i_p]), &(source_bank->p[i]), sizeof(Particle));
+        }
+      }
+
+      source_bank->n = n;
+    }
+
+    // Write coordinates of particles in source bank
+    if(params->write_bank == TRUE){
+      write_bank(source_bank, fp, params->bank_file);
+    }
+
+    // Loop over generations
+    for(i_g=0; i_g<params->cnvg_n_generations[i_s]; i_g++){
+
+      // Loop over particles
+      for(i_p=0; i_p<source_bank->n; i_p++){
+
+        // Transport the next particle from source bank
+        transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params);
+
+        // Increment total number of histories
+//        params->n_histories++;
+      }
+
+      // Calculate generation k_effective and accumulate batch k_effective
+      keff_gen = (double) fission_bank->n / source_bank->n;
+
+      // Sample new source particles from the particles that were added to the
+      // fission bank during this generation
+      synchronize_bank(source_bank, fission_bank, g);
+
+      // Calculate shannon entropy to assess source convergence
+      H = shannon_entropy(g, source_bank, params);
+      if(params->write_entropy == TRUE){
+        write_entropy(H, fp, params->entropy_file);
+      }
+    }
+  }
+
+  return;
+}
+
+/*void ramp_up(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t)
+{
+  int i_s;            // index over stages
+  int i_g;            // index over generations
+  unsigned long i_p;  // index over particles
+  double keff_gen = 1;// keff of generation
+  double H;           // shannon entropy
+  FILE *fp = NULL;    // file pointer for output
+  int n_particles;    // total number of particles in stage
+
+  // Loop over stages
+  for(i_s=0; i_s<params->cnvg_n_stages; i_s++){
+
+    n_particles = params->cnvg_n_particles[i_s];
+
+    // At first stage sample initial source particles
+    if(i_s == 0){
+      for(i_p=0; i_p<n_particles; i_p++){
+        sample_source_particle(&(source_bank->p[i_p]), g);
+        source_bank->n++;
+      }
+    }
+
+    // At remaining stages add new uniformly sampled particles
+    else{
+
+      // Iterate over particles to add and  uniformly sample
+      for(i_p=params->cnvg_n_particles[i_s-1]; i_p<n_particles; i_p++){
+
+        // Sample particle uniformly from within bin
+        sample_source_particle(&(source_bank->p[i_p]), g);
+        source_bank->n++;
+      }
+    }
+
+    // Write coordinates of particles in source bank
+    if(params->write_bank == TRUE){
+      write_bank(source_bank, fp, params->bank_file);
+    }
+
+    // Loop over generations
+    for(i_g=0; i_g<params->cnvg_n_generations[i_s]; i_g++){
+
+      // Loop over particles
+      for(i_p=0; i_p<source_bank->n; i_p++){
+
+        // Transport the next particle from source bank
+        transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params);
+
+        // Increment total number of histories
+        params->n_histories++;
+      }
+
+      // Calculate generation k_effective and accumulate batch k_effective
+      keff_gen = (double) fission_bank->n / source_bank->n;
+
+      // Sample new source particles from the particles that were added to the
+      // fission bank during this generation
+      synchronize_bank(source_bank, fission_bank, g);
+
+      // Calculate shannon entropy to assess source convergence
+      H = shannon_entropy(g, source_bank, params);
+      if(params->write_entropy == TRUE){
+        write_entropy(H, fp, params->entropy_file);
+      }
+    }
+  }
+
+  return;
+}
+
+void ramp_up(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t)
+{
+  int i_s;            // index over stages
+  int i_g;            // index over generations
   int i_m;            // index over mesh
   unsigned long i_p;  // index over particles
   double keff_gen = 1;// keff of generation
@@ -61,9 +235,9 @@ void ramp_up(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry
         count[ix*n_bins*n_bins + iy*n_bins + iz]++;
       }
 
-      // Iterate over particles, sample bin, then uniformly sample from within
-      // that bin
-      for(i_p=0; i_p<n_particles; i_p++){
+      // Iterate over particles to add, sample bin, then uniformly sample from
+      // within that bin
+      for(i_p=params->cnvg_n_particles[i_s-1]; i_p<n_particles; i_p++){
 
         i = 0;
 
@@ -100,6 +274,9 @@ void ramp_up(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry
 
         // Transport the next particle from source bank
         transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params);
+
+        // Increment total number of histories
+        params->n_histories++;
       }
 
       // Calculate generation k_effective and accumulate batch k_effective
@@ -117,9 +294,11 @@ void ramp_up(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry
     }
   }
 
+  free(count);
+
   return;
 }
-
+*/
 void converge_source(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t)
 {
   int i_b;            // index over batches
@@ -160,6 +339,9 @@ void converge_source(Parameters *params, Bank *source_bank, Bank *fission_bank, 
 
         // Transport the next particle from source bank
         transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params);
+
+        // Increment total number of histories
+//        params->n_histories++;
       }
 
       // Calculate generation k_effective and accumulate batch k_effective
@@ -222,6 +404,9 @@ void run_eigenvalue(Parameters *params, Bank *source_bank, Bank *fission_bank, G
 
         // Transport the next particle from source bank
         transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params);
+
+        // Increment total number of histories
+//        params->n_histories++;
       }
 
       // Calculate generation k_effective and accumulate batch k_effective
@@ -317,7 +502,7 @@ double shannon_entropy(Geometry *g, Bank *b, Parameters *params)
   Particle *p;
 
   // Determine an appropriate number of grid boxes in each dimension
-  n = ceil(pow(b->n/20, 1.0/3.0));
+  n = params->entropy_bins;
 
   // Find grid spacing
   dx = g->x/n;

@@ -2,10 +2,10 @@
 
 int main(int argc, char *argv[])
 {
-  FILE *fp = NULL;    // file pointer for output
-  double t1, t2;      // timers
-  double *keff;       // effective multiplication factor
-  Parameters *params; // user defined parameters
+  FILE *fp = NULL;               // file pointer for output
+  double t1, t2;                 // timers
+  double *keff;                  // effective multiplication factor
+  Parameters *params;            // user defined parameters
   Geometry *g;
   Material *m;
   Tally *t;
@@ -50,16 +50,28 @@ int main(int argc, char *argv[])
   t1 = timer();
 
   // Converge source (inactive batches)
-  //converge_source(params, source_bank, fission_bank, g, m, t);
-  ramp_up(params, source_bank, fission_bank, g, m, t);
+  if(params->cnvg_method == 1){
+    printf("Converging source...\n");
+    ramp_up(params, source_bank, fission_bank, g, m, t);
+  }
+  else{
+    converge_source(params, source_bank, fission_bank, g, m, t);
+  }
+
+  // Stop time
+  t1 = timer() - t1;
+
+  // Start time
+  t2 = timer();
 
   // Run eigenvalue problem (active batches)
   run_eigenvalue(params, source_bank, fission_bank, g, m, t, keff);
 
   // Stop time
-  t2 = timer();
+  t2 = timer() - t2;
 
-  printf("Simulation time: %f secs\n", t2-t1);
+  printf("Inactive batches time: %f secs\n", t1);
+  printf("Active batches time: %f secs\n", t2);
 
   // Write out keff
   if(params->write_keff == TRUE){
