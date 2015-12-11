@@ -11,6 +11,10 @@ int main(int argc, char *argv[])
   Tally *t;
   Bank *source_bank;
   Bank *fission_bank;
+  unsigned long n_histories = 0;
+
+  fp = fopen("histories.dat", "w");
+  fclose(fp);
 
   // Get inputs
   params = set_default_params();
@@ -52,10 +56,10 @@ int main(int argc, char *argv[])
   // Converge source (inactive batches)
   if(params->cnvg_method == 1){
     printf("Converging source...\n");
-    ramp_up(params, source_bank, fission_bank, g, m, t);
+    ramp_up(params, source_bank, fission_bank, g, m, t, &n_histories);
   }
   else{
-    converge_source(params, source_bank, fission_bank, g, m, t);
+    converge_source(params, source_bank, fission_bank, g, m, t, &n_histories);
   }
 
   // Stop time
@@ -65,7 +69,7 @@ int main(int argc, char *argv[])
   t2 = timer();
 
   // Run eigenvalue problem (active batches)
-  run_eigenvalue(params, source_bank, fission_bank, g, m, t, keff);
+  run_eigenvalue(params, source_bank, fission_bank, g, m, t, keff, &n_histories);
 
   // Stop time
   t2 = timer() - t2;

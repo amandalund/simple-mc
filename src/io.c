@@ -699,17 +699,6 @@ void read_convergence_parameters(Parameters *params)
 
     if(line[0] == '#' || line[0] == '\n') continue;
 
-    // Number of bins in mesh
-    s = strtok(line, " \n");
-    params->cnvg_n_bins = atoi(s);
-
-    break;
-  }
-
-  while((s = fgets(line, sizeof(line), fp)) != NULL){
-
-    if(line[0] == '#' || line[0] == '\n') continue;
-
     // Number of stages
     s = strtok(line, " \n");
     params->cnvg_n_stages = atoi(s);

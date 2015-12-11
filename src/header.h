@@ -65,7 +65,6 @@ typedef struct Parameters_{
   char *keff_file;           // path to write keff to
   char *bank_file;           // path to write particle bank to
   int cnvg_method;
-  int cnvg_n_bins;
   int cnvg_n_stages;
   int *cnvg_n_particles;
   int *cnvg_n_generations;
@@ -158,7 +157,6 @@ Tally *init_tally(Parameters *params);
 Material *init_material(Parameters *params);
 Bank *init_bank(unsigned long n_particles);
 void sample_source_particle(Particle *p, Geometry *g);
-void sample_bounded_source_particle(Particle *p, double x_min, double x_max, double y_min, double y_max, double z_min, double z_max);
 void resize_particles(Bank *b);
 void free_bank(Bank *b);
 void free_material(Material *m);
@@ -173,9 +171,9 @@ void cross_surface(Particle *p, Geometry *g);
 void collision(Particle *p, Material *m, Bank *fission_bank, double keff, double nu);
 
 // eigenvalue.c function prototypes
-void ramp_up(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t);
-void converge_source(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t);
-void run_eigenvalue(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t, double *keff);
+void ramp_up(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t, unsigned long *n_histories);
+void converge_source(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t, unsigned long *n_histories);
+void run_eigenvalue(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t, double *keff, unsigned long *n_histories);
 void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g);
 double shannon_entropy(Geometry *g, Bank *b, Parameters *params);
 void calculate_keff(double *keff, double *mean, double *std, int n);

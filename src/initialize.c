@@ -32,7 +32,6 @@ Parameters *set_default_params(void)
   params->keff_file = NULL;
   params->bank_file = NULL;
   params->cnvg_method = 0;
-  params->cnvg_n_bins = 0;
   params->cnvg_n_stages = 0;
   params->cnvg_n_particles = NULL;
   params->cnvg_n_generations = NULL;
@@ -154,27 +153,6 @@ Bank *init_bank(unsigned long n_particles)
   return b;
 }
 
-void sample_bounded_source_particle(Particle *p, double x_min, double x_max, double y_min, double y_max, double z_min, double z_max)
-{
-  p->alive = TRUE;
-  p->energy = 1;
-  p->last_energy = 0;
-  p->mu = rn()*2 - 1;
-  p->phi = rn()*2*PI;
-  p->u = p->mu;
-  p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
-  p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);
-//  p->x = (x_max - x_min)*((double)rand() / (double)RAND_MAX) + x_min;
-//  p->y = (y_max - y_min)*((double)rand() / (double)RAND_MAX) + y_min;
-//  p->z = (z_max - z_min)*((double)rand() / (double)RAND_MAX) + z_min;
-  // Point source at center of bin
-  p->x = (x_max - x_min)/2;
-  p->y = (y_max - y_min)/2;
-  p->z = (z_max - z_min)/2;
-
-  return;
-}
-
 void sample_source_particle(Particle *p, Geometry *g)
 {
   p->alive = TRUE;
@@ -185,13 +163,13 @@ void sample_source_particle(Particle *p, Geometry *g)
   p->u = p->mu;
   p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
   p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);
-//  p->x = rn()*g->x;
-//  p->y = rn()*g->y;
-//  p->z = rn()*g->z;
+  p->x = rn()*g->x;
+  p->y = rn()*g->y;
+  p->z = rn()*g->z;
   // Point source at center
-  p->x = g->x/2;
-  p->y = g->y/2;
-  p->z = g->z/2;
+//  p->x = g->x/2;
+//  p->y = g->y/2;
+//  p->z = g->z/2;
 
   return;
 }
