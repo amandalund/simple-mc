@@ -1,62 +1,78 @@
 ###################################################################
-# Simple Transport User Defined Parameters
+# SIMPLE-MC INPUT PARAMETERS
 ###################################################################
-# <name> (<CLI argument>): <description>
-# particles (-p): number of particles to simulate
-# batches (-b): number of batches
-# generations (-g): number of generations per batch
-# active (-a): number of active batches
-# nuclides (-n): number of nuclides in material
-# tally (-t): whether to tally
-# n_bins (-m): number of bins in each dimension of mesh
-# seed (-s): RNG seed
-# xs_f (-f): fission macroscopic cross section of material
-# xs_a (-d): absorption macroscopic cross section of material
-# xs_s (-e): scattering macroscopic cross section of material
-# bc (-c): boundary conditions (vacuum, reflective, periodic)
-# x (-x): length of domain in x dimension
-# y (-y): length of domain in y dimension
-# load_source (-l) load the source from binary file source.dat
-# save_source (-o) output the source to binary file source.dat
-# write_tally (-i): whether to output tallies
-# write_entropy (-j): whether to output entropy
-# write_keff (-k): whether to output keff
-# write_bank (-q) whether to output particle bank
-# tally_file (-u): path to tally output
-# entropy_file (-v): path to entropy output
-# keff_file (-w): path to keff output
-# bank_file (-r): path to particle bank output
-###################################################################
+
+# particles: number of particles to simulate
 particles=1000000
+
+# batches: number of batches
 batches=10
+
+# generations: number of generations per batch
 generations=1
+
+# active: number of active batches
 active=10
+
+# nuclides: number of nuclides in material
 nuclides=1
+
+# tally: whether to tally
 tally=true
-n_bins=20
+
+# bins: number of bins in each dimension of mesh
+bins=20
+
+# seed: RNG seed
 seed=1
-###################################################################
-# Material Parameters
-###################################################################
+
+# nu: average number of fission neutrons produced
+nu=1.5
+
+# xs_f: fission macroscopic cross section of material
 xs_f=2.29
+
+# xs_a: absorption macroscopic cross section of material
 xs_a=3.42
+
+# xs_s: scattering macroscopic cross section of material
 xs_s=2.29
-###################################################################
-# Geometry Parameters
-###################################################################
-bc=vacuum
+
+# bc: boundary conditions (vacuum, reflective, periodic)
+bc=reflective
+
+# x: length of domain in x dimension
 x=10
+
+# y: length of domain in y dimension
 y=10
-###################################################################
-# Output Parameters
-###################################################################
+
+# load_source: load the source from binary file source.dat
 load_source=false
+
+# save_source: output the source to binary file source.dat
 save_source=false
+
+# write_tally: whether to output tallies
 write_tally=false
+
+# write_entropy: whether to output entropy
 write_entropy=false
+
+# write_keff: whether to output keff
 write_keff=false
+
+# write_bank: whether to output particle bank
 write_bank=false
+
+# tally_file: path to tally output
 tally_file=tally.dat
+
+# entropy_file: path to entropy output
 entropy_file=entropy.dat
+
+# keff_file: path to keff output
 keff_file=keff.dat
+
+# bank_file: path to particle bank output
 bank_file=bank.dat

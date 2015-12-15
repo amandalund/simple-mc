@@ -1,7 +1,7 @@
 #include "header.h"
 
 // Main logic to move particle
-void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, double keff)
+void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, double keff, Parameters *params)
 {
   while(p->alive){
 
@@ -29,11 +29,11 @@ void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_ba
     }
     // Case where particle has collision
     else{
-      collision(p, m, fission_bank, keff);
+      collision(p, m, fission_bank, keff, params->nu);
 
       // Score tallies
       if(t->tallies_on == TRUE){
-        score_tally(t, p);
+        score_tally(t, p, m, params);
       }
     }
   }
@@ -165,10 +165,9 @@ void cross_surface(Particle *p, Geometry *g)
   return;
 }
 
-void collision(Particle *p, Material *m, Bank *fission_bank, double keff)
+void collision(Particle *p, Material *m, Bank *fission_bank, double keff, double nu)
 {
   int n;
-  double nu = 1.5;
   int i = 0;
   double prob = 0.0;
   double cutoff;
