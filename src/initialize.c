@@ -123,7 +123,7 @@ Material *init_material(Parameters *params)
     m->nuclides[i].xs_a /= sum.xs_a/macro.xs_a;
     m->nuclides[i].xs_f /= sum.xs_f/macro.xs_f;
     m->nuclides[i].xs_s /= sum.xs_s/macro.xs_s;
-    m->nuclides[i].xs_t = m->nuclides[i].xs_a + m->nuclides[i].xs_f + m->nuclides[i].xs_s;
+    m->nuclides[i].xs_t = m->nuclides[i].xs_a + m->nuclides[i].xs_s;
   }
 
   return m;

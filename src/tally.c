@@ -26,7 +26,7 @@ void batch_tally(Tally *t, Parameters *params)
   n = t->n * t->n;
 
   // Total cross section of material
-  xs_t = params->xs_a + params->xs_f + params->xs_s;
+  xs_t = params->xs_a + params->xs_s;
 
   // Volume
   vol = t->dx * t->dy;
