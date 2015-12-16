@@ -679,7 +679,7 @@ void write_source(Geometry *g, Bank *b, Parameters *params, FILE *fp, char *file
     iy = p->y/dy;
     iz = p->z/dz;
 
-    dist[ix*n*n + iy*n + iz]++;
+    dist[ix + n*iy + n*n*iz]++;
   }
 
   // Normalize by number of particles
