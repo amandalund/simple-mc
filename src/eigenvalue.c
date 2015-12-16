@@ -43,6 +43,11 @@ void converge_source(Parameters *params, Bank *source_bank, Bank *fission_bank, 
       if(params->write_entropy == TRUE){
         write_entropy(H, fp, params->entropy_file);
       }
+
+      // Write the source distribution
+      if(params->write_source == TRUE){
+        write_source(g, source_bank, params, fp, params->source_file);
+      }
     }
 
     // Calculate k_effective
@@ -105,14 +110,16 @@ void run_eigenvalue(Parameters *params, Bank *source_bank, Bank *fission_bank, G
       if(params->write_entropy == TRUE){
         write_entropy(H, fp, params->entropy_file);
       }
+
+      // Write the source distribution
+      if(params->write_source == TRUE){
+        write_source(g, source_bank, params, fp, params->source_file);
+      }
     }
 
     // Calculate k_effective
     keff_batch /= params->n_generations;
     keff[i_b] = keff_batch;
-
-    // Write source distribution
-    source_distribution(g, source_bank, params);
 
     // Tallies for this realization
     if(t->tallies_on == TRUE){
@@ -241,59 +248,4 @@ void calculate_keff(double *keff, double *mean, double *std, int n)
   *std = sqrt(*std/(n-1));
 
   return;
-}
-
-// Finds the source distribution
-void source_distribution(Geometry *g, Bank *b, Parameters *params)
-{
-  int i, j, k;
-  double dx, dy, dz;
-  unsigned long ix, iy, iz;
-  unsigned long l;
-  unsigned long n;
-  double *count;
-  FILE *fp;
-  Particle *p;
-
-  // Number of grid boxes in each dimension
-  n = params->n_bins;
-
-  // Find grid spacing
-  dx = g->x/n;
-  dy = g->y/n;
-  dz = g->z/n;
-
-  // Allocate array to keep track of number of sites in each grid box
-  count = calloc(n*n*n, sizeof(double));
-
-  for(l=0; l<b->n; l++){
-    p = &(b->p[l]);
-
-    // Find the indices of the grid box of the particle
-    ix = p->x/dx;
-    iy = p->y/dy;
-    iz = p->z/dz;
-
-    count[ix*n*n + iy*n + iz]++;
-  }
-
-  // Normalize by number of particles
-  for(l=0; l<n*n*n; l++){
-    count[l] /= b->n;
-  }
-
-  fp = fopen("source_dist.dat", "a");
-
-  for(i=0; i<n; i++){
-    for(j=0; j<n; j++){
-      for(k=0; k<n; k++){
-        fprintf(fp, "%e ", count[i + n*j + n*n*k]);
-      }
-      fprintf(fp, "\n");
-    }
-  }
-
-  fclose(fp);
-
-  free(count);
 }
