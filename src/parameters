@@ -21,31 +21,31 @@ nuclides=1
 tally=true
 
 # bins: number of bins in each dimension of mesh
-bins=20
+bins=16
 
 # seed: RNG seed
 seed=1
 
 # nu: average number of fission neutrons produced
-nu=1.5
+nu=2.5
 
 # xs_f: fission macroscopic cross section of material
-xs_f=2.29
+xs_f=0.012
 
 # xs_a: absorption macroscopic cross section of material
-xs_a=3.42
+xs_a=0.03
 
 # xs_s: scattering macroscopic cross section of material
-xs_s=2.29
+xs_s=0.27
 
 # bc: boundary conditions (vacuum, reflective, periodic)
 bc=reflective
 
 # x: length of domain in x dimension
-x=10
+x=400
 
 # y: length of domain in y dimension
-y=10
+y=400
 
 # load_source: load the source from binary file source.dat
 load_source=false

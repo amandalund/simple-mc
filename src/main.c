@@ -111,6 +111,11 @@ int main(int argc, char *argv[])
       if(params->write_entropy == TRUE){
         write_entropy(H, fp, params->entropy_file);
       }
+
+      // Write the source distribution
+      if(params->write_source == TRUE){
+        write_source(g, source_bank, params, fp, params->source_file);
+      }
     }
 
     // Calculate k_effective

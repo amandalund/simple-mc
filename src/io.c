@@ -171,6 +171,17 @@ void parse_params(char *filename, Parameters *params)
         print_error("Invalid option for parameter 'write_bank': must be 'true' or 'false'");
     }
 
+    // Whether to output source distribution
+    else if(strcmp(s, "write_source") == 0){
+      s = strtok(NULL, "=\n");
+      if(strcasecmp(s, "true") == 0)
+        params->write_source = TRUE;
+      else if(strcasecmp(s, "false") == 0)
+        params->write_source = FALSE;
+      else
+        print_error("Invalid option for parameter 'write_source': must be 'true' or 'false'");
+    }
+
     // Path to write tallies to
     else if(strcmp(s, "tally_file") == 0){
       s = strtok(NULL, "=\n");
@@ -197,6 +208,13 @@ void parse_params(char *filename, Parameters *params)
       s = strtok(NULL, "=\n");
       params->bank_file = malloc(strlen(s)*sizeof(char)+1);
       strcpy(params->bank_file, s);
+    }
+
+    // Path to write source distribution to
+    else if(strcmp(s, "source_file") == 0){
+      s = strtok(NULL, "=\n");
+      params->source_file = malloc(strlen(s)*sizeof(char)+1);
+      strcpy(params->source_file, s);
     }
 
     // Unknown config file option
@@ -406,6 +424,19 @@ void read_CLI(int argc, char *argv[], Parameters *params)
       else print_error("Error reading command line input '-write_bank'");
     }
 
+    // Whether to output source distribution (-write_source)
+    else if(strcmp(arg, "-write_source") == 0){
+      if(++i < argc){
+        if(strcasecmp(argv[i], "true") == 0)
+          params->write_source = TRUE;
+        else if(strcasecmp(argv[i], "false") == 0)
+          params->write_source = FALSE;
+        else
+          print_error("Invalid option for parameter 'write_source': must be 'true' or 'false'");
+      }
+      else print_error("Error reading command line input '-write_source'");
+    }
+
     // Path to write tallies to (-tally_file)
     else if(strcmp(arg, "-tally_file") == 0){
       if(++i < argc){
@@ -446,6 +477,16 @@ void read_CLI(int argc, char *argv[], Parameters *params)
       else print_error("Error reading command line input '-bank_file'");
     }
 
+    // Path to write source distribution to (-source_file)
+    else if(strcmp(arg, "-source_file") == 0){
+      if(++i < argc){
+        if(params->source_file != NULL) free(params->source_file);
+        params->source_file = malloc(strlen(argv[i])*sizeof(char)+1);
+        strcpy(params->source_file, argv[i]);
+      }
+      else print_error("Error reading command line input '-source_file'");
+    }
+
     // Unknown command line option
     else print_error("Error reading command line input");
   }
@@ -459,6 +500,8 @@ void read_CLI(int argc, char *argv[], Parameters *params)
     params->keff_file = "keff.dat";
   if(params->write_bank == TRUE && params->bank_file == NULL)
     params->bank_file = "bank.dat";
+  if(params->write_source == TRUE && params->source_file == NULL)
+    params->source_file = "source.dat";
   if(params->n_batches < 1 && params->n_generations < 1)
     print_error("Must have at least one batch or one generation");
   if(params->n_batches < 0)
@@ -593,6 +636,57 @@ void write_bank(Bank *b, FILE *fp, char *filename)
   fprintf(fp, "\n");
 
   fclose(fp);
+  return;
+}
+
+void write_source(Geometry *g, Bank *b, Parameters *params, FILE *fp, char *filename)
+{
+  int i, j;
+  double dx, dy;
+  unsigned long ix, iy;
+  unsigned long l;
+  unsigned long n;
+  double *dist;
+  Particle *p;
+
+  // Number of grid boxes in each dimension
+  n = params->n_bins;
+
+  // Find grid spacing
+  dx = g->x/n;
+  dy = g->y/n;
+
+  // Allocate array to keep track of number of sites in each grid box
+  dist = calloc(n*n, sizeof(double));
+
+  for(l=0; l<b->n; l++){
+    p = &(b->p[l]);
+
+    // Find the indices of the grid box of the particle
+    ix = p->x/dx;
+    iy = p->y/dy;
+
+    dist[ix + n*iy]++;
+  }
+
+  // Normalize by number of particles
+  for(l=0; l<n*n; l++){
+    dist[l] /= b->n;
+  }
+
+  fp = fopen(filename, "a");
+
+  for(i=0; i<n; i++){
+    for(j=0; j<n; j++){
+      fprintf(fp, "%e ", dist[i + n*j]);
+    }
+    fprintf(fp, "\n");
+  }
+
+  fclose(fp);
+
+  free(dist);
+
   return;
 }
 
