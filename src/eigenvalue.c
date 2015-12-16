@@ -167,6 +167,11 @@ void converge_source(Parameters *params, Bank *source_bank, Bank *fission_bank, 
         fclose(fp);
         write_entropy(H, fp, params->entropy_file);
       }
+
+      // Write the source distribution
+      if(params->write_source == TRUE){
+        write_source(g, source_bank, params, fp, params->source_file);
+      }
     }
 
     // Calculate k_effective
@@ -234,6 +239,11 @@ void run_eigenvalue(Parameters *params, Bank *source_bank, Bank *fission_bank, G
         fprintf(fp, "%lu\n", *n_histories);
         fclose(fp);
         write_entropy(H, fp, params->entropy_file);
+      }
+
+      // Write the source distribution
+      if(params->write_source == TRUE){
+        write_source(g, source_bank, params, fp, params->source_file);
       }
     }
 

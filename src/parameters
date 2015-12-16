@@ -73,6 +73,9 @@ write_keff=false
 # write_bank: whether to output particle bank
 write_bank=false
 
+# write_source: whether to output source distribution
+write_source=false
+
 # tally_file: path to tally output
 tally_file=tally.dat
 
@@ -84,6 +87,9 @@ keff_file=keff.dat
 
 # bank_file: path to particle bank output
 bank_file=bank.dat
+
+# source_file: path to source distribution output
+source_file=source.dat
 
 # convergence method (default or accel)
 cnvg_method=default
