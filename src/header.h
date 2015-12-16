@@ -168,6 +168,7 @@ void run_eigenvalue(Parameters *params, Bank *source_bank, Bank *fission_bank, G
 void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g);
 double shannon_entropy(Geometry *g, Bank *b, Parameters *params);
 void calculate_keff(double *keff, double *mean, double *std, int n);
+void source_distribution(Geometry *g, Bank *b, Parameters *params);
 
 // tally.c function prototypes
 void score_tally(Tally *t, Particle *p, Material *m, Parameters *params);
