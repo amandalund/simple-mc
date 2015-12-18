@@ -28,12 +28,14 @@ Parameters *set_default_params(void)
   params->write_keff = FALSE;
   params->write_bank = FALSE;
   params->write_source = FALSE;
+  params->write_histories = FALSE;
   params->tally_file = NULL;
   params->entropy_file = NULL;
   params->keff_file = NULL;
   params->bank_file = NULL;
   params->source_file = NULL;
-  params->cnvg_method = 0;
+  params->histories_file = NULL;
+  params->cnvg_method = 1;
   params->cnvg_n_stages = 0;
   params->cnvg_n_particles = NULL;
   params->cnvg_n_generations = NULL;
@@ -70,6 +72,12 @@ void init_output(Parameters *params, FILE *fp)
   // Set up file to output source distribution
   if(params->write_source == TRUE){
     fp = fopen(params->source_file, "w");
+    fclose(fp);
+  }
+
+  // Set up file to output histories
+  if(params->write_histories == TRUE){
+    fp = fopen(params->histories_file, "w");
     fclose(fp);
   }
 

@@ -95,13 +95,24 @@ void ramp_up(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry
       // Calculate shannon entropy to assess source convergence
       H = shannon_entropy(g, source_bank, params);
       if(params->write_entropy == TRUE){
-        fp = fopen("histories.dat", "a");
+        write_entropy(H, fp, params->entropy_file);
+      }
+
+      // Write the histories
+      if(params->write_histories == TRUE){
+        fp = fopen(params->histories_file, "a");
         fprintf(fp, "%lu\n", *n_histories);
         fclose(fp);
-        write_entropy(H, fp, params->entropy_file);
+      }
+
+      // Write the source distribution
+      if(params->write_source == TRUE){
+        write_source(g, source_bank, params, fp, params->source_file);
       }
     }
   }
+
+  printf("Converged after %lu histories.\n", *n_histories);
 
   return;
 }
@@ -162,10 +173,14 @@ void converge_source(Parameters *params, Bank *source_bank, Bank *fission_bank, 
       // Calculate shannon entropy to assess source convergence
       H = shannon_entropy(g, source_bank, params);
       if(params->write_entropy == TRUE){
-        fp = fopen("histories.dat", "a");
+        write_entropy(H, fp, params->entropy_file);
+      }
+
+      // Write the histories
+      if(params->write_histories == TRUE){
+        fp = fopen(params->histories_file, "a");
         fprintf(fp, "%lu\n", *n_histories);
         fclose(fp);
-        write_entropy(H, fp, params->entropy_file);
       }
 
       // Write the source distribution
@@ -235,10 +250,14 @@ void run_eigenvalue(Parameters *params, Bank *source_bank, Bank *fission_bank, G
       // Calculate shannon entropy to assess source convergence
       H = shannon_entropy(g, source_bank, params);
       if(params->write_entropy == TRUE){
-        fp = fopen("histories.dat", "a");
+        write_entropy(H, fp, params->entropy_file);
+      }
+
+      // Write the histories
+      if(params->write_histories == TRUE){
+        fp = fopen(params->histories_file, "a");
         fprintf(fp, "%lu\n", *n_histories);
         fclose(fp);
-        write_entropy(H, fp, params->entropy_file);
       }
 
       // Write the source distribution

@@ -61,11 +61,13 @@ typedef struct Parameters_{
   int write_keff;            // whether to output keff
   int write_bank;            // whether to output particle bank
   int write_source;          // whether to output source distribution
+  int write_histories;       // whether to output number of histories at each cycle
   char *tally_file;          // path to write tallies to
   char *entropy_file;        // path to write shannon entropy to
   char *keff_file;           // path to write keff to
   char *bank_file;           // path to write particle bank to
   char *source_file;         // path to write source distribution to
+  char *histories_file;      // path to write histories to
   int cnvg_method;
   int cnvg_n_stages;
   int *cnvg_n_particles;

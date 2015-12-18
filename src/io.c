@@ -192,6 +192,17 @@ void parse_params(char *filename, Parameters *params)
         print_error("Invalid option for parameter 'write_source': must be 'true' or 'false'");
     }
 
+    // Whether to output histories
+    else if(strcmp(s, "write_histories") == 0){
+      s = strtok(NULL, "=\n");
+      if(strcasecmp(s, "true") == 0)
+        params->write_histories = TRUE;
+      else if(strcasecmp(s, "false") == 0)
+        params->write_histories = FALSE;
+      else
+        print_error("Invalid option for parameter 'write_histories': must be 'true' or 'false'");
+    }
+
     // Path to write tallies to
     else if(strcmp(s, "tally_file") == 0){
       s = strtok(NULL, "=\n");
@@ -225,6 +236,13 @@ void parse_params(char *filename, Parameters *params)
       s = strtok(NULL, "=\n");
       params->source_file = malloc(strlen(s)*sizeof(char)+1);
       strcpy(params->source_file, s);
+    }
+
+    // Path to write histories to
+    else if(strcmp(s, "histories_file") == 0){
+      s = strtok(NULL, "=\n");
+      params->histories_file = malloc(strlen(s)*sizeof(char)+1);
+      strcpy(params->histories_file, s);
     }
 
     // Convergence method
@@ -470,6 +488,19 @@ void read_CLI(int argc, char *argv[], Parameters *params)
       else print_error("Error reading command line input '-write_source'");
     }
 
+    // Whether to output histories (-write_histories)
+    else if(strcmp(arg, "-write_histories") == 0){
+      if(++i < argc){
+        if(strcasecmp(argv[i], "true") == 0)
+          params->write_histories = TRUE;
+        else if(strcasecmp(argv[i], "false") == 0)
+          params->write_histories = FALSE;
+        else
+          print_error("Invalid option for parameter 'write_histories': must be 'true' or 'false'");
+      }
+      else print_error("Error reading command line input '-write_source'");
+    }
+
     // Path to write tallies to (-tally_file)
     else if(strcmp(arg, "-tally_file") == 0){
       if(++i < argc){
@@ -520,6 +551,16 @@ void read_CLI(int argc, char *argv[], Parameters *params)
       else print_error("Error reading command line input '-source_file'");
     }
 
+    // Path to write histories to (-histories_file)
+    else if(strcmp(arg, "-histories_file") == 0){
+      if(++i < argc){
+        if(params->histories_file != NULL) free(params->histories_file);
+        params->histories_file = malloc(strlen(argv[i])*sizeof(char)+1);
+        strcpy(params->histories_file, argv[i]);
+      }
+      else print_error("Error reading command line input '-histories_file'");
+    }
+
     // Convergence method
     else if(strcmp(arg, "-cnvg_method") == 0){
       if(++i < argc){
@@ -558,6 +599,8 @@ void read_CLI(int argc, char *argv[], Parameters *params)
     params->bank_file = "bank.dat";
   if(params->write_source == TRUE && params->source_file == NULL)
     params->source_file = "source.dat";
+  if(params->write_histories == TRUE && params->histories_file == NULL)
+    params->histories_file = "histories.dat";
   if(params->n_batches < 1 && params->n_generations < 1)
     print_error("Must have at least one batch or one generation");
   if(params->n_batches < 0)
@@ -600,6 +643,10 @@ void print_params(Parameters *params)
   printf("Boundary conditions:            %s\n", bc);
   printf("Number of nuclides in material: %d\n", params->n_nuclides);
   printf("RNG seed:                       %d\n", params->seed);
+  if(params->cnvg_method == 1)
+    printf("Convergence method:             Accelerated\n");
+  else
+    printf("Convergence method:             Default\n");
   border_print();
 }
 

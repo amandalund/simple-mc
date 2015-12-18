@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
   parse_params("parameters", params);
   read_CLI(argc, argv, params);
   print_params(params);
+  if(params->cnvg_method == 1){};
 
   // Set up output files
   init_output(params, fp);
