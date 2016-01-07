@@ -186,7 +186,6 @@ void collision(Particle *p, Material *m, Bank *fission_bank, double keff, double
   int i = 0;
   double prob = 0.0;
   double cutoff;
-  Particle *p_new;
   Nuclide nuc;
 
   // Cutoff for sampling nuclide
@@ -219,18 +218,7 @@ void collision(Particle *p, Material *m, Bank *fission_bank, double keff, double
       if(fission_bank->n >= fission_bank->sz){
         fission_bank->resize(fission_bank);
       }
-      p_new = &(fission_bank->p[fission_bank->n]);
-      p_new->alive = TRUE;
-      p_new->energy = 1;
-      p_new->last_energy = 0;
-      p_new->mu = rn()*2 - 1;
-      p_new->phi = rn()*2*PI;
-      p_new->u = p_new->mu;
-      p_new->v = sqrt(1 - p_new->mu*p_new->mu)*cos(p_new->phi);
-      p_new->w = sqrt(1 - p_new->mu*p_new->mu)*sin(p_new->phi);
-      p_new->x = p->x;
-      p_new->y = p->y;
-      p_new->z = p->z;
+      sample_fission_particle(&(fission_bank->p[fission_bank->n]), p);
       fission_bank->n++;
     }
     p->alive = FALSE;

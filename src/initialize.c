@@ -173,6 +173,23 @@ void sample_source_particle(Particle *p, Geometry *g)
   return;
 }
 
+void sample_fission_particle(Particle *p, Particle *p_old)
+{
+  p->alive = TRUE;
+  p->energy = 1;
+  p->last_energy = 0;
+  p->mu = rn()*2 - 1;
+  p->phi = rn()*2*PI;
+  p->u = p->mu;
+  p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
+  p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);
+  p->x = p_old->x;
+  p->y = p_old->y;
+  p->z = p_old->z;
+
+  return;
+}
+
 void resize_particles(Bank *b)
 {
   b->p = realloc(b->p, sizeof(Particle)*2*b->sz);

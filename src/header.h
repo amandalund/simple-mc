@@ -152,6 +152,7 @@ Tally *init_tally(Parameters *params);
 Material *init_material(Parameters *params);
 Bank *init_bank(unsigned long n_particles);
 void sample_source_particle(Particle *p, Geometry *g);
+void sample_fission_particle(Particle *p, Particle *p_old);
 void resize_particles(Bank *b);
 void free_bank(Bank *b);
 void free_material(Material *m);
