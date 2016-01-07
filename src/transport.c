@@ -214,10 +214,10 @@ void collision(Particle *p, Material *m, Bank *fission_bank, double keff, double
 
     // Sample n new particles from the source distribution but at the current
     // particle's location
+    if(fission_bank->n+n >= fission_bank->sz){
+      fission_bank->resize(fission_bank);
+    }
     for(i=0; i<n; i++){
-      if(fission_bank->n >= fission_bank->sz){
-        fission_bank->resize(fission_bank);
-      }
       sample_fission_particle(&(fission_bank->p[fission_bank->n]), p);
       fission_bank->n++;
     }
