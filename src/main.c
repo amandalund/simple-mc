@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
   Tally *t;
   Bank *source_bank;
   Bank *fission_bank;
+  Queue *delay_queue;
 
   // Get inputs
   params = set_default_params();
@@ -43,6 +44,9 @@ int main(int argc, char *argv[])
   // Initialize fission bank
   fission_bank = init_bank(params->n_particles);
 
+  // Initialize delay queue
+  delay_queue = init_queue(params->n_particles*params->lag);
+
   // Sample source particles or load a source
   if(params->load_source == TRUE){
     load_source(source_bank);
@@ -63,10 +67,13 @@ int main(int argc, char *argv[])
   t1 = timer();
 
   // Converge source (inactive batches)
-  converge_source(params, source_bank, fission_bank, g, m, t);
+  converge_source(params, source_bank, fission_bank, g, m, t, delay_queue);
+
+  // Build the delay bank before beginning active batches
+  build_delay_bank(params, source_bank, fission_bank, g, m, t, delay_queue);
 
   // Run eigenvalue problem (active batches)
-  run_eigenvalue(params, source_bank, fission_bank, g, m, t, keff);
+  run_eigenvalue(params, source_bank, fission_bank, g, m, t, keff, delay_queue);
 
   // Stop time
   t2 = timer();
@@ -85,6 +92,7 @@ int main(int argc, char *argv[])
   // Free memory
   free_bank(fission_bank);
   free_bank(source_bank);
+  free_queue(delay_queue);
   free_tally(t);
   free_material(m);
   free(g);

@@ -1,6 +1,6 @@
 #include "header.h"
 
-void converge_source(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t)
+void converge_source(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t, Queue *delay_queue)
 {
   int i_b;            // index over batches
   int i_g;            // index over generations
@@ -27,7 +27,7 @@ void converge_source(Parameters *params, Bank *source_bank, Bank *fission_bank, 
       for(i_p=0; i_p<source_bank->n; i_p++){
 
         // Transport the next particle from source bank
-        transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params);
+        transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params, IGNORE_DB, delay_queue);
       }
 
       // Calculate generation k_effective and accumulate batch k_effective
@@ -60,7 +60,45 @@ void converge_source(Parameters *params, Bank *source_bank, Bank *fission_bank, 
   return;
 }
 
-void run_eigenvalue(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t, double *keff)
+void build_delay_bank(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t, Queue *delay_queue)
+{
+  int i_g;            // index over generations
+  unsigned long i_p;  // index over particles
+  double keff_gen = 1;// keff of generation
+  double H;           // shannon entropy
+  FILE *fp = NULL;    // file pointer for output
+
+  // Loop over generations
+  for(i_g=0; i_g<params->lag; i_g++){
+
+    // Loop over particles
+    for(i_p=0; i_p<source_bank->n; i_p++){
+
+      // Transport the next particle from source bank
+      transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params, BUILD_DB, delay_queue);
+    }
+
+    // Calculate generation k_effective and accumulate batch k_effective
+    keff_gen = (double) fission_bank->n / source_bank->n;
+
+    // Sample new source particles from the particles that were added to the
+    // fission bank during this generation
+    synchronize_bank(source_bank, fission_bank, g);
+
+    // Calculate shannon entropy to assess source convergence
+    H = shannon_entropy(g, source_bank, params);
+    if(params->write_entropy == TRUE){
+      write_entropy(H, fp, params->entropy_file);
+    }
+
+    // Status text
+    printf("Building delay bank...\n");
+  }
+
+  return;
+}
+
+void run_eigenvalue(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t, double *keff, Queue *delay_queue)
 {
   int i_b;            // index over batches
   int i_g;            // index over generations
@@ -94,7 +132,7 @@ void run_eigenvalue(Parameters *params, Bank *source_bank, Bank *fission_bank, G
       for(i_p=0; i_p<source_bank->n; i_p++){
 
         // Transport the next particle from source bank
-        transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params);
+        transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params, USE_DB, delay_queue);
       }
 
       // Calculate generation k_effective and accumulate batch k_effective

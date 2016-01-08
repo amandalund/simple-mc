@@ -5,6 +5,7 @@ Parameters *set_default_params(void)
   Parameters *params = malloc(sizeof(Parameters));
 
   params->n_particles = 10000;
+  params->lag = 10;
   params->n_batches = 20;
   params->n_generations = 1;
   params->n_active = 10;
@@ -156,6 +157,57 @@ Bank *init_bank(unsigned long n_particles)
   return b;
 }
 
+Queue *init_queue(unsigned long n_particles)
+{
+  Queue *q = malloc(sizeof(Queue));
+  q->p = malloc(n_particles*sizeof(Particle));
+  q->sz = n_particles;
+  q->head = 0;
+  q->n = 0;
+  q->resize = resize_queue;
+  q->enqueue = enqueue;
+  q->dequeue = dequeue;
+
+  return q;
+}
+
+void resize_queue(Queue *q)
+{
+  q->p = realloc(q->p, sizeof(Particle)*2*q->sz);
+  if(q->p == NULL){
+    print_error("Could not resize particle queue.");
+  }
+  q->sz = 2*q->sz;
+  memcpy(&(q->p[q->head+q->n]), &(q->p[0]), q->head*sizeof(Particle));
+
+  return;
+}
+
+void enqueue(Queue *q, Particle *p)
+{
+  if(q->sz == q->n+1){
+    q->resize(q);
+  }
+
+  memcpy(&(q->p[q->head+q->n]), p, sizeof(Particle));
+  q->n++;
+
+  return;
+}
+
+void dequeue(Queue *q, Particle *p)
+{
+  if(q->n == 0){
+    print_error("Can't dequeue particle from empty queue.");
+  }
+
+  memcpy(p, &(q->p[q->head]), sizeof(Particle));
+  q->n--;
+  q->head++;
+
+  return;
+}
+
 void sample_source_particle(Particle *p, Geometry *g)
 {
   p->alive = TRUE;
@@ -173,10 +225,37 @@ void sample_source_particle(Particle *p, Geometry *g)
   return;
 }
 
+void sample_fission_particle(Particle *p, Particle *p_old)
+{
+  p->alive = TRUE;
+  p->energy = 1;
+  p->last_energy = 0;
+  p->mu = rn()*2 - 1;
+  p->phi = rn()*2*PI;
+  p->u = p->mu;
+  p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
+  p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);
+  p->x = p_old->x;
+  p->y = p_old->y;
+  p->z = p_old->z;
+
+  return;
+}
+
 void resize_particles(Bank *b)
 {
   b->p = realloc(b->p, sizeof(Particle)*2*b->sz);
   b->sz = 2*b->sz;
+
+  return;
+}
+
+void free_queue(Queue *q)
+{
+  free(q->p);
+  q->p = NULL;
+  free(q);
+  q = NULL;
 
   return;
 }

@@ -1,7 +1,7 @@
 #include "header.h"
 
 // Main logic to move particle
-void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, double keff, Parameters *params)
+void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, double keff, Parameters *params, int delay_tag, Queue *delay_queue)
 {
   while(p->alive){
 
@@ -30,7 +30,7 @@ void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_ba
     }
     // Case where particle has collision
     else{
-      collision(p, m, fission_bank, keff, params->nu);
+      collision(p, m, fission_bank, keff, params->nu, delay_tag, delay_queue);
 
       // Score tallies
       if(t->tallies_on == TRUE){
@@ -180,13 +180,12 @@ void cross_surface(Particle *p, Geometry *g)
   return;
 }
 
-void collision(Particle *p, Material *m, Bank *fission_bank, double keff, double nu)
+void collision(Particle *p, Material *m, Bank *fission_bank, double keff, double nu, int delay_tag, Queue *delay_queue)
 {
   int n;
   int i = 0;
   double prob = 0.0;
   double cutoff;
-  Particle *p_new;
   Nuclide nuc;
 
   // Cutoff for sampling nuclide
@@ -213,25 +212,25 @@ void collision(Particle *p, Material *m, Bank *fission_bank, double keff, double
       n = nu + 1;
     }
 
+    // Check whether we have to resize fission bank
+    if(fission_bank->n+n >= fission_bank->sz){
+      fission_bank->resize(fission_bank);
+    }
+
     // Sample n new particles from the source distribution but at the current
-    // particle's location
+    // particle's location. When building the delay bank, queue one particle to
+    // delay bank and add all to fission bank. When using the delay bank, queue
+    // one particle to delay bank, add remaining particles to fission bank, and
+    // dequeue one particle from delay bank to add to fission bank
     for(i=0; i<n; i++){
-      if(fission_bank->n >= fission_bank->sz){
-        fission_bank->resize(fission_bank);
-      }
-      p_new = &(fission_bank->p[fission_bank->n]);
-      p_new->alive = TRUE;
-      p_new->energy = 1;
-      p_new->last_energy = 0;
-      p_new->mu = rn()*2 - 1;
-      p_new->phi = rn()*2*PI;
-      p_new->u = p_new->mu;
-      p_new->v = sqrt(1 - p_new->mu*p_new->mu)*cos(p_new->phi);
-      p_new->w = sqrt(1 - p_new->mu*p_new->mu)*sin(p_new->phi);
-      p_new->x = p->x;
-      p_new->y = p->y;
-      p_new->z = p->z;
+      sample_fission_particle(&(fission_bank->p[fission_bank->n]), p);
       fission_bank->n++;
+    }
+    if(delay_tag != IGNORE_DB){
+      enqueue(delay_queue, &(fission_bank->p[fission_bank->n-1]));
+    }
+    if(delay_tag == USE_DB){
+      dequeue(delay_queue, &(fission_bank->p[fission_bank->n-1]));
     }
     p->alive = FALSE;
     p->event = FISSION;
