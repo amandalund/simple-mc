@@ -90,9 +90,6 @@ void build_delay_bank(Parameters *params, Bank *source_bank, Bank *fission_bank,
     if(params->write_entropy == TRUE){
       write_entropy(H, fp, params->entropy_file);
     }
-
-    // Status text
-    printf("Building delay bank...\n");
   }
 
   return;

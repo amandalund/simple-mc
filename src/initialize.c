@@ -189,7 +189,7 @@ void enqueue(Queue *q, Particle *p)
     q->resize(q);
   }
 
-  memcpy(&(q->p[q->head+q->n]), p, sizeof(Particle));
+  memcpy(&(q->p[(q->head+q->n) % q->sz]), p, sizeof(Particle));
   q->n++;
 
   return;
@@ -203,7 +203,7 @@ void dequeue(Queue *q, Particle *p)
 
   memcpy(p, &(q->p[q->head]), sizeof(Particle));
   q->n--;
-  q->head++;
+  q->head = (q->head + 1) % q->sz;
 
   return;
 }

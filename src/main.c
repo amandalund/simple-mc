@@ -67,12 +67,15 @@ int main(int argc, char *argv[])
   t1 = timer();
 
   // Converge source (inactive batches)
+  printf("CONVERGING SOURCE...\n");
   converge_source(params, source_bank, fission_bank, g, m, t, delay_queue);
 
   // Build the delay bank before beginning active batches
+  printf("BUILDING DELAY BANK...\n");
   build_delay_bank(params, source_bank, fission_bank, g, m, t, delay_queue);
 
   // Run eigenvalue problem (active batches)
+  printf("BEGINNING ACTIVE CYCLES...\n");
   run_eigenvalue(params, source_bank, fission_bank, g, m, t, keff, delay_queue);
 
   // Stop time
