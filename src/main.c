@@ -13,9 +13,6 @@ int main(int argc, char *argv[])
   Bank *fission_bank;
   unsigned long n_histories = 0;
 
-  fp = fopen("histories.dat", "w");
-  fclose(fp);
-
   // Get inputs
   params = set_default_params();
   parse_params("parameters", params);
