@@ -72,6 +72,9 @@ write_keff=false
 # write_bank: whether to output particle bank
 write_bank=false
 
+# write_histories: whether to output number of histories
+write_histories=false
+
 # tally_file: path to tally output
 tally_file=tally.dat
 
@@ -83,3 +86,6 @@ keff_file=keff.dat
 
 # bank_file: path to particle bank output
 bank_file=bank.dat
+
+# histories_file: path to histories output
+histories_file=histories.dat
