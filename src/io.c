@@ -583,17 +583,15 @@ void center_print(const char *s, int width)
 
 void write_tally(Tally *t, FILE *fp, char *filename)
 {
-  int i, j, k;
+  int i, j;
 
   fp = fopen(filename, "a");
 
   for(i=0; i<t->n; i++){
     for(j=0; j<t->n; j++){
-      for(k=0; k<t->n; k++){
-        fprintf(fp, "%e ", t->flux[i + t->n*j + t->n*t->n*k]);
-      }
-      fprintf(fp, "\n");
+      fprintf(fp, "%e ", t->flux[i + t->n*j]);
     }
+    fprintf(fp, "\n");
   }
 
   fclose(fp);

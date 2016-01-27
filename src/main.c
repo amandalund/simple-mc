@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
       if(params->write_tally == TRUE){
         write_tally(t, fp, params->tally_file);
       }
-      memset(t->flux, 0, t->n*t->n*t->n*sizeof(double));
+      memset(t->flux, 0, t->n*t->n*sizeof(double));
     }
 
     // Calculate keff mean and standard deviation
