@@ -554,7 +554,7 @@ void print_params(Parameters *params)
   printf("Number of generations:          %d\n", params->n_generations);
   printf("Boundary conditions:            %s\n", bc);
   printf("Number of nuclides in material: %d\n", params->n_nuclides);
-  printf("RNG seed:                       %lu\n", params->seed);
+  printf("RNG seed:                       %llu\n", params->seed);
   border_print();
 }
 

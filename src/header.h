@@ -37,7 +37,7 @@
 #define Z1 5
 
 typedef struct Parameters_{
-  unsigned long seed;        // RNG seed
+  unsigned long long seed;        // RNG seed
   unsigned long n_particles; // number of particles
   int n_batches;             // number of batches
   int n_generations;         // number of generations per batch
@@ -140,8 +140,8 @@ void load_source(Bank *b);
 void save_source(Bank *b);
 
 // utils.c funtion prototypes
-double rn(unsigned long *seed);
-int rni(unsigned long *seed, int min, int max);
+double rn(unsigned long long *seed);
+int rni(unsigned long long *seed, int min, int max);
 double timer(void);
 
 // initialize.c function prototypes
