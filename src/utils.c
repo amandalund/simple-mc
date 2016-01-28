@@ -3,8 +3,8 @@
 // Linear congruential random number generator
 double rn(unsigned long *seed)
 {
-  unsigned long a = 16807;
-  unsigned long m = 2147483647;
+  unsigned long a = 19073486328125;
+  unsigned long m = 281474976710656;
 
   *seed = (a*(*seed)) % m;
 
@@ -14,8 +14,8 @@ double rn(unsigned long *seed)
 // Linear congruential random number generator for integer in range [min max)
 int rni(unsigned long *seed, int min, int max)
 {
-  unsigned long a = 16807;
-  unsigned long m = 2147483647;
+  unsigned long a = 19073486328125;
+  unsigned long m = 281474976710656;
 
   *seed = (a*(*seed)) % m;
 
