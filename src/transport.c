@@ -195,7 +195,7 @@ void collision(Particle *p, Material *m, Bank *fission_bank, double keff, Parame
   // Sample which nuclide particle has collision with
   while(prob < cutoff){
     nuc = m->nuclides[i];
-    prob += nuc.atom_density * nuc.xs_t;
+    prob += nuc.atom_density*nuc.xs_t;
     i++;
   }
 
