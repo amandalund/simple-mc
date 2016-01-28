@@ -37,6 +37,7 @@
 #define Z1 5
 
 typedef struct Parameters_{
+  unsigned long seed;        // RNG seed
   unsigned long n_particles; // number of particles
   int n_batches;             // number of batches
   int n_generations;         // number of generations per batch
@@ -45,7 +46,6 @@ typedef struct Parameters_{
   int n_nuclides;            // number of nuclides in material
   int tally;                 // whether to tally
   int n_bins;                // number of bins in each dimension of mesh
-  int seed;                  // RNG seed
   double nu;                 // average number of fission neutrons produced
   double xs_a;               // absorption macro xs
   double xs_s;               // scattering macro xs
@@ -140,8 +140,8 @@ void load_source(Bank *b);
 void save_source(Bank *b);
 
 // utils.c funtion prototypes
-//double rn(unsigned long *seed);
-double rn(void);
+double rn(unsigned long *seed);
+int rni(unsigned long *seed, int min, int max);
 double timer(void);
 
 // initialize.c function prototypes
@@ -151,7 +151,7 @@ Geometry *init_geometry(Parameters *params);
 Tally *init_tally(Parameters *params);
 Material *init_material(Parameters *params);
 Bank *init_bank(unsigned long n_particles);
-void sample_source_particle(Particle *p, Geometry *g);
+void sample_source_particle(Particle *p, Geometry *g, Parameters *params);
 void resize_particles(Bank *b);
 void free_bank(Bank *b);
 void free_material(Material *m);
@@ -161,12 +161,12 @@ void free_tally(Tally *t);
 void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, double keff, Parameters *params);
 void calculate_xs(Particle *p, Material *m);
 double distance_to_boundary(Particle *p, Geometry *g);
-double distance_to_collision(Material *m);
+double distance_to_collision(Material *m, Parameters *params);
 void cross_surface(Particle *p, Geometry *g);
-void collision(Particle *p, Material *m, Bank *fission_bank, double keff, double nu);
+void collision(Particle *p, Material *m, Bank *fission_bank, double keff, Parameters *params);
 
 // eigenvalue.c function prototypes
-void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g);
+void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g, Parameters *params);
 double shannon_entropy(Geometry *g, Bank *b, Parameters *params);
 void calculate_keff(double *keff, double *mean, double *std, int n);
 

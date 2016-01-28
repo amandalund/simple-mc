@@ -59,7 +59,7 @@ void parse_params(char *filename, Parameters *params)
 
     // RNG seed
     else if(strcmp(s, "seed") == 0){
-      params->seed = atoi(strtok(NULL, "=\n"));
+      params->seed = atol(strtok(NULL, "=\n"));
     }
 
     // Average number of fission neutrons produced
@@ -311,7 +311,7 @@ void read_CLI(int argc, char *argv[], Parameters *params)
 
     // RNG seed (-seed)
     else if(strcmp(arg, "-seed") == 0){
-      if(++i < argc) params->seed = atoi(argv[i]);
+      if(++i < argc) params->seed = atol(argv[i]);
       else print_error("Error reading command line input '-seed'");
     }
 
@@ -554,7 +554,7 @@ void print_params(Parameters *params)
   printf("Number of generations:          %d\n", params->n_generations);
   printf("Boundary conditions:            %s\n", bc);
   printf("Number of nuclides in material: %d\n", params->n_nuclides);
-  printf("RNG seed:                       %d\n", params->seed);
+  printf("RNG seed:                       %lu\n", params->seed);
   border_print();
 }
 
