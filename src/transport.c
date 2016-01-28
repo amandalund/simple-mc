@@ -14,7 +14,7 @@ void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_ba
     double d_b = distance_to_boundary(p, g);
 
     // Find distance to collision
-    double d_c = distance_to_collision(m);
+    double d_c = distance_to_collision(m, params);
 
     // Take smaller of two distances
     double d = d_b < d_c ? d_b : d_c;
@@ -30,7 +30,7 @@ void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_ba
     }
     // Case where particle has collision
     else{
-      collision(p, m, fission_bank, keff, params->nu);
+      collision(p, m, fission_bank, keff, params);
 
       // Score tallies
       if(t->tallies_on == TRUE){
@@ -105,7 +105,7 @@ double distance_to_boundary(Particle *p, Geometry *g)
 }
 
 // Returns the distance to the next collision for a particle
-double distance_to_collision(Material *m)
+double distance_to_collision(Material *m, Parameters *params)
 {
   double d;
 
@@ -113,7 +113,7 @@ double distance_to_collision(Material *m)
     d = D_INF;
   }
   else{
-    d = -log(rn())/m->xs_t;
+    d = -log(rn(&(params->seed)))/m->xs_t;
   }
 
   return d;
@@ -180,16 +180,17 @@ void cross_surface(Particle *p, Geometry *g)
   return;
 }
 
-void collision(Particle *p, Material *m, Bank *fission_bank, double keff, double nu)
+void collision(Particle *p, Material *m, Bank *fission_bank, double keff, Parameters *params)
 {
   int n;
   int i = 0;
   double prob = 0.0;
   double cutoff;
+  double nu = params->nu;
   Nuclide nuc;
 
   // Cutoff for sampling nuclide
-  cutoff = rn()*m->xs_t;
+  cutoff = rn(&(params->seed))*m->xs_t;
 
   // Sample which nuclide particle has collision with
   while(prob < cutoff){
@@ -199,13 +200,13 @@ void collision(Particle *p, Material *m, Bank *fission_bank, double keff, double
   }
 
   // Cutoff for sampling reaction
-  cutoff = rn()*nuc.xs_t;
+  cutoff = rn(&(params->seed))*nuc.xs_t;
 
   // Sample fission
   if(nuc.xs_f > cutoff){
 
     // Sample number of fission neutrons produced
-    if(rn() > nu - (int)nu){
+    if(rn(&(params->seed)) > nu - (int)nu){
       n = nu;
     }
     else{
@@ -218,7 +219,7 @@ void collision(Particle *p, Material *m, Bank *fission_bank, double keff, double
       fission_bank->resize(fission_bank);
     }
     for(i=0; i<n; i++){
-      sample_fission_particle(&(fission_bank->p[fission_bank->n]), p);
+      sample_fission_particle(&(fission_bank->p[fission_bank->n]), p, params);
       fission_bank->n++;
     }
     p->alive = FALSE;
@@ -233,8 +234,8 @@ void collision(Particle *p, Material *m, Bank *fission_bank, double keff, double
 
   // Sample scattering
   else{
-    p->mu = rn()*2 - 1;
-    p->phi = rn()*2*PI;
+    p->mu = rn(&(params->seed))*2 - 1;
+    p->phi = rn(&(params->seed))*2*PI;
     p->u = p->mu;
     p->v = sqrt(1 - p->mu*p->mu) * cos(p->phi);
     p->w = sqrt(1 - p->mu*p->mu) * sin(p->phi);
