@@ -30,9 +30,6 @@ int main(int argc, char *argv[])
   // Set up output files
   init_output(params, fp);
 
-  // Seed RNG
-  srand(params->seed);
-
   // Set up array for keff
   keff = calloc(params->n_active, sizeof(double));
 
@@ -58,7 +55,7 @@ int main(int argc, char *argv[])
   }
   else{
     for(i_p=0; i_p<params->n_particles; i_p++){
-      sample_source_particle(&(source_bank->p[i_p]), g);
+      sample_source_particle(&(source_bank->p[i_p]), g, params);
       source_bank->n++;
     }
   }
