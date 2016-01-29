@@ -1,24 +1,25 @@
 #include "header.h"
-/*
-// Park & Miller Multiplicative Conguential Algorithm
-// From "Numerical Recipes" Second Edition
-double rn(unsigned long * seed)
-{
-	double ret;
-	unsigned long n1;
-	unsigned long a = 16807;
-	unsigned long m = 2147483647;
-	n1 = ( a * (*seed) ) % m;
-	*seed = n1;
-	ret = (double) n1 / m;
-	return ret;
-}
-*/
 
-// Random number in range [0, 1)
-double rn(void)
+// Linear congruential random number generator
+double rn(unsigned long long *seed)
 {
-  return (double)rand()/((double)(RAND_MAX));
+  unsigned long long a = 19073486328125;
+  unsigned long long m = 281474976710656;
+
+  *seed = (a*(*seed)) % m;
+
+  return (double) *seed/m;
+}
+
+// Linear congruential random number generator for integer in range [min max)
+int rni(unsigned long long *seed, int min, int max)
+{
+  unsigned long long a = 19073486328125;
+  unsigned long long m = 281474976710656;
+
+  *seed = (a*(*seed)) % m;
+
+  return min + (int) (max*(*seed)/(m + min));
 }
 
 double timer(void)

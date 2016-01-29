@@ -36,7 +36,7 @@ void converge_source(Parameters *params, Bank *source_bank, Bank *fission_bank, 
 
       // Sample new source particles from the particles that were added to the
       // fission bank during this generation
-      synchronize_bank(source_bank, fission_bank, g);
+      synchronize_bank(source_bank, fission_bank, g, params);
 
       // Calculate shannon entropy to assess source convergence
       H = shannon_entropy(g, source_bank, params);
@@ -83,7 +83,7 @@ void build_delay_bank(Parameters *params, Bank *source_bank, Bank *fission_bank,
 
     // Sample new source particles from the particles that were added to the
     // fission bank during this generation
-    synchronize_bank(source_bank, fission_bank, g);
+    synchronize_bank(source_bank, fission_bank, g, params);
 
     // Calculate shannon entropy to assess source convergence
     H = shannon_entropy(g, source_bank, params);
@@ -138,7 +138,7 @@ void run_eigenvalue(Parameters *params, Bank *source_bank, Bank *fission_bank, G
 
       // Sample new source particles from the particles that were added to the
       // fission bank during this generation
-      synchronize_bank(source_bank, fission_bank, g);
+      synchronize_bank(source_bank, fission_bank, g, params);
 
       // Calculate shannon entropy to assess source convergence
       H = shannon_entropy(g, source_bank, params);
@@ -174,7 +174,7 @@ void run_eigenvalue(Parameters *params, Bank *source_bank, Bank *fission_bank, G
   return;
 }
 
-void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g)
+void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g, Parameters *params)
 {
   unsigned long i, j;
   unsigned long n_s = source_bank->n;
@@ -191,7 +191,7 @@ void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g)
     // iteration each particle in fission bank will have equal probability of
     // being selected for source bank
     for(i=n_s; i<n_f; i++){
-      j = rand() % (i+1);
+      j = rni(&(params->seed), 0, i+1);
       if(j<n_s){
         memcpy(&(source_bank->p[j]), &(fission_bank->p[i]), sizeof(Particle));
       }
@@ -200,12 +200,13 @@ void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g)
 
   // If the fission bank is smaller than the source bank, use all fission bank
   // sites for the source bank and randomly sample remaining particles from
-  // source distribution
+  // fission bank
   else{
 
-    // First sample particles from source distribution
+    // First randomly sample particles from fission bank
     for(i=0; i<(n_s-n_f); i++){
-      sample_source_particle(&(source_bank->p[i]), g);
+      j = rni(&(params->seed), 0, n_f);
+      memcpy(&(source_bank->p[i]), &(fission_bank->p[j]), sizeof(Particle));
     }
 
     // Fill remaining source bank sites with fission bank

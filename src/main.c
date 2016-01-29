@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
   }
   else{
     for(i_p=0; i_p<params->n_particles; i_p++){
-      sample_source_particle(&(source_bank->p[i_p]), g);
+      sample_source_particle(&(source_bank->p[i_p]), g, params);
       source_bank->n++;
     }
   }

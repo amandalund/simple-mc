@@ -1,6 +1,8 @@
 # User options
 
 COMPILER = gnu
+OPTIMIZE = yes
+DEBUG    = no
 
 # Program and source code
 
@@ -21,11 +23,21 @@ OBJECTS = $(SOURCE:.c=.o)
 
 # Set flags
 
-CFLAGS = -Wall -g
+CFLAGS = -Wall
 LDFLAGS = -lm
+
+ifeq ($(DEBUG),yes)
+  CFLAGS += -g
+  LDFLAGS  += -g
+endif
+
+ifeq ($(OPTIMIZE),yes)
+  CFLAGS += -O3
+endif
 
 ifeq ($(COMPILER),gnu)
   CC = gcc
+#  CFLAGS += -fopenmp
 endif
 
 # Targets to build

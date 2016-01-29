@@ -42,6 +42,7 @@
 #define USE_DB 2             // dequeue and queue particles when fission occurs
 
 typedef struct Parameters_{
+  unsigned long long seed;                  // RNG seed
   unsigned long n_particles; // number of particles
   int lag;                   // lag for delay bank
   int n_batches;             // number of batches
@@ -51,7 +52,6 @@ typedef struct Parameters_{
   int n_nuclides;            // number of nuclides in material
   int tally;                 // whether to tally
   int n_bins;                // number of bins in each dimension of mesh
-  int seed;                  // RNG seed
   double nu;                 // average number of fission neutrons produced
   double xs_a;               // absorption macro xs
   double xs_s;               // scattering macro xs
@@ -157,7 +157,8 @@ void save_source(Bank *b);
 
 // utils.c funtion prototypes
 //double rn(unsigned long *seed);
-double rn(void);
+double rn(unsigned long long *seed);
+int rni(unsigned long long *seed, int min, int max);
 double timer(void);
 
 // initialize.c function prototypes
@@ -168,8 +169,8 @@ Tally *init_tally(Parameters *params);
 Material *init_material(Parameters *params);
 Bank *init_bank(unsigned long n_particles);
 Queue *init_queue(unsigned long n_particles);
-void sample_source_particle(Particle *p, Geometry *g);
-void sample_fission_particle(Particle *p, Particle *p_old);
+void sample_source_particle(Particle *p, Geometry *g, Parameters *params);
+void sample_fission_particle(Particle *p, Particle *p_old, Parameters *params);
 void resize_particles(Bank *b);
 void resize_queue(Queue *q);
 void enqueue(Queue *q, Particle *p);
@@ -183,15 +184,15 @@ void free_tally(Tally *t);
 void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, double keff, Parameters *params, int delay_tag, Queue *delay_queue);
 void calculate_xs(Particle *p, Material *m);
 double distance_to_boundary(Particle *p, Geometry *g);
-double distance_to_collision(Material *m);
+double distance_to_collision(Material *m, Parameters *params);
 void cross_surface(Particle *p, Geometry *g);
-void collision(Particle *p, Material *m, Bank *fission_bank, double keff, double nu, int delay_tag, Queue *delay_queue);
+void collision(Particle *p, Material *m, Bank *fission_bank, double keff, Parameters *params, int delay_tag, Queue *delay_queue);
 
 // eigenvalue.c function prototypes
 void converge_source(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t, Queue *delay_queue);
 void build_delay_bank(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t, Queue *delay_queue);
 void run_eigenvalue(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t, double *keff, Queue *delay_queue);
-void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g);
+void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g, Parameters *params);
 double shannon_entropy(Geometry *g, Bank *b, Parameters *params);
 void calculate_keff(double *keff, double *mean, double *std, int n);
 
