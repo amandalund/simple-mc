@@ -36,13 +36,26 @@
 #define Z0 4
 #define Z1 5
 
-// Tags for delay bank
 #define IGNORE_DB 0          // ignore delay bank
 #define BUILD_DB 1           // build up the delay bank
 #define USE_DB 2             // dequeue and queue particles when fission occurs
 
+typedef struct RNG_Parameters_{
+  unsigned long long mult;   // multiplier g
+  unsigned long long mod;    // modulus, 2^M
+  unsigned long long inc;    // increment c
+  unsigned long long stride; // stride
+  unsigned long long mask;   // mask, 2^M - 1
+  unsigned long long period; // period, 2^M for c!=0, else 2^(M-2)
+} RNG_Parameters;
+
+// LCG parameters from 'The MCNP5 Random Number Generator', Forrest Brown,
+// LA-UR-07K-7961. Additional multiplier values: 2806196910506780709ULL,
+// 3249286849523012805ULL
+static const RNG_Parameters RNG = {9219741426499971445ULL, 9223372036854775808ULL, 1ULL, 152917, 9223372036854775807ULL, 9223372036854775808ULL};
+
 typedef struct Parameters_{
-  unsigned long long seed;                  // RNG seed
+  unsigned long long seed;   // RNG seed
   unsigned long n_particles; // number of particles
   int lag;                   // lag for delay bank
   int n_batches;             // number of batches

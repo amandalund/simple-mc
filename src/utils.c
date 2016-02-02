@@ -1,25 +1,48 @@
 #include "header.h"
 
-// Linear congruential random number generator
+// Linear congruential random number generator: seed = (mult*seed + inc) % mod
 double rn(unsigned long long *seed)
 {
-  unsigned long long a = 19073486328125;
-  unsigned long long m = 281474976710656;
+  *seed = (RNG.mult*(*seed) + RNG.inc) & RNG.mask;
 
-  *seed = (a*(*seed)) % m;
-
-  return (double) *seed/m;
+  return (double) *seed/RNG.mod;
 }
 
-// Linear congruential random number generator for integer in range [min max)
-int rni(unsigned long long *seed, int min, int max)
+// Linear congruential random number generator for integer in range [a b)
+int rni(unsigned long long *seed, int a, int b)
 {
-  unsigned long long a = 19073486328125;
-  unsigned long long m = 281474976710656;
+  *seed = (RNG.mult*(*seed) + RNG.inc) & RNG.mask;
 
-  *seed = (a*(*seed)) % m;
+  return a + (int) (b*(*seed)/(RNG.mod + a));
+}
 
-  return min + (int) (max*(*seed)/(m + min));
+// Algorithm to skip ahead n random numbers in O(log2(n)) operation, from 'The
+// MCNP5 Random Number Generator', Forrest Brown, LA-UR-07K-7961.
+unsigned long long rn_skip(unsigned long long seed, long long n)
+{
+  unsigned long long g = RNG.mult;
+  unsigned long long c = RNG.inc;
+  unsigned long long g_new = 1;
+  unsigned long long c_new = 0;
+
+  // Add period until greater than 0
+  while(n < 0) n += RNG.period;
+
+  // n % mod
+  n = n & RNG.mask;
+
+  // Get mult = mult^n in log2(n) operations
+  while(n > 0){
+    if(n & 1){
+      g_new = g_new*g & RNG.mask;
+      c_new = (c_new*g + c) & RNG.mask;
+    }
+    c = (c*g + c) & RNG.mask;
+    g = g*g & RNG.mask;
+    n >>= 1;
+  }
+
+  return (g_new*seed + c_new) & RNG.mask;
 }
 
 double timer(void)
