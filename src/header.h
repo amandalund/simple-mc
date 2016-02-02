@@ -156,6 +156,7 @@ void save_source(Bank *b);
 // utils.c funtion prototypes
 double rn(unsigned long long *seed);
 int rni(unsigned long long *seed, int min, int max);
+unsigned long long rn_skip(unsigned long long seed, long long n);
 double timer(void);
 
 // initialize.c function prototypes
