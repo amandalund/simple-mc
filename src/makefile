@@ -37,7 +37,7 @@ endif
 
 ifeq ($(COMPILER),gnu)
   CC = gcc
-#  CFLAGS += -fopenmp
+  CFLAGS += -fopenmp
 endif
 
 # Targets to build

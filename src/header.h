@@ -9,6 +9,7 @@
 #include<float.h>
 #include<unistd.h>
 #include<string.h>
+#include<omp.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -53,6 +54,7 @@ static const RNG_Parameters RNG = {9219741426499971445ULL, 9223372036854775808UL
 typedef struct Parameters_{
   unsigned long long seed;   // RNG seed
   unsigned long n_particles; // number of particles
+  int n_threads;             // number of openmp threads
   int n_batches;             // number of batches
   int n_generations;         // number of generations per batch
   int n_active;              // number of active batches

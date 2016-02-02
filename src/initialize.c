@@ -6,6 +6,7 @@ Parameters *set_default_params(void)
 
   params->n_particles = 10000;
   params->n_batches = 20;
+  params->n_threads = omp_get_num_procs();
   params->n_generations = 1;
   params->n_active = 10;
   params->bc = REFLECT;

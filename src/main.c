@@ -32,6 +32,9 @@ int main(int argc, char *argv[])
   // Set RNG seed
   seed = params->seed;
 
+  // Set number of openmp threads
+  omp_set_num_threads(params->n_threads);
+
   // Set up output files
   init_output(params, fp);
 
@@ -70,7 +73,7 @@ int main(int argc, char *argv[])
   printf("%-15s %-15s %-15s %-15s\n", "BATCH", "ENTROPY", "KEFF", "MEAN KEFF");
 
   // Start time
-  t1 = timer();
+  t1 = omp_get_wtime();
 
   // Loop over batches
   for(i_b=0; i_b<params->n_batches; i_b++){
@@ -166,7 +169,7 @@ int main(int argc, char *argv[])
   }
 
   // Stop time
-  t2 = timer();
+  t2 = omp_get_wtime();;
 
   printf("Simulation time: %f secs\n", t2-t1);
 
