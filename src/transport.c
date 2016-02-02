@@ -187,7 +187,7 @@ void collision(Particle *p, Material *m, Bank *fission_bank, double keff, Parame
   double prob = 0.0;
   double cutoff;
   double nu = params->nu;
-  Nuclide nuc;
+  Nuclide nuc = {0, 0, 0, 0, 0};
 
   // Cutoff for sampling nuclide
   cutoff = rn(&(params->seed))*m->xs_t;
