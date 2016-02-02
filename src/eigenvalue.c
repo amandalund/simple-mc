@@ -1,6 +1,6 @@
 #include "header.h"
 
-void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g, Parameters *params)
+void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g, unsigned long long *seed)
 {
   unsigned long i, j;
   unsigned long n_s = source_bank->n;
@@ -17,7 +17,7 @@ void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g, Parame
     // iteration each particle in fission bank will have equal probability of
     // being selected for source bank
     for(i=n_s; i<n_f; i++){
-      j = rni(&(params->seed), 0, i+1);
+      j = rni(seed, 0, i+1);
       if(j<n_s){
         memcpy(&(source_bank->p[j]), &(fission_bank->p[i]), sizeof(Particle));
       }
@@ -31,7 +31,7 @@ void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g, Parame
 
     // First randomly sample particles from fission bank
     for(i=0; i<(n_s-n_f); i++){
-      j = rni(&(params->seed), 0, n_f);
+      j = rni(seed, 0, n_f);
       memcpy(&(source_bank->p[i]), &(fission_bank->p[j]), sizeof(Particle));
     }
 
@@ -46,7 +46,7 @@ void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g, Parame
 
 // Calculates the shannon entropy of the source distribution to assess
 // convergence
-double shannon_entropy(Geometry *g, Bank *b, Parameters *params)
+double shannon_entropy(Geometry *g, Bank *b)
 {
   unsigned long i;
   double H = 0.0;
