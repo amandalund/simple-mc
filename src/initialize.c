@@ -98,7 +98,7 @@ Tally *init_tally(Parameters *params)
   return t;
 }
 
-Material *init_material(Parameters *params)
+Material *init_material(Parameters *params, unsigned long long *seed)
 {
   int i;
   Nuclide sum = {0, 0, 0, 0, 0};
@@ -117,17 +117,17 @@ Material *init_material(Parameters *params)
   // cross sections evaluate to what is hardwired above
   for(i=0; i<m->n_nuclides; i++){
     if(i<m->n_nuclides-1){
-      m->nuclides[i].atom_density = rn(&(params->seed))*macro.atom_density;
+      m->nuclides[i].atom_density = rn(seed)*macro.atom_density;
       macro.atom_density -= m->nuclides[i].atom_density;
     }
     else{
       m->nuclides[i].atom_density = macro.atom_density;
     }
-    m->nuclides[i].xs_a = rn(&(params->seed));
+    m->nuclides[i].xs_a = rn(seed);
     sum.xs_a += m->nuclides[i].xs_a * m->nuclides[i].atom_density;
-    m->nuclides[i].xs_f = rn(&(params->seed));
+    m->nuclides[i].xs_f = rn(seed);
     sum.xs_f += m->nuclides[i].xs_f * m->nuclides[i].atom_density;
-    m->nuclides[i].xs_s = rn(&(params->seed));
+    m->nuclides[i].xs_s = rn(seed);
     sum.xs_s += m->nuclides[i].xs_s * m->nuclides[i].atom_density;
   }
   for(i=0; i<m->n_nuclides; i++){
@@ -156,30 +156,30 @@ Bank *init_bank(unsigned long n_particles)
   return b;
 }
 
-void sample_source_particle(Particle *p, Geometry *g, Parameters *params)
+void sample_source_particle(Particle *p, Geometry *g, unsigned long long *seed)
 {
   p->alive = TRUE;
   p->energy = 1;
   p->last_energy = 0;
-  p->mu = rn(&(params->seed))*2 - 1;
-  p->phi = rn(&(params->seed))*2*PI;
+  p->mu = rn(seed)*2 - 1;
+  p->phi = rn(seed)*2*PI;
   p->u = p->mu;
   p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
   p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);
-  p->x = rn(&(params->seed))*g->x;
-  p->y = rn(&(params->seed))*g->y;
-  p->z = rn(&(params->seed))*g->z;
+  p->x = rn(seed)*g->x;
+  p->y = rn(seed)*g->y;
+  p->z = rn(seed)*g->z;
 
   return;
 }
 
-void sample_fission_particle(Particle *p, Particle *p_old, Parameters *params)
+void sample_fission_particle(Particle *p, Particle *p_old, unsigned long long *seed)
 {
   p->alive = TRUE;
   p->energy = 1;
   p->last_energy = 0;
-  p->mu = rn(&(params->seed))*2 - 1;
-  p->phi = rn(&(params->seed))*2*PI;
+  p->mu = rn(seed)*2 - 1;
+  p->phi = rn(seed)*2*PI;
   p->u = p->mu;
   p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
   p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);

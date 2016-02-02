@@ -2,6 +2,7 @@
 
 int main(int argc, char *argv[])
 {
+  unsigned long long seed;  // RNG seed
   int i_b;            // index over batches
   int i_a=-1;         // index over active batches
   int i_g;            // index over generations
@@ -27,6 +28,9 @@ int main(int argc, char *argv[])
   read_CLI(argc, argv, params);
   print_params(params);
 
+  // Set RNG seed
+  seed = params->seed;
+
   // Set up output files
   init_output(params, fp);
 
@@ -37,7 +41,7 @@ int main(int argc, char *argv[])
   g = init_geometry(params);
 
   // Set up material
-  m = init_material(params);
+  m = init_material(params, &seed);
 
   // Set up tallies
   t = init_tally(params);
@@ -55,7 +59,7 @@ int main(int argc, char *argv[])
   }
   else{
     for(i_p=0; i_p<params->n_particles; i_p++){
-      sample_source_particle(&(source_bank->p[i_p]), g, params);
+      sample_source_particle(&(source_bank->p[i_p]), g, &seed);
       source_bank->n++;
     }
   }
@@ -92,7 +96,7 @@ int main(int argc, char *argv[])
       for(i_p=0; i_p<source_bank->n; i_p++){
 
         // Transport the next particle from source bank
-        transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params);
+        transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params, &seed);
       }
 
       // Calculate generation k_effective and accumulate batch k_effective
@@ -101,10 +105,10 @@ int main(int argc, char *argv[])
 
       // Sample new source particles from the particles that were added to the
       // fission bank during this generation
-      synchronize_bank(source_bank, fission_bank, g, params);
+      synchronize_bank(source_bank, fission_bank, g, &seed);
 
       // Calculate shannon entropy to assess source convergence
-      H = shannon_entropy(g, source_bank, params);
+      H = shannon_entropy(g, source_bank);
       if(params->write_entropy == TRUE){
         write_entropy(H, fp, params->entropy_file);
       }
