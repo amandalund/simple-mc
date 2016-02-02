@@ -3,6 +3,7 @@
 int main(int argc, char *argv[])
 {
   unsigned long long seed;  // RNG seed
+  unsigned long long seed0; // initial RNG seed
   int i_b;            // index over batches
   int i_a=-1;         // index over active batches
   int i_g;            // index over generations
@@ -92,12 +93,22 @@ int main(int argc, char *argv[])
     // Loop over generations
     for(i_g=0; i_g<params->n_generations; i_g++){
 
+      // Set initial seed before particle loop
+      seed0 = seed;
+
       // Loop over particles
       for(i_p=0; i_p<source_bank->n; i_p++){
+
+	// Set seed for particle i_p by skipping ahead in the random number
+	// sequence <stride> numbers. This allows for reproducibility of the
+	// particle history.
+        seed = rn_skip(seed0, i_p*RNG.stride);
 
         // Transport the next particle from source bank
         transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params, &seed);
       }
+
+      seed = rn_skip(seed0, source_bank->n*RNG.stride);
 
       // Calculate generation k_effective and accumulate batch k_effective
       keff_gen = (double) fission_bank->n / source_bank->n;
