@@ -174,12 +174,12 @@ void free_material(Material *m);
 void free_tally(Tally *t);
 
 // transport.c function prototypes
-void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, double keff, Parameters *params, unsigned long long *seed);
+void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, Parameters *params, unsigned long long *seed);
 void calculate_xs(Particle *p, Material *m);
 double distance_to_boundary(Particle *p, Geometry *g);
 double distance_to_collision(Material *m, unsigned long long *seed);
 void cross_surface(Particle *p, Geometry *g);
-void collision(Particle *p, Material *m, Bank *fission_bank, double keff, double nu, unsigned long long *seed);
+void collision(Particle *p, Material *m, Bank *fission_bank, double nu, unsigned long long *seed);
 
 // eigenvalue.c function prototypes
 void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g, unsigned long long *seed);

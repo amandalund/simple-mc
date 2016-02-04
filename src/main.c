@@ -69,6 +69,9 @@ int main(int argc, char *argv[])
   border_print();
   printf("%-15s %-15s %-15s %-15s\n", "BATCH", "ENTROPY", "KEFF", "MEAN KEFF");
 
+  // Set initial seed before starting eigenvalue problem
+  seed0 = seed;
+
   // Start time
   t1 = timer();
 
@@ -93,22 +96,19 @@ int main(int argc, char *argv[])
     // Loop over generations
     for(i_g=0; i_g<params->n_generations; i_g++){
 
-      // Set initial seed before particle loop
-      seed0 = seed;
-
       // Loop over particles
-      for(i_p=0; i_p<source_bank->n; i_p++){
+      for(i_p=0; i_p<params->n_particles; i_p++){
 
 	// Set seed for particle i_p by skipping ahead in the random number
-	// sequence <stride> numbers. This allows for reproducibility of the
-	// particle history.
-        seed = rn_skip(seed0, i_p*RNG.stride);
+	// sequence stride*(total particles simulated) numbers. This allows for
+	// reproducibility of the particle history.
+        seed = rn_skip(seed0, RNG.stride*((i_b*params->n_generations + i_g)*params->n_particles + i_p));
 
         // Transport the next particle from source bank
-        transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params, &seed);
+        transport(&(source_bank->p[i_p]), g, m, t, fission_bank, params, &seed);
       }
 
-      seed = rn_skip(seed0, source_bank->n*RNG.stride);
+      seed = rn_skip(seed0, RNG.stride*(i_b*params->n_generations + i_g));
 
       // Calculate generation k_effective and accumulate batch k_effective
       keff_gen = (double) fission_bank->n / source_bank->n;

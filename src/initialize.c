@@ -160,7 +160,7 @@ void sample_source_particle(Particle *p, Geometry *g, unsigned long long *seed)
 {
   p->alive = TRUE;
   p->energy = 1;
-  p->last_energy = 0;
+  p->last_energy = 1;
   p->mu = rn(seed)*2 - 1;
   p->phi = rn(seed)*2*PI;
   p->u = p->mu;
@@ -177,7 +177,7 @@ void sample_fission_particle(Particle *p, Particle *p_old, unsigned long long *s
 {
   p->alive = TRUE;
   p->energy = 1;
-  p->last_energy = 0;
+  p->last_energy = 1;
   p->mu = rn(seed)*2 - 1;
   p->phi = rn(seed)*2*PI;
   p->u = p->mu;
