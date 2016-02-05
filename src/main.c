@@ -8,8 +8,8 @@ int thread_id;
 
 int main(int argc, char *argv[])
 {
-  unsigned long long seed;  // RNG seed
-  unsigned long long seed0; // initial RNG seed
+  unsigned long long seed1, seed2; // RNG seeds for different RN sequences
+  unsigned long long seed1_0, seed2_0; // initial RNG seeds
   int i_b;            // index over batches
   int i_a=-1;         // index over active batches
   int i_g;            // index over generations
@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 #ifdef _OPENMP
   int n_threads;      // number of OpenMP threads
   int i_t;            // index over threads
-  unsigned long n_sites;        // total number of source sites in fission bank
+  unsigned long n_sites; // total number of source sites in fission bank
   Bank *master_fission_bank;
 #else
   Bank *fission_bank;
@@ -44,8 +44,10 @@ int main(int argc, char *argv[])
   read_CLI(argc, argv, params);
   print_params(params);
 
-  // Set RNG seed
-  seed = params->seed;
+  // Set RNG seeds for two different RN sequences: one for tracking and one for
+  // everything else
+  seed1 = params->seed;
+  seed2 = seed1 + 1;
 
   // Set up output files
   init_output(params, fp);
@@ -57,7 +59,7 @@ int main(int argc, char *argv[])
   g = init_geometry(params);
 
   // Set up material
-  m = init_material(params, &seed);
+  m = init_material(params, &seed2);
 
   // Set up tallies
   t = init_tally(params);
@@ -94,7 +96,7 @@ int main(int argc, char *argv[])
   }
   else{
     for(i_p=0; i_p<params->n_particles; i_p++){
-      sample_source_particle(&(source_bank->p[i_p]), g, &seed);
+      sample_source_particle(&(source_bank->p[i_p]), g, &seed2);
       source_bank->n++;
     }
   }
@@ -104,7 +106,8 @@ int main(int argc, char *argv[])
   printf("%-15s %-15s %-15s %-15s\n", "BATCH", "ENTROPY", "KEFF", "MEAN KEFF");
 
   // Set initial seed before starting eigenvalue problem
-  seed0 = seed;
+  seed1_0 = seed1;
+  seed2_0 = seed2;
 
   // Start time
 #ifdef _OPENMP
@@ -134,7 +137,7 @@ int main(int argc, char *argv[])
     // Loop over generations
     for(i_g=0; i_g<params->n_generations; i_g++){
 
-#pragma omp parallel default(none) private(i_p, p, seed) shared(i_b, i_g, params, source_bank, g, m, t, seed0)
+#pragma omp parallel default(none) private(i_p, p, seed1) shared(i_b, i_g, params, source_bank, g, m, t, seed1_0)
 {
 #pragma omp for
       // Loop over particles
@@ -143,22 +146,20 @@ int main(int argc, char *argv[])
 	// Set seed for particle i_p by skipping ahead in the random number
 	// sequence stride*(total particles simulated) numbers. This allows for
 	// reproducibility of the particle history.
-        seed = rn_skip(seed0, RNG.stride*((i_b*params->n_generations + i_g)*params->n_particles + i_p));
+        seed1 = rn_skip(seed1_0, RNG.stride*((i_b*params->n_generations + i_g)*params->n_particles + i_p));
 
         // Copy next particle into p
         copy_particle(&p, &(source_bank->p[i_p]));
 
         // Transport the next particle from source bank
-        transport(&p, g, m, t, fission_bank, params, &seed);
-        //test(&p, g, m, t, fission_bank, params, &seed);
+        transport(&p, g, m, t, fission_bank, params, &seed1);
       }
 }
-      seed = rn_skip(seed0, RNG.stride*(i_b*params->n_generations + i_g));
+      seed2 = rn_skip(seed2_0, RNG.stride*(i_b*params->n_generations + i_g));
 
 // Merge fission banks from threads
 #ifdef _OPENMP
       n_sites = 0;
-
 #pragma omp parallel
 {
 #pragma omp for ordered
@@ -188,7 +189,7 @@ int main(int argc, char *argv[])
 
       // Sample new source particles from the particles that were added to the
       // fission bank during this generation
-      synchronize_bank(source_bank, fission_bank, g, &seed);
+      synchronize_bank(source_bank, fission_bank, g, &seed2);
 
       // Calculate shannon entropy to assess source convergence
       H = shannon_entropy(g, source_bank);
