@@ -1,8 +1,12 @@
 #include "header.h"
 
 // Main logic to move particle
-void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, double keff, Parameters *params, unsigned long long *seed)
+void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, Parameters *params, unsigned long long *seed)
 {
+  double d_b;
+  double d_c;
+  double d;
+
   while(p->alive){
 
     // Recalculate macro xs if particle has changed energy
@@ -11,13 +15,13 @@ void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_ba
     }
 
     // Find distance to boundary
-    double d_b = distance_to_boundary(p, g);
+    d_b = distance_to_boundary(p, g);
 
     // Find distance to collision
-    double d_c = distance_to_collision(m, seed);
+    d_c = distance_to_collision(m, seed);
 
     // Take smaller of two distances
-    double d = d_b < d_c ? d_b : d_c;
+    d = d_b < d_c ? d_b : d_c;
 
     // Advance particle
     p->x = p->x + d*p->u;
@@ -30,7 +34,7 @@ void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_ba
     }
     // Case where particle has collision
     else{
-      collision(p, m, fission_bank, keff, params->nu, seed);
+      collision(p, m, fission_bank, params->nu, seed);
 
       // Score tallies
       if(t->tallies_on == TRUE){
@@ -97,7 +101,7 @@ double distance_to_boundary(Particle *p, Geometry *g)
     }
     if(dist < d){
       d = dist;
-      g->surface_crossed = surfaces[i];
+      p->surface_crossed = surfaces[i];
     }
   }
 
@@ -129,27 +133,27 @@ void cross_surface(Particle *p, Geometry *g)
 
   // Handle reflective boundary conditions
   else if(g->bc == REFLECT){
-    if(g->surface_crossed == X0){
+    if(p->surface_crossed == X0){
       p->u = -p->u;
       p->x = 0.0;
     }
-    else if(g->surface_crossed == X1){
+    else if(p->surface_crossed == X1){
       p->u = -p->u;
       p->x = g->x;
     }
-    else if(g->surface_crossed == Y0){
+    else if(p->surface_crossed == Y0){
       p->v = -p->v;
       p->y = 0.0;
     }
-    else if(g->surface_crossed == Y1){
+    else if(p->surface_crossed == Y1){
       p->v = -p->v;
       p->y = g->y;
     }
-    else if(g->surface_crossed == Z0){
+    else if(p->surface_crossed == Z0){
       p->w = -p->w;
       p->z = 0.0;
     }
-    else if(g->surface_crossed == Z1){
+    else if(p->surface_crossed == Z1){
       p->w = -p->w;
       p->z = g->z;
     }
@@ -157,22 +161,22 @@ void cross_surface(Particle *p, Geometry *g)
   
   // Handle periodic boundary conditions
   else if(g->bc == PERIODIC){
-    if(g->surface_crossed == X0){
+    if(p->surface_crossed == X0){
       p->x = g->x;
     }
-    else if(g->surface_crossed == X1){
+    else if(p->surface_crossed == X1){
       p->x = 0;
     }
-    else if(g->surface_crossed == Y0){
+    else if(p->surface_crossed == Y0){
       p->y = g->y;
     }
-    else if(g->surface_crossed == Y1){
+    else if(p->surface_crossed == Y1){
       p->y = 0;
     }
-    else if(g->surface_crossed == Z0){
+    else if(p->surface_crossed == Z0){
       p->z = g->z;
     }
-    else if(g->surface_crossed == Z1){
+    else if(p->surface_crossed == Z1){
       p->z = 0;
     }
   }
@@ -180,7 +184,7 @@ void cross_surface(Particle *p, Geometry *g)
   return;
 }
 
-void collision(Particle *p, Material *m, Bank *fission_bank, double keff, double nu, unsigned long long *seed)
+void collision(Particle *p, Material *m, Bank *fission_bank, double nu, unsigned long long *seed)
 {
   int n;
   int i = 0;

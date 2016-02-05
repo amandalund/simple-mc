@@ -1,5 +1,11 @@
 #include "header.h"
 
+#ifdef _OPENMP
+Bank *fission_bank;
+int thread_id;
+#pragma omp threadprivate(fission_bank, thread_id)
+#endif
+
 int main(int argc, char *argv[])
 {
   unsigned long long seed;  // RNG seed
@@ -16,12 +22,21 @@ int main(int argc, char *argv[])
   double keff_mean;   // keff mean over active batches
   double keff_std;    // keff standard deviation over active batches
   double H;           // shannon entropy
+  Particle p;
   Parameters *params; // user defined parameters
   Geometry *g;
   Material *m;
   Tally *t;
   Bank *source_bank;
+
+#ifdef _OPENMP
+  int n_threads;      // number of OpenMP threads
+  int i_t;            // index over threads
+  unsigned long n_sites;        // total number of source sites in fission bank
+  Bank *master_fission_bank;
+#else
   Bank *fission_bank;
+#endif
 
   // Get inputs
   params = set_default_params();
@@ -31,9 +46,6 @@ int main(int argc, char *argv[])
 
   // Set RNG seed
   seed = params->seed;
-
-  // Set number of openmp threads
-  omp_set_num_threads(params->n_threads);
 
   // Set up output files
   init_output(params, fp);
@@ -50,11 +62,30 @@ int main(int argc, char *argv[])
   // Set up tallies
   t = init_tally(params);
 
+#ifdef _OPENMP
+  // Set number of openmp threads
+  omp_set_num_threads(params->n_threads);
+
+  // Allocate one fission bank for each thread and one master fission bank to
+  // collect fission sites at end of each generation
+#pragma omp parallel
+{
+  n_threads = omp_get_num_threads();
+  thread_id = omp_get_thread_num();
+  if(thread_id == 0){
+    fission_bank = init_bank(2*params->n_particles);
+  }
+  else{
+    fission_bank = init_bank(2*params->n_particles/n_threads);
+  }
+}
+  master_fission_bank = init_bank(2*params->n_particles);
+#else
+  fission_bank = init_bank(2*params->n_particles);
+#endif
+
   // Initialize source bank
   source_bank = init_bank(params->n_particles);
-
-  // Initialize fission bank
-  fission_bank = init_bank(params->n_particles);
 
   // Sample source particles or load a source
   if(params->load_source == TRUE){
@@ -72,8 +103,15 @@ int main(int argc, char *argv[])
   border_print();
   printf("%-15s %-15s %-15s %-15s\n", "BATCH", "ENTROPY", "KEFF", "MEAN KEFF");
 
+  // Set initial seed before starting eigenvalue problem
+  seed0 = seed;
+
   // Start time
+#ifdef _OPENMP
   t1 = omp_get_wtime();
+#else
+  t1 = timer();
+#endif
 
   // Loop over batches
   for(i_b=0; i_b<params->n_batches; i_b++){
@@ -96,22 +134,53 @@ int main(int argc, char *argv[])
     // Loop over generations
     for(i_g=0; i_g<params->n_generations; i_g++){
 
-      // Set initial seed before particle loop
-      seed0 = seed;
-
+#pragma omp parallel default(none) private(i_p, p, seed) shared(i_b, i_g, params, source_bank, g, m, t, seed0)
+{
+#pragma omp for
       // Loop over particles
-      for(i_p=0; i_p<source_bank->n; i_p++){
+      for(i_p=0; i_p<params->n_particles; i_p++){
 
 	// Set seed for particle i_p by skipping ahead in the random number
-	// sequence <stride> numbers. This allows for reproducibility of the
-	// particle history.
-        seed = rn_skip(seed0, i_p*RNG.stride);
+	// sequence stride*(total particles simulated) numbers. This allows for
+	// reproducibility of the particle history.
+        seed = rn_skip(seed0, RNG.stride*((i_b*params->n_generations + i_g)*params->n_particles + i_p));
+
+        // Copy next particle into p
+        copy_particle(&p, &(source_bank->p[i_p]));
 
         // Transport the next particle from source bank
-        transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params, &seed);
+        transport(&p, g, m, t, fission_bank, params, &seed);
+        //test(&p, g, m, t, fission_bank, params, &seed);
+      }
+}
+      seed = rn_skip(seed0, RNG.stride*(i_b*params->n_generations + i_g));
+
+// Merge fission banks from threads
+#ifdef _OPENMP
+      n_sites = 0;
+
+#pragma omp parallel
+{
+#pragma omp for ordered
+      for(i_t=0; i_t<n_threads; i_t++){
+#pragma omp ordered
+{
+        memcpy(&(master_fission_bank->p[n_sites]), fission_bank->p, fission_bank->n*sizeof(Particle));
+        n_sites += fission_bank->n;
+}
       }
 
-      seed = rn_skip(seed0, source_bank->n*RNG.stride);
+#pragma omp barrier
+      // Copy shared fission bank sites into master thread's fission bank
+      if(thread_id == 0){
+        memcpy(fission_bank->p, master_fission_bank->p, n_sites*sizeof(Particle));
+        fission_bank->n = n_sites;
+      }
+      else{
+        fission_bank->n = 0;
+      }
+}
+#endif
 
       // Calculate generation k_effective and accumulate batch k_effective
       keff_gen = (double) fission_bank->n / source_bank->n;
@@ -169,12 +238,24 @@ int main(int argc, char *argv[])
   }
 
   // Stop time
+#ifdef _OPENMP
   t2 = omp_get_wtime();;
+#else
+  t2 = timer();
+#endif
 
   printf("Simulation time: %f secs\n", t2-t1);
 
   // Free memory
+#ifdef _OPENMP
+#pragma omp parallel
+{
   free_bank(fission_bank);
+}
+  free_bank(master_fission_bank);
+#else
+  free_bank(fission_bank);
+#endif
   free_bank(source_bank);
   free_tally(t);
   free_material(m);

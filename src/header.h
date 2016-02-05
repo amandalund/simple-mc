@@ -95,6 +95,7 @@ typedef struct Particle_{
   double x;                  // position
   double y;
   double z;
+  int surface_crossed;
   int event;
 } Particle;
 
@@ -103,7 +104,6 @@ typedef struct Geometry_{
   double x;
   double y;
   double z;
-  int surface_crossed;
 } Geometry;
 
 typedef struct Nuclide_{
@@ -170,18 +170,19 @@ Material *init_material(Parameters *params, unsigned long long *seed);
 Bank *init_bank(unsigned long n_particles);
 void sample_source_particle(Particle *p, Geometry *g, unsigned long long *seed);
 void sample_fission_particle(Particle *p, Particle *p_old, unsigned long long *seed);
+void copy_particle(Particle *dest, Particle *source);
 void resize_particles(Bank *b);
 void free_bank(Bank *b);
 void free_material(Material *m);
 void free_tally(Tally *t);
 
 // transport.c function prototypes
-void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, double keff, Parameters *params, unsigned long long *seed);
+void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, Parameters *params, unsigned long long *seed);
 void calculate_xs(Particle *p, Material *m);
 double distance_to_boundary(Particle *p, Geometry *g);
 double distance_to_collision(Material *m, unsigned long long *seed);
 void cross_surface(Particle *p, Geometry *g);
-void collision(Particle *p, Material *m, Bank *fission_bank, double keff, double nu, unsigned long long *seed);
+void collision(Particle *p, Material *m, Bank *fission_bank, double nu, unsigned long long *seed);
 
 // eigenvalue.c function prototypes
 void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g, unsigned long long *seed);

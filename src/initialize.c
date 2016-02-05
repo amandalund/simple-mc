@@ -6,7 +6,9 @@ Parameters *set_default_params(void)
 
   params->n_particles = 10000;
   params->n_batches = 20;
+#ifdef _OPENMP
   params->n_threads = omp_get_num_procs();
+#endif
   params->n_generations = 1;
   params->n_active = 10;
   params->bc = REFLECT;
@@ -80,7 +82,6 @@ Geometry *init_geometry(Parameters *params)
   g->y = params->gy;
   g->z = params->gz;
   g->bc = params->bc;
-  g->surface_crossed = -1;
 
   return g;
 }
@@ -161,7 +162,7 @@ void sample_source_particle(Particle *p, Geometry *g, unsigned long long *seed)
 {
   p->alive = TRUE;
   p->energy = 1;
-  p->last_energy = 0;
+  p->last_energy = 1;
   p->mu = rn(seed)*2 - 1;
   p->phi = rn(seed)*2*PI;
   p->u = p->mu;
@@ -178,7 +179,7 @@ void sample_fission_particle(Particle *p, Particle *p_old, unsigned long long *s
 {
   p->alive = TRUE;
   p->energy = 1;
-  p->last_energy = 0;
+  p->last_energy = 1;
   p->mu = rn(seed)*2 - 1;
   p->phi = rn(seed)*2*PI;
   p->u = p->mu;
@@ -187,6 +188,24 @@ void sample_fission_particle(Particle *p, Particle *p_old, unsigned long long *s
   p->x = p_old->x;
   p->y = p_old->y;
   p->z = p_old->z;
+
+  return;
+}
+
+void copy_particle(Particle *dest, Particle *source)
+{
+  dest->alive = source->alive;
+  dest->energy = source->energy;
+  dest->last_energy = source->last_energy;
+  dest->mu = source->mu;
+  dest->phi = source->phi;
+  dest->u = source->u;
+  dest->v = source->v;
+  dest->w = source->w;
+  dest->x = source->x;
+  dest->y = source->y;
+  dest->z = source->z;
+  dest->event = source->event;
 
   return;
 }

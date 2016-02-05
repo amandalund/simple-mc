@@ -14,6 +14,7 @@ void score_tally(Tally *t, Particle *p, Material *m, Parameters *params)
   iy = p->y/t->dy;
   iz = p->z/t->dz;
 
+#pragma omp atomic
   // Scalar flux
   t->flux[ix + t->n*iy + t->n*t->n*iz] += 1./(vol * m->xs_t * params->n_particles);
 
