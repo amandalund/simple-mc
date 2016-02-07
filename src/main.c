@@ -1,51 +1,47 @@
 #include "header.h"
-
-Bank *fission_bank;
-#ifdef _OPENMP
-int thread_id;
-#pragma omp threadprivate(fission_bank, thread_id)
-#endif
+#include "global.h"
 
 int main(int argc, char *argv[])
 {
-  unsigned long long seed1, seed2; // RNG seeds for different RN sequences
-  unsigned long long seed1_0, seed2_0; // initial RNG seeds
-  int i_b;            // index over batches
-  int i_a = -1;       // index over active batches
-  int i_g;            // index over generations
-  unsigned long i_p;  // index over particles
-  FILE *fp = NULL;    // file pointer for output
-  double t1, t2;      // timers
-  double *keff;       // effective multiplication factor
-  double keff_gen = 1;// keff of generation
-  double keff_batch;  // keff of batch
-  double keff_mean;   // keff mean over active batches
-  double keff_std;    // keff standard deviation over active batches
-  double H;           // shannon entropy
+  unsigned long long seed1, seed2, seed3; // RNG seeds for different RN sequences
+  unsigned long long seed1_0, seed2_0, seed3_0; // initial RNG seeds
+  int i_b; // index over batches
+  int i_a = -1; // index over active batches
+  int i_g; // index over generations
+  unsigned long i_p; // index over particles
+  FILE *fp = NULL; // file pointer for output
+  double t1, t2; // timers
+  double *keff; // effective multiplication factor
+  double keff_gen = 1; // keff of generation
+  double keff_batch; // keff of batch
+  double keff_mean; // keff mean over active batches
+  double keff_std; // keff standard deviation over active batches
+  double H; // shannon entropy
   Particle p;
-  Parameters *params; // user defined parameters
-  Geometry *g;
-  Material *m;
-  Tally *t;
-  Bank *source_bank;
-#ifdef _OPENMP
-  int i_t;            // index over threads
-  int n_threads;      // number of OpenMP threads
-  unsigned long n_sites; // total number of source sites in fission bank
-  Bank *master_fission_bank;
-#endif
 
-  // Get inputs: set parameters to default values, then parse parameter file,
-  // then override with any command line inputs
-  params = init_params();
-  parse_params(params);
-  read_CLI(argc, argv, params);
-  print_params(params);
+  // Initialize the global variables used throughout the simulation
+  init_problem(argc, argv);
+
+  // Set OpenMP specific variables
+#ifdef _OPENMP
+  omp_set_num_threads(params->n_threads);
+#pragma omp parallel
+{
+  n_threads = omp_get_num_threads();
+  thread_id = omp_get_thread_num();
+}
+#endif
 
   // Set RNG seeds for two different RN sequences: one for tracking and one for
   // everything else
   seed1 = params->seed;
   seed2 = seed1 + 1;
+  seed3 = seed1 + 2;
+
+  // Set initial RNG seeds
+  seed1_0 = seed1;
+  seed2_0 = seed2;
+  seed3_0 = seed3;
 
   // Set up output files
   init_output(params, fp);
@@ -57,21 +53,16 @@ int main(int argc, char *argv[])
   g = init_geometry(params);
 
   // Set up material
-  m = init_material(params, &seed2);
+  m = init_material(params, &seed1);
 
   // Set up tallies
   t = init_tally(params);
 
-#ifdef _OPENMP
-  // Set number of openmp threads
-  omp_set_num_threads(params->n_threads);
-
   // Allocate one fission bank for each thread and one master fission bank to
   // collect fission sites at end of each generation
+#ifdef _OPENMP
 #pragma omp parallel
 {
-  n_threads = omp_get_num_threads();
-  thread_id = omp_get_thread_num();
   if(thread_id == 0){
     fission_bank = init_bank(2*params->n_particles);
   }
@@ -94,7 +85,7 @@ int main(int argc, char *argv[])
   }
   else{
     for(i_p=0; i_p<params->n_particles; i_p++){
-      sample_source_particle(&(source_bank->p[i_p]), g, &seed2);
+      sample_source_particle(&(source_bank->p[i_p]), g, &seed1);
       source_bank->n++;
     }
   }
@@ -102,10 +93,6 @@ int main(int argc, char *argv[])
   center_print("SIMULATION", 79);
   border_print();
   printf("%-15s %-15s %-15s %-15s\n", "BATCH", "ENTROPY", "KEFF", "MEAN KEFF");
-
-  // Set initial seed before starting eigenvalue problem
-  seed1_0 = seed1;
-  seed2_0 = seed2;
 
   // Start time
   t1 = timer();
@@ -131,7 +118,7 @@ int main(int argc, char *argv[])
     // Loop over generations
     for(i_g=0; i_g<params->n_generations; i_g++){
 
-#pragma omp parallel default(none) private(i_p, p, seed1) shared(i_b, i_g, params, source_bank, g, m, t, seed1_0)
+#pragma omp parallel default(none) private(i_p, p, seed2) shared(i_b, i_g, params, source_bank, g, m, t, seed2_0)
 {
 #pragma omp for
       // Loop over particles
@@ -140,40 +127,20 @@ int main(int argc, char *argv[])
 	// Set seed for particle i_p by skipping ahead in the random number
 	// sequence stride*(total particles simulated) numbers. This allows for
 	// reproducibility of the particle history.
-        seed1 = rn_skip(seed1_0, (i_b*params->n_generations + i_g)*params->n_particles + i_p);
+        seed2 = rn_skip(seed2_0, (i_b*params->n_generations + i_g)*params->n_particles + i_p);
 
         // Copy next particle into p
         copy_particle(&p, &(source_bank->p[i_p]));
 
         // Transport the next particle from source bank
-	transport(&p, g, m, t, fission_bank, params, &seed1);
+	transport(&p, g, m, t, params, &seed2);
       }
 }
-      seed2 = rn_skip(seed2_0, i_b*params->n_generations + i_g);
+      seed3 = rn_skip(seed3_0, i_b*params->n_generations + i_g);
 
-// Merge fission banks from threads
 #ifdef _OPENMP
-      n_sites = 0;
-#pragma omp parallel
-{
-#pragma omp for ordered
-      for(i_t=0; i_t<n_threads; i_t++){
-#pragma omp ordered
-{
-        memcpy(&(master_fission_bank->p[n_sites]), fission_bank->p, fission_bank->n*sizeof(Particle));
-        n_sites += fission_bank->n;
-}
-      }
-#pragma omp barrier
-      // Copy shared fission bank sites into master thread's fission bank
-      if(thread_id == 0){
-        memcpy(fission_bank->p, master_fission_bank->p, n_sites*sizeof(Particle));
-        fission_bank->n = n_sites;
-      }
-      else{
-        fission_bank->n = 0;
-      }
-}
+      // Merge fission banks from threads
+      merge_fission_banks();
 #endif
 
       // Calculate generation k_effective and accumulate batch k_effective
@@ -182,7 +149,7 @@ int main(int argc, char *argv[])
 
       // Sample new source particles from the particles that were added to the
       // fission bank during this generation
-      synchronize_bank(source_bank, fission_bank, g, &seed2);
+      synchronize_bank(g, &seed3);
 
       // Calculate shannon entropy to assess source convergence
       H = shannon_entropy(g, source_bank);

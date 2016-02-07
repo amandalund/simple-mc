@@ -1,6 +1,36 @@
 #include "header.h"
+#include "global.h"
 
-void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g, unsigned long long *seed)
+void merge_fission_banks()
+{
+  unsigned long n_sites = 0; // total number of source sites in fission bank
+  int i_t; // index over threads
+
+#pragma omp parallel
+{
+#pragma omp for ordered
+  for(i_t=0; i_t<n_threads; i_t++){
+#pragma omp ordered
+{
+    memcpy(&(master_fission_bank->p[n_sites]), fission_bank->p, fission_bank->n*sizeof(Particle));
+    n_sites += fission_bank->n;
+}
+  }
+#pragma omp barrier
+  // Copy shared fission bank sites into master thread's fission bank
+  if(thread_id == 0){
+    memcpy(fission_bank->p, master_fission_bank->p, n_sites*sizeof(Particle));
+    fission_bank->n = n_sites;
+  }
+  else{
+    fission_bank->n = 0;
+  }
+}
+
+  return;
+}
+
+void synchronize_bank(Geometry *g, unsigned long long *seed)
 {
   unsigned long i, j;
   unsigned long n_s = source_bank->n;

@@ -9,7 +9,9 @@ OPENMP   = yes
 
 PROGRAM = transport
 
-HEADERS = header.h
+HEADERS = \
+header.h \
+global.h
 
 SOURCE = \
 main.c \
@@ -19,7 +21,8 @@ utils.c \
 io.c \
 transport.c \
 tally.c \
-eigenvalue.c
+eigenvalue.c \
+global.c
 
 OBJECTS = $(SOURCE:.c=.o)
 

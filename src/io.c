@@ -1,7 +1,8 @@
 #include "header.h"
+#include "global.h"
 
 // Read in parameters from file
-void parse_params(Parameters *params)
+void parse_params()
 {
   char line[256], *s;
   FILE *fp = fopen("parameters", "r");
@@ -236,7 +237,7 @@ void parse_params(Parameters *params)
   return;
 }
 
-void read_CLI(int argc, char *argv[], Parameters *params)
+void read_CLI(int argc, char *argv[])
 {
   int i;
   char *arg;
@@ -544,13 +545,7 @@ void read_CLI(int argc, char *argv[], Parameters *params)
   return;
 }
 
-void print_error(char *message)
-{
-  printf("ERROR: %s\n", message);
-  exit(1);
-}
-
-void print_params(Parameters *params)
+void print_params()
 {
   char *bc = NULL;
   if(params->bc == 0) bc = "Vacuum";
@@ -568,6 +563,12 @@ void print_params(Parameters *params)
   printf("Number of nuclides in material: %d\n", params->n_nuclides);
   printf("RNG seed:                       %llu\n", params->seed);
   border_print();
+}
+
+void print_error(char *message)
+{
+  printf("ERROR: %s\n", message);
+  exit(1);
 }
 
 void border_print(void)

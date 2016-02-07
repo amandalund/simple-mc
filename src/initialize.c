@@ -1,4 +1,19 @@
 #include "header.h"
+#include "global.h"
+
+void init_problem(int argc, char *argv[])
+{
+  // Get inputs: set parameters to default values, then parse parameter file,
+  // then override with any command line inputs
+  params = init_params();
+  parse_params();
+  read_CLI(argc, argv);
+  print_params();
+
+
+
+  return;
+}
 
 Parameters *init_params(void)
 {

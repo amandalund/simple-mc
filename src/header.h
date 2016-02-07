@@ -11,32 +11,6 @@
 #include<string.h>
 #include<omp.h>
 
-#define TRUE 1
-#define FALSE 0
-
-// Constants
-#define PI 3.1415926535898
-#define D_INF DBL_MAX
-
-// Geometry boundary conditions
-#define VACUUM 0
-#define REFLECT 1
-#define PERIODIC 2
-
-// Reaction types
-#define TOTAL 0
-#define ABSORPTION 1
-#define SCATTER 2
-#define FISSION 3
-
-// Surfaces
-#define X0 0
-#define X1 1
-#define Y0 2
-#define Y1 3
-#define Z0 4
-#define Z1 5
-
 typedef struct Parameters_{
   unsigned long long seed;   // RNG seed
   unsigned long n_particles; // number of particles
@@ -126,10 +100,10 @@ typedef struct Bank_{
 } Bank;
 
 // io.c function prototypes
-void parse_params(Parameters *params);
-void read_CLI(int argc, char *argv[], Parameters *params);
+void parse_params();
+void read_CLI(int argc, char *argv[]);
 void print_error(char *message);
-void print_params(Parameters *params);
+void print_params();
 void border_print(void);
 void fancy_int(long a);
 void center_print(const char *s, int width);
@@ -151,6 +125,7 @@ int rni(unsigned long long *seed, int min, int max);
 unsigned long long rn_skip(unsigned long long seed, long long n);
 
 // initialize.c function prototypes
+void init_problem(int argc, char *argv[]);
 Parameters *init_params(void);
 Geometry *init_geometry(Parameters *params);
 Tally *init_tally(Parameters *params);
@@ -165,15 +140,16 @@ void free_material(Material *m);
 void free_tally(Tally *t);
 
 // transport.c function prototypes
-void transport(Particle *p, Geometry *g, Material *m, Tally *t, Bank *fission_bank, Parameters *params, unsigned long long *seed);
+void transport(Particle *p, Geometry *g, Material *m, Tally *t, Parameters *params, unsigned long long *seed);
 void calculate_xs(Particle *p, Material *m);
 double distance_to_boundary(Particle *p, Geometry *g);
 double distance_to_collision(Material *m, unsigned long long *seed);
 void cross_surface(Particle *p, Geometry *g);
-void collision(Particle *p, Material *m, Bank *fission_bank, double nu, unsigned long long *seed);
+void collision(Particle *p, Material *m, double nu, unsigned long long *seed);
 
 // eigenvalue.c function prototypes
-void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g, unsigned long long *seed);
+void merge_fission_banks();
+void synchronize_bank(Geometry *g, unsigned long long *seed);
 double shannon_entropy(Geometry *g, Bank *b);
 void calculate_keff(double *keff, double *mean, double *std, int n);
 
