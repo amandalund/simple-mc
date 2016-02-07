@@ -37,20 +37,6 @@
 #define Z0 4
 #define Z1 5
 
-typedef struct RNG_Parameters_{
-  unsigned long long mult;   // multiplier g
-  unsigned long long mod;    // modulus, 2^M
-  unsigned long long inc;    // increment c
-  unsigned long long stride; // stride
-  unsigned long long mask;   // mask, 2^M - 1
-  unsigned long long period; // period, 2^M for c!=0, else 2^(M-2)
-} RNG_Parameters;
-
-// LCG parameters from 'The MCNP5 Random Number Generator', Forrest Brown,
-// LA-UR-07K-7961. Additional multiplier values: 2806196910506780709ULL,
-// 3249286849523012805ULL
-static const RNG_Parameters RNG = {9219741426499971445ULL, 9223372036854775808ULL, 1ULL, 152917, 9223372036854775807ULL, 9223372036854775808ULL};
-
 typedef struct Parameters_{
   unsigned long long seed;   // RNG seed
   unsigned long n_particles; // number of particles
@@ -140,13 +126,14 @@ typedef struct Bank_{
 } Bank;
 
 // io.c function prototypes
-void parse_params(char *filename, Parameters *params);
+void parse_params(Parameters *params);
 void read_CLI(int argc, char *argv[], Parameters *params);
 void print_error(char *message);
 void print_params(Parameters *params);
 void border_print(void);
 void fancy_int(long a);
 void center_print(const char *s, int width);
+void init_output(Parameters *params, FILE *fp);
 void write_tally(Tally *t, FILE *fp, char *filename);
 void write_entropy(double H, FILE *fp, char *filename);
 void write_keff(double *keff, int n, FILE *fp, char *filename);
@@ -156,14 +143,15 @@ void load_source(Bank *b);
 void save_source(Bank *b);
 
 // utils.c funtion prototypes
+double timer(void);
+
+// prng.c function prototypes
 double rn(unsigned long long *seed);
 int rni(unsigned long long *seed, int min, int max);
 unsigned long long rn_skip(unsigned long long seed, long long n);
-double timer(void);
 
 // initialize.c function prototypes
-Parameters *set_default_params(void);
-void init_output(Parameters *params, FILE *fp);
+Parameters *init_params(void);
 Geometry *init_geometry(Parameters *params);
 Tally *init_tally(Parameters *params);
 Material *init_material(Parameters *params, unsigned long long *seed);

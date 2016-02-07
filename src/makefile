@@ -14,6 +14,7 @@ HEADERS = header.h
 SOURCE = \
 main.c \
 initialize.c \
+prng.c \
 utils.c \
 io.c \
 transport.c \
@@ -38,6 +39,7 @@ endif
 
 ifeq ($(COMPILER),gnu)
   CC = gcc
+  CFLAGS += -Wno-unknown-pragmas
   ifeq ($(OPENMP),yes)
     CFLAGS += -fopenmp
   endif

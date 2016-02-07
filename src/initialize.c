@@ -1,28 +1,28 @@
 #include "header.h"
 
-Parameters *set_default_params(void)
+Parameters *init_params(void)
 {
   Parameters *params = malloc(sizeof(Parameters));
 
-  params->n_particles = 10000;
-  params->n_batches = 20;
 #ifdef _OPENMP
   params->n_threads = omp_get_num_procs();
 #endif
+  params->n_particles = 1000000;
+  params->n_batches = 10;
   params->n_generations = 1;
   params->n_active = 10;
   params->bc = REFLECT;
-  params->n_nuclides = 60;
-  params->tally = FALSE;
-  params->n_bins = 10;
+  params->n_nuclides = 1;
+  params->tally = TRUE;
+  params->n_bins = 16;
   params->seed = 1;
-  params->nu = 1.5;
-  params->xs_f = 2.29;
-  params->xs_a = 3.42;
-  params->xs_s = 2.29;
-  params->gx = 1000;
-  params->gy = 1000;
-  params->gz = 1000;
+  params->nu = 2.5;
+  params->xs_f = 0.012;
+  params->xs_a = 0.03;
+  params->xs_s = 0.27;
+  params->gx = 400;
+  params->gy = 400;
+  params->gz = 400;
   params->load_source = FALSE;
   params->save_source = FALSE;
   params->write_tally = FALSE;
@@ -37,41 +37,6 @@ Parameters *set_default_params(void)
   params->source_file = NULL;
 
   return params;
-}
-
-void init_output(Parameters *params, FILE *fp)
-{
-  // Set up file to output tallies
-  if(params->write_tally == TRUE){
-    fp = fopen(params->tally_file, "w");
-    fclose(fp);
-  }
-
-  // Set up file to output shannon entropy to assess source convergence
-  if(params->write_entropy == TRUE){
-    fp = fopen(params->entropy_file, "w");
-    fclose(fp);
-  }
-
-  // Set up file to output keff
-  if(params->write_keff == TRUE){
-    fp = fopen(params->keff_file, "w");
-    fclose(fp);
-  }
-
-  // Set up file to output particle bank
-  if(params->write_bank == TRUE){
-    fp = fopen(params->bank_file, "w");
-    fclose(fp);
-  }
-
-  // Set up file to output source distribution
-  if(params->write_source == TRUE){
-    fp = fopen(params->source_file, "w");
-    fclose(fp);
-  }
-
-  return;
 }
 
 Geometry *init_geometry(Parameters *params)

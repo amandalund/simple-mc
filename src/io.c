@@ -1,10 +1,10 @@
 #include "header.h"
 
 // Read in parameters from file
-void parse_params(char *filename, Parameters *params)
+void parse_params(Parameters *params)
 {
   char line[256], *s;
-  FILE *fp = fopen(filename, "r");
+  FILE *fp = fopen("parameters", "r");
 
   while((s = fgets(line, sizeof(line), fp)) != NULL){
 
@@ -602,6 +602,41 @@ void center_print(const char *s, int width)
   }
   fputs(s, stdout);
   fputs("\n", stdout);
+}
+
+void init_output(Parameters *params, FILE *fp)
+{
+  // Set up file to output tallies
+  if(params->write_tally == TRUE){
+    fp = fopen(params->tally_file, "w");
+    fclose(fp);
+  }
+
+  // Set up file to output shannon entropy to assess source convergence
+  if(params->write_entropy == TRUE){
+    fp = fopen(params->entropy_file, "w");
+    fclose(fp);
+  }
+
+  // Set up file to output keff
+  if(params->write_keff == TRUE){
+    fp = fopen(params->keff_file, "w");
+    fclose(fp);
+  }
+
+  // Set up file to output particle bank
+  if(params->write_bank == TRUE){
+    fp = fopen(params->bank_file, "w");
+    fclose(fp);
+  }
+
+  // Set up file to output source distribution
+  if(params->write_source == TRUE){
+    fp = fopen(params->source_file, "w");
+    fclose(fp);
+  }
+
+  return;
 }
 
 void write_tally(Tally *t, FILE *fp, char *filename)

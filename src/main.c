@@ -1,7 +1,7 @@
 #include "header.h"
 
-#ifdef _OPENMP
 Bank *fission_bank;
+#ifdef _OPENMP
 int thread_id;
 #pragma omp threadprivate(fission_bank, thread_id)
 #endif
@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
   unsigned long long seed1, seed2; // RNG seeds for different RN sequences
   unsigned long long seed1_0, seed2_0; // initial RNG seeds
   int i_b;            // index over batches
-  int i_a=-1;         // index over active batches
+  int i_a = -1;       // index over active batches
   int i_g;            // index over generations
   unsigned long i_p;  // index over particles
   FILE *fp = NULL;    // file pointer for output
@@ -28,19 +28,17 @@ int main(int argc, char *argv[])
   Material *m;
   Tally *t;
   Bank *source_bank;
-
 #ifdef _OPENMP
-  int n_threads;      // number of OpenMP threads
   int i_t;            // index over threads
+  int n_threads;      // number of OpenMP threads
   unsigned long n_sites; // total number of source sites in fission bank
   Bank *master_fission_bank;
-#else
-  Bank *fission_bank;
 #endif
 
-  // Get inputs
-  params = set_default_params();
-  parse_params("parameters", params);
+  // Get inputs: set parameters to default values, then parse parameter file,
+  // then override with any command line inputs
+  params = init_params();
+  parse_params(params);
   read_CLI(argc, argv, params);
   print_params(params);
 
@@ -110,11 +108,7 @@ int main(int argc, char *argv[])
   seed2_0 = seed2;
 
   // Start time
-#ifdef _OPENMP
-  t1 = omp_get_wtime();
-#else
   t1 = timer();
-#endif
 
   // Loop over batches
   for(i_b=0; i_b<params->n_batches; i_b++){
@@ -146,16 +140,16 @@ int main(int argc, char *argv[])
 	// Set seed for particle i_p by skipping ahead in the random number
 	// sequence stride*(total particles simulated) numbers. This allows for
 	// reproducibility of the particle history.
-        seed1 = rn_skip(seed1_0, RNG.stride*((i_b*params->n_generations + i_g)*params->n_particles + i_p));
+        seed1 = rn_skip(seed1_0, (i_b*params->n_generations + i_g)*params->n_particles + i_p);
 
         // Copy next particle into p
         copy_particle(&p, &(source_bank->p[i_p]));
 
         // Transport the next particle from source bank
-        transport(&p, g, m, t, fission_bank, params, &seed1);
+	transport(&p, g, m, t, fission_bank, params, &seed1);
       }
 }
-      seed2 = rn_skip(seed2_0, RNG.stride*(i_b*params->n_generations + i_g));
+      seed2 = rn_skip(seed2_0, i_b*params->n_generations + i_g);
 
 // Merge fission banks from threads
 #ifdef _OPENMP
@@ -170,7 +164,6 @@ int main(int argc, char *argv[])
         n_sites += fission_bank->n;
 }
       }
-
 #pragma omp barrier
       // Copy shared fission bank sites into master thread's fission bank
       if(thread_id == 0){
@@ -229,6 +222,11 @@ int main(int argc, char *argv[])
     }
   }
 
+  // Stop time
+  t2 = timer();
+
+  printf("Simulation time: %f secs\n", t2-t1);
+
   // Write out keff
   if(params->write_keff == TRUE){
     write_keff(keff, params->n_active, fp, params->keff_file);
@@ -237,15 +235,6 @@ int main(int argc, char *argv[])
   if(params->save_source == TRUE){
     save_source(source_bank);
   }
-
-  // Stop time
-#ifdef _OPENMP
-  t2 = omp_get_wtime();;
-#else
-  t2 = timer();
-#endif
-
-  printf("Simulation time: %f secs\n", t2-t1);
 
   // Free memory
 #ifdef _OPENMP
