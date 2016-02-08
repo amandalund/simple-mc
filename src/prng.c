@@ -16,7 +16,7 @@ typedef struct RNG_Parameters_{
 static const RNG_Parameters RNG = {9219741426499971445ULL, 9223372036854775808ULL, 1ULL, 152917, 9223372036854775807ULL, 9223372036854775808ULL}; // period 2^63
 
 int stream;
-unsigned long long seed0;
+unsigned long long seed0[N_STREAMS];
 unsigned long long seed[N_STREAMS];
 #pragma omp threadprivate(seed)
 
@@ -50,7 +50,8 @@ void set_initial_seed(unsigned long long rn_seed0)
   int i;
 
   for(i=0; i<N_STREAMS; i++){
-    seed[i] = seed0 + i;
+    seed0[i] = rn_seed0 + i;
+    seed[i] = seed0[i];
   }
 
   return;
@@ -84,5 +85,5 @@ void rn_skip(long long n)
     n >>= 1;
   }
 
-  seed[stream] = (g_new*seed[stream] + c_new) & RNG.mask;
+  seed[stream] = (g_new*seed0[stream] + c_new) & RNG.mask;
 }
