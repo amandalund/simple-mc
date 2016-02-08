@@ -15,9 +15,6 @@ void score_tally(Tally *t, Particle *p)
   iy = p->y/t->dy;
   iz = p->z/t->dz;
 
-#ifdef _OPENMP
-#pragma omp atomic
-#endif
   // Scalar flux
   t->flux[ix + t->n*iy + t->n*t->n*iz] += 1./(vol * material->xs_t * parameters->n_particles);
 

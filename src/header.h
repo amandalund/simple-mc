@@ -9,12 +9,10 @@
 #include<float.h>
 #include<unistd.h>
 #include<string.h>
-#include<omp.h>
 
 typedef struct Parameters_{
   unsigned long long seed; // RNG seed
   unsigned long n_particles; // number of particles
-  int n_threads; // number of openmp threads
   int n_batches; // number of batches
   int n_generations; // number of generations per batch
   int n_active; // number of active batches
@@ -154,7 +152,6 @@ void collision(Particle *p);
 
 // eigenvalue.c function prototypes
 void run_eigenvalue(void);
-void merge_fission_banks(void);
 void synchronize_bank(void);
 double shannon_entropy(Bank *b);
 void calculate_keff(double *mean, double *std, int n);

@@ -18,9 +18,6 @@ static const RNG_Parameters RNG = {9219741426499971445ULL, 9223372036854775808UL
 int stream;
 unsigned long long seed0[N_STREAMS];
 unsigned long long seed[N_STREAMS];
-#ifdef _OPENMP
-#pragma omp threadprivate(seed)
-#endif
 
 // Linear congruential random number generator: seed = (mult*seed + inc) % mod
 double rn(void)

@@ -14,16 +14,6 @@ void init_problem(int argc, char *argv[])
   set_initial_seed(parameters->seed);
   set_stream(STREAM_INIT);
 
-  // Set OpenMP specific variables
-#ifdef _OPENMP
-  omp_set_num_threads(parameters->n_threads);
-#pragma omp parallel
-{
-  n_threads = omp_get_num_threads();
-  thread_id = omp_get_thread_num();
-}
-#endif
-
   // Set up output files
   init_output();
 
@@ -52,11 +42,6 @@ Parameters *init_parameters()
 {
   Parameters *parameters = malloc(sizeof(Parameters));
 
-#ifdef _OPENMP
-  parameters->n_threads = omp_get_num_procs();
-#else
-  parameters->n_threads = 1;
-#endif
   parameters->n_particles = 1000000;
   parameters->n_batches = 10;
   parameters->n_generations = 1;
@@ -186,22 +171,7 @@ void init_source_bank(void)
 
 void init_fission_bank(void)
 {
-  // Allocate one fission bank for each thread and one master fission bank to
-  // collect fission sites at end of each generation
-#ifdef _OPENMP
-#pragma omp parallel
-{
-  if(thread_id == 0){
-    fission_bank = init_bank(2*parameters->n_particles);
-  }
-  else{
-    fission_bank = init_bank(2*parameters->n_particles/n_threads);
-  }
-}
-  master_fission_bank = init_bank(2*parameters->n_particles);
-#else
   fission_bank = init_bank(2*parameters->n_particles);
-#endif
 
   return;
 }
@@ -309,15 +279,7 @@ void free_tally(Tally *t)
 
 void free_problem(void)
 {
-#ifdef _OPENMP
-#pragma omp parallel
-{
   free_bank(fission_bank);
-}
-  free_bank(master_fission_bank);
-#else
-  free_bank(fission_bank);
-#endif
   free_bank(source_bank);
   free_tally(tally);
   free_material(material);

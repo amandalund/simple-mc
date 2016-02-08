@@ -38,11 +38,6 @@ void run_eigenvalue(void)
       // Set RNG stream for tracking
       set_stream(STREAM_TRACK);
 
-#ifdef _OPENMP
-#pragma omp parallel default(none) private(i_p, p) shared(i_b, i_g, parameters, source_bank, geometry, material, tally)
-{
-#pragma omp for
-#endif
       // Loop over particles
       for(i_p=0; i_p<parameters->n_particles; i_p++){
 
@@ -57,16 +52,8 @@ void run_eigenvalue(void)
         // Transport the next particle from source bank
 	transport(&p);
       }
-#ifdef _OPENMP
-}
-#endif
       set_stream(STREAM_OTHER);
       rn_skip(i_b*parameters->n_generations + i_g);
-
-#ifdef _OPENMP
-      // Merge fission banks from threads
-      merge_fission_banks();
-#endif
 
       // Calculate generation k_effective and accumulate batch k_effective
       keff_gen = (double) fission_bank->n / source_bank->n;
@@ -122,54 +109,6 @@ void run_eigenvalue(void)
   if(parameters->save_source == TRUE){
     save_source(source_bank);
   }
-
-  return;
-}
-
-void merge_fission_banks(void)
-{
-#ifdef _OPENMP
-  unsigned long n = 0;
-  unsigned long n_sites = 0; // total number of source sites in fission bank
-  int i_t; // index over threads
-
-#pragma omp parallel
-{
-  // Count total number of source sites and resize master fission banks if
-  // necessary
-#pragma omp for ordered
-  for(i_t=0; i_t<n_threads; i_t++){
-#pragma omp ordered
-{
-    n += fission_bank->n;
-}
-  }
-#pragma omp barrier
-  if(thread_id == 0 && n > fission_bank->sz){
-    fission_bank->resize(fission_bank);
-    master_fission_bank->resize(master_fission_bank);
-  }
-
-  // Copy sites from each fission bank into master bank
-#pragma omp for ordered
-  for(i_t=0; i_t<n_threads; i_t++){
-#pragma omp ordered
-{
-    memcpy(&(master_fission_bank->p[n_sites]), fission_bank->p, fission_bank->n*sizeof(Particle));
-    n_sites += fission_bank->n;
-}
-  }
-#pragma omp barrier
-  // Copy shared fission bank sites into master thread's fission bank
-  if(thread_id == 0){
-    memcpy(fission_bank->p, master_fission_bank->p, n_sites*sizeof(Particle));
-    fission_bank->n = n_sites;
-  }
-  else{
-    fission_bank->n = 0;
-  }
-}
-#endif
 
   return;
 }

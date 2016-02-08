@@ -46,7 +46,6 @@ void transport(Particle *p)
   return;
 }
 
-// TODO fix for threading. Not currently used since one-group homogenous cube
 // Calculates the macroscopic cross section of the material the particle is
 // traveling through
 void calculate_xs(void)

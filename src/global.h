@@ -40,11 +40,3 @@ extern Tally *tally; // scalar flux tally
 extern Bank *source_bank; // bank for particle source sites
 extern Bank *fission_bank; // bank for particle fission sites
 extern double *keff; // effective multiplication factor
-
-// Declare OpenMP specific variables
-#ifdef _OPENMP
-extern int thread_id;
-extern int n_threads; // number of OpenMP threads
-extern Bank *master_fission_bank; // bank for collecting fission sites from threads
-#pragma omp threadprivate(fission_bank, thread_id)
-#endif

@@ -27,11 +27,6 @@ void parse_parameters(void)
       parameters->n_batches = atoi(strtok(NULL, "=\n"));
     }
 
-    // Number of openmp threads
-    else if(strcmp(s, "threads") == 0){
-      parameters->n_threads = atoi(strtok(NULL, "=\n"));
-    }
-
     // Number of generations
     else if(strcmp(s, "generations") == 0){
       parameters->n_generations = atoi(strtok(NULL, "=\n"));
@@ -267,12 +262,6 @@ void read_CLI(int argc, char *argv[])
     else if(strcmp(arg, "-active") == 0){
       if(++i < argc) parameters->n_active = atoi(argv[i]);
       else print_error("Error reading command line input '-active'");
-    }
-
-    // Number of openmp threads (-threads)
-    else if(strcmp(arg, "-threads") == 0){
-      if(++i < argc) parameters->n_threads = atoi(argv[i]);
-      else print_error("Error reading command line input '-threads'");
     }
 
     // Number of generations (-generations)
@@ -558,7 +547,6 @@ void print_parameters(void)
   printf("Number of batches:              %d\n", parameters->n_batches);
   printf("Number of active batches:       %d\n", parameters->n_active);
   printf("Number of generations:          %d\n", parameters->n_generations);
-  printf("Number of threads:              %d\n", parameters->n_threads);
   printf("Boundary conditions:            %s\n", bc);
   printf("Number of nuclides in material: %d\n", parameters->n_nuclides);
   printf("RNG seed:                       %llu\n", parameters->seed);
