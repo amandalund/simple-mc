@@ -7,6 +7,7 @@ Material *m;
 Tally *t;
 Bank *source_bank;
 Bank *fission_bank;
+double *keff;
 
 #ifdef _OPENMP
 Bank *master_fission_bank;

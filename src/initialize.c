@@ -42,6 +42,9 @@ void init_problem(int argc, char *argv[])
   // Set up source bank and initial source distribution
   init_source_bank();
 
+  // Set up array for keff
+  keff = calloc(params->n_active, sizeof(double));
+
   return;
 }
 
@@ -51,6 +54,8 @@ Parameters *init_params()
 
 #ifdef _OPENMP
   params->n_threads = omp_get_num_procs();
+#else
+  params->n_threads = 1;
 #endif
   params->n_particles = 1000000;
   params->n_batches = 10;
@@ -317,6 +322,7 @@ void free_problem(void)
   free_tally(t);
   free_material(m);
   free(g);
+  free(keff);
   free(params);
 
   return;

@@ -39,6 +39,7 @@ extern Material *m; // problem material
 extern Tally *t; // scalar flux tally
 extern Bank *source_bank; // bank for particle source sites
 extern Bank *fission_bank; // bank for particle fission sites
+extern double *keff; // effective multiplication factor
 
 // Declare OpenMP specific variables
 #ifdef _OPENMP

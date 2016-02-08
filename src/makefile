@@ -1,8 +1,8 @@
 # User options
 
 COMPILER = gnu
-OPTIMIZE = no
-DEBUG    = yes
+OPTIMIZE = yes
+DEBUG    = no
 OPENMP   = yes
 
 # Program and source code
@@ -42,7 +42,6 @@ endif
 
 ifeq ($(COMPILER),gnu)
   CC = gcc
-  CFLAGS += -Wno-unknown-pragmas
   ifeq ($(OPENMP),yes)
     CFLAGS += -fopenmp
   endif

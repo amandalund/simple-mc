@@ -642,9 +642,10 @@ void init_output(void)
   return;
 }
 
-void write_tally(FILE *fp, char *filename)
+void write_tally(char *filename)
 {
   int i, j, k;
+  FILE *fp;
 
   fp = fopen(filename, "a");
 
@@ -662,8 +663,10 @@ void write_tally(FILE *fp, char *filename)
   return;
 }
 
-void write_entropy(double H, FILE *fp, char *filename)
+void write_entropy(double H, char *filename)
 {
+  FILE *fp;
+
   fp = fopen(filename, "a");
   fprintf(fp, "%.10f\n", H);
   fclose(fp);
@@ -671,9 +674,11 @@ void write_entropy(double H, FILE *fp, char *filename)
   return;
 }
 
-void write_keff(double *keff, int n, FILE *fp, char *filename)
+void write_keff(double *keff, int n, char *filename)
 {
   int i;
+  FILE *fp;
+
   fp = fopen(filename, "a");
 
   for(i=0; i<n; i++){
@@ -685,9 +690,10 @@ void write_keff(double *keff, int n, FILE *fp, char *filename)
   return;
 }
 
-void write_bank(Bank *b, FILE *fp, char *filename)
+void write_bank(Bank *b, char *filename)
 {
   int i;
+  FILE *fp;
 
   fp = fopen(filename, "a");
 
@@ -700,7 +706,7 @@ void write_bank(Bank *b, FILE *fp, char *filename)
   return;
 }
 
-void write_source(Bank *b, FILE *fp, char *filename)
+void write_source(Bank *b, char *filename)
 {
   int i, j, k;
   double dx, dy, dz;
@@ -709,6 +715,7 @@ void write_source(Bank *b, FILE *fp, char *filename)
   unsigned long n;
   double *dist;
   Particle *p;
+  FILE *fp;
 
   // Number of grid boxes in each dimension
   n = params->n_bins;
