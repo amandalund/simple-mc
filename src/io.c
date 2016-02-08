@@ -2,7 +2,7 @@
 #include "global.h"
 
 // Read in parameters from file
-void parse_params(void)
+void parse_parameters(void)
 {
   char line[256], *s;
   FILE *fp = fopen("parameters", "r");
@@ -19,99 +19,99 @@ void parse_params(void)
       long long n_particles = atoll(strtok(NULL, "=\n"));
       if(n_particles < 1)
         print_error("Number of particles must be greater than 0");
-      params->n_particles = n_particles;
+      parameters->n_particles = n_particles;
     }
 
     // Number of batches
     else if(strcmp(s, "batches") == 0){
-      params->n_batches = atoi(strtok(NULL, "=\n"));
+      parameters->n_batches = atoi(strtok(NULL, "=\n"));
     }
 
     // Number of openmp threads
     else if(strcmp(s, "threads") == 0){
-      params->n_threads = atoi(strtok(NULL, "=\n"));
+      parameters->n_threads = atoi(strtok(NULL, "=\n"));
     }
 
     // Number of generations
     else if(strcmp(s, "generations") == 0){
-      params->n_generations = atoi(strtok(NULL, "=\n"));
+      parameters->n_generations = atoi(strtok(NULL, "=\n"));
     }
 
     // Number of active batches
     else if(strcmp(s, "active") == 0){
-      params->n_active = atoi(strtok(NULL, "=\n"));
+      parameters->n_active = atoi(strtok(NULL, "=\n"));
     }
 
     // Number of nuclides in material
     else if(strcmp(s, "nuclides") == 0){
-      params->n_nuclides = atoi(strtok(NULL, "=\n"));
+      parameters->n_nuclides = atoi(strtok(NULL, "=\n"));
     }
 
     // Whether to tally
     else if(strcmp(s, "tally") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "true") == 0)
-        params->tally = TRUE;
+        parameters->tally = TRUE;
       else if(strcasecmp(s, "false") == 0)
-        params->tally = FALSE;
+        parameters->tally = FALSE;
       else
         print_error("Invalid option for parameter 'tally': must be 'true' or 'false'");
     }
 
     // Number of bins in each dimension
     else if(strcmp(s, "bins") == 0){
-      params->n_bins = atoi(strtok(NULL, "=\n"));
+      parameters->n_bins = atoi(strtok(NULL, "=\n"));
     }
 
     // RNG seed
     else if(strcmp(s, "seed") == 0){
-      params->seed = atol(strtok(NULL, "=\n"));
+      parameters->seed = atol(strtok(NULL, "=\n"));
     }
 
     // Average number of fission neutrons produced
     else if(strcmp(s, "nu") == 0){
-      params->nu = atof(strtok(NULL, "=\n"));
+      parameters->nu = atof(strtok(NULL, "=\n"));
     }
 
     // Fission macro xs
     else if(strcmp(s, "xs_f") == 0){
-      params->xs_f = atof(strtok(NULL, "=\n"));
+      parameters->xs_f = atof(strtok(NULL, "=\n"));
     }
 
     // Absorption macro xs
     else if(strcmp(s, "xs_a") == 0){
-      params->xs_a = atof(strtok(NULL, "=\n"));
+      parameters->xs_a = atof(strtok(NULL, "=\n"));
     }
 
     // Scattering macro xs
     else if(strcmp(s, "xs_s") == 0){
-      params->xs_s = atof(strtok(NULL, "=\n"));
+      parameters->xs_s = atof(strtok(NULL, "=\n"));
     }
 
     // Geometry size in x
     else if(strcmp(s, "x") == 0){
-      params->gx = atof(strtok(NULL, "=\n"));
+      parameters->gx = atof(strtok(NULL, "=\n"));
     }
 
     // Geometry size in y
     else if(strcmp(s, "y") == 0){
-      params->gy = atof(strtok(NULL, "=\n"));
+      parameters->gy = atof(strtok(NULL, "=\n"));
     }
 
     // Geometry size in z
     else if(strcmp(s, "z") == 0){
-      params->gz = atof(strtok(NULL, "=\n"));
+      parameters->gz = atof(strtok(NULL, "=\n"));
     }
 
     // Boundary conditions
     else if(strcmp(s, "bc") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "vacuum") == 0)
-        params->bc = 0;
+        parameters->bc = 0;
       else if(strcasecmp(s, "reflective") == 0)
-        params->bc = 1;
+        parameters->bc = 1;
       else if(strcasecmp(s, "periodic") == 0)
-        params->bc = 2;
+        parameters->bc = 2;
       else
         print_error("Invalid boundary condition");
     }
@@ -120,9 +120,9 @@ void parse_params(void)
     else if(strcmp(s, "load_source") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "true") == 0)
-        params->load_source = TRUE;
+        parameters->load_source = TRUE;
       else if(strcasecmp(s, "false") == 0)
-        params->load_source = FALSE;
+        parameters->load_source = FALSE;
       else
         print_error("Invalid option for parameter 'load_source': must be 'true' or 'false'");
     }
@@ -131,9 +131,9 @@ void parse_params(void)
     else if(strcmp(s, "save_source") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "true") == 0)
-        params->save_source = TRUE;
+        parameters->save_source = TRUE;
       else if(strcasecmp(s, "false") == 0)
-        params->save_source = FALSE;
+        parameters->save_source = FALSE;
       else
         print_error("Invalid option for parameter 'save_source': must be 'true' or 'false'");
     }
@@ -142,9 +142,9 @@ void parse_params(void)
     else if(strcmp(s, "write_tally") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "true") == 0)
-        params->write_tally = TRUE;
+        parameters->write_tally = TRUE;
       else if(strcasecmp(s, "false") == 0)
-        params->write_tally = FALSE;
+        parameters->write_tally = FALSE;
       else
         print_error("Invalid option for parameter 'write_tally': must be 'true' or 'false'");
     }
@@ -153,9 +153,9 @@ void parse_params(void)
     else if(strcmp(s, "write_entropy") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "true") == 0)
-        params->write_entropy = TRUE;
+        parameters->write_entropy = TRUE;
       else if(strcasecmp(s, "false") == 0)
-        params->write_entropy = FALSE;
+        parameters->write_entropy = FALSE;
       else
         print_error("Invalid option for parameter 'write_entropy': must be 'true' or 'false'");
     }
@@ -164,9 +164,9 @@ void parse_params(void)
     else if(strcmp(s, "write_keff") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "true") == 0)
-        params->write_keff = TRUE;
+        parameters->write_keff = TRUE;
       else if(strcasecmp(s, "false") == 0)
-        params->write_keff = FALSE;
+        parameters->write_keff = FALSE;
       else
         print_error("Invalid option for parameter 'write_keff': must be 'true' or 'false'");
     }
@@ -175,9 +175,9 @@ void parse_params(void)
     else if(strcmp(s, "write_bank") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "true") == 0)
-        params->write_bank = TRUE;
+        parameters->write_bank = TRUE;
       else if(strcasecmp(s, "false") == 0)
-        params->write_bank = FALSE;
+        parameters->write_bank = FALSE;
       else
         print_error("Invalid option for parameter 'write_bank': must be 'true' or 'false'");
     }
@@ -186,9 +186,9 @@ void parse_params(void)
     else if(strcmp(s, "write_source") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "true") == 0)
-        params->write_source = TRUE;
+        parameters->write_source = TRUE;
       else if(strcasecmp(s, "false") == 0)
-        params->write_source = FALSE;
+        parameters->write_source = FALSE;
       else
         print_error("Invalid option for parameter 'write_source': must be 'true' or 'false'");
     }
@@ -196,36 +196,36 @@ void parse_params(void)
     // Path to write tallies to
     else if(strcmp(s, "tally_file") == 0){
       s = strtok(NULL, "=\n");
-      params->tally_file = malloc(strlen(s)*sizeof(char)+1);
-      strcpy(params->tally_file, s);
+      parameters->tally_file = malloc(strlen(s)*sizeof(char)+1);
+      strcpy(parameters->tally_file, s);
     }
 
     // Path to write shannon entropy to
     else if(strcmp(s, "entropy_file") == 0){
       s = strtok(NULL, "=\n");
-      params->entropy_file = malloc(strlen(s)*sizeof(char)+1);
-      strcpy(params->entropy_file, s);
+      parameters->entropy_file = malloc(strlen(s)*sizeof(char)+1);
+      strcpy(parameters->entropy_file, s);
     }
 
     // Path to write keff to
     else if(strcmp(s, "keff_file") == 0){
       s = strtok(NULL, "=\n");
-      params->keff_file = malloc(strlen(s)*sizeof(char)+1);
-      strcpy(params->keff_file, s);
+      parameters->keff_file = malloc(strlen(s)*sizeof(char)+1);
+      strcpy(parameters->keff_file, s);
     }
 
     // Path to write bank to
     else if(strcmp(s, "bank_file") == 0){
       s = strtok(NULL, "=\n");
-      params->bank_file = malloc(strlen(s)*sizeof(char)+1);
-      strcpy(params->bank_file, s);
+      parameters->bank_file = malloc(strlen(s)*sizeof(char)+1);
+      strcpy(parameters->bank_file, s);
     }
 
     // Path to write source distribution to
     else if(strcmp(s, "source_file") == 0){
       s = strtok(NULL, "=\n");
-      params->source_file = malloc(strlen(s)*sizeof(char)+1);
-      strcpy(params->source_file, s);
+      parameters->source_file = malloc(strlen(s)*sizeof(char)+1);
+      strcpy(parameters->source_file, s);
     }
 
     // Unknown config file option
@@ -252,32 +252,32 @@ void read_CLI(int argc, char *argv[])
         long long n_particles = atoll(argv[i]);
         if(n_particles < 1)
           print_error("Number of particles must be greater than 0");
-        params->n_particles = n_particles;
+        parameters->n_particles = n_particles;
       }
       else print_error("Error reading command line input '-particles'");
     }
 
     // Number of batches (-batches)
     else if(strcmp(arg, "-batches") == 0){
-      if(++i < argc) params->n_batches = atoi(argv[i]);
+      if(++i < argc) parameters->n_batches = atoi(argv[i]);
       else print_error("Error reading command line input '-batches'");
     }
 
     // Number of active batches (-active)
     else if(strcmp(arg, "-active") == 0){
-      if(++i < argc) params->n_active = atoi(argv[i]);
+      if(++i < argc) parameters->n_active = atoi(argv[i]);
       else print_error("Error reading command line input '-active'");
     }
 
     // Number of openmp threads (-threads)
     else if(strcmp(arg, "-threads") == 0){
-      if(++i < argc) params->n_threads = atoi(argv[i]);
+      if(++i < argc) parameters->n_threads = atoi(argv[i]);
       else print_error("Error reading command line input '-threads'");
     }
 
     // Number of generations (-generations)
     else if(strcmp(arg, "-generations") == 0){
-      if(++i < argc) params->n_generations = atoi(argv[i]);
+      if(++i < argc) parameters->n_generations = atoi(argv[i]);
       else print_error("Error reading command line input '-generations'");
     }
 
@@ -285,11 +285,11 @@ void read_CLI(int argc, char *argv[])
     else if(strcmp(arg, "-bc") == 0){
       if(++i < argc){
         if(strcasecmp(argv[i], "vacuum") == 0)
-          params->bc = 0;
+          parameters->bc = 0;
         else if(strcasecmp(argv[i], "reflective") == 0)
-          params->bc = 1;
+          parameters->bc = 1;
         else if(strcasecmp(argv[i], "periodic") == 0)
-          params->bc = 2;
+          parameters->bc = 2;
         else
           print_error("Invalid boundary condition");
       }
@@ -298,7 +298,7 @@ void read_CLI(int argc, char *argv[])
 
     // Number of nuclides in material (-nuclides)
     else if(strcmp(arg, "-nuclides") == 0){
-      if(++i < argc) params->n_nuclides = atoi(argv[i]);
+      if(++i < argc) parameters->n_nuclides = atoi(argv[i]);
       else print_error("Error reading command line input '-nuclides'");
     }
 
@@ -306,9 +306,9 @@ void read_CLI(int argc, char *argv[])
     else if(strcmp(arg, "-tally") == 0){
       if(++i < argc){
         if(strcasecmp(argv[i], "true") == 0)
-          params->tally = TRUE;
+          parameters->tally = TRUE;
         else if(strcasecmp(argv[i], "false") == 0)
-          params->tally = FALSE;
+          parameters->tally = FALSE;
         else
           print_error("Invalid option for parameter 'tally': must be 'true' or 'false'");
       }
@@ -317,55 +317,55 @@ void read_CLI(int argc, char *argv[])
 
     // Number of bins in each dimension (-bins)
     else if(strcmp(arg, "-bins") == 0){
-      if(++i < argc) params->n_bins = atoi(argv[i]);
+      if(++i < argc) parameters->n_bins = atoi(argv[i]);
       else print_error("Error reading command line input '-bins'");
     }
 
     // RNG seed (-seed)
     else if(strcmp(arg, "-seed") == 0){
-      if(++i < argc) params->seed = atol(argv[i]);
+      if(++i < argc) parameters->seed = atol(argv[i]);
       else print_error("Error reading command line input '-seed'");
     }
 
     // Average number of fission neutrons produced (-nu)
     else if(strcmp(arg, "-nu") == 0){
-      if(++i < argc) params->nu = atof(argv[i]);
+      if(++i < argc) parameters->nu = atof(argv[i]);
       else print_error("Error reading command line input '-nu'");
     }
 
     // Absorption macro xs (-xs_a)
     else if(strcmp(arg, "-xs_a") == 0){
-      if(++i < argc) params->xs_a = atof(argv[i]);
+      if(++i < argc) parameters->xs_a = atof(argv[i]);
       else print_error("Error reading command line input '-xs_a'");
     }
 
     // Scattering macro xs (-xs_s)
     else if(strcmp(arg, "-xs_s") == 0){
-      if(++i < argc) params->xs_s = atof(argv[i]);
+      if(++i < argc) parameters->xs_s = atof(argv[i]);
       else print_error("Error reading command line input '-xs_s'");
     }
 
     // Fission macro xs (-xs_f)
     else if(strcmp(arg, "-xs_f") == 0){
-      if(++i < argc) params->xs_f = atof(argv[i]);
+      if(++i < argc) parameters->xs_f = atof(argv[i]);
       else print_error("Error reading command line input '-xs_f'");
     }
 
     // Geometry size in x (-x)
     else if(strcmp(arg, "-x") == 0){
-      if(++i < argc) params->gx = atof(argv[i]);
+      if(++i < argc) parameters->gx = atof(argv[i]);
       else print_error("Error reading command line input '-x'");
     }
 
     // Geometry size in y (-y)
     else if(strcmp(arg, "-y") == 0){
-      if(++i < argc) params->gy = atof(argv[i]);
+      if(++i < argc) parameters->gy = atof(argv[i]);
       else print_error("Error reading command line input '-y'");
     }
 
     // Geometry size in z (-z)
     else if(strcmp(arg, "-z") == 0){
-      if(++i < argc) params->gz = atof(argv[i]);
+      if(++i < argc) parameters->gz = atof(argv[i]);
       else print_error("Error reading command line input '-z'");
     }
 
@@ -373,9 +373,9 @@ void read_CLI(int argc, char *argv[])
     else if(strcmp(arg, "-load_source") == 0){
       if(++i < argc){
         if(strcasecmp(argv[i], "true") == 0)
-          params->load_source = TRUE;
+          parameters->load_source = TRUE;
         else if(strcasecmp(argv[i], "false") == 0)
-          params->load_source = FALSE;
+          parameters->load_source = FALSE;
         else
           print_error("Invalid option for parameter 'load_source': must be 'true' or 'false'");
       }
@@ -386,9 +386,9 @@ void read_CLI(int argc, char *argv[])
     else if(strcmp(arg, "-save_source") == 0){
       if(++i < argc){
         if(strcasecmp(argv[i], "true") == 0)
-          params->save_source = TRUE;
+          parameters->save_source = TRUE;
         else if(strcasecmp(argv[i], "false") == 0)
-          params->save_source = FALSE;
+          parameters->save_source = FALSE;
         else
           print_error("Invalid option for parameter 'save_source': must be 'true' or 'false'");
       }
@@ -399,9 +399,9 @@ void read_CLI(int argc, char *argv[])
     else if(strcmp(arg, "-write_tally") == 0){
       if(++i < argc){
         if(strcasecmp(argv[i], "true") == 0)
-          params->write_tally = TRUE;
+          parameters->write_tally = TRUE;
         else if(strcasecmp(argv[i], "false") == 0)
-          params->write_tally = FALSE;
+          parameters->write_tally = FALSE;
         else
           print_error("Invalid option for parameter 'write_tally': must be 'true' or 'false'");
       }
@@ -412,9 +412,9 @@ void read_CLI(int argc, char *argv[])
     else if(strcmp(arg, "-write_entropy") == 0){
       if(++i < argc){
         if(strcasecmp(argv[i], "true") == 0)
-          params->write_entropy = TRUE;
+          parameters->write_entropy = TRUE;
         else if(strcasecmp(argv[i], "false") == 0)
-          params->write_entropy = FALSE;
+          parameters->write_entropy = FALSE;
         else
           print_error("Invalid option for parameter 'write_entropy': must be 'true' or 'false'");
       }
@@ -425,9 +425,9 @@ void read_CLI(int argc, char *argv[])
     else if(strcmp(arg, "-write_keff") == 0){
       if(++i < argc){
         if(strcasecmp(argv[i], "true") == 0)
-          params->write_keff = TRUE;
+          parameters->write_keff = TRUE;
         else if(strcasecmp(argv[i], "false") == 0)
-          params->write_keff = FALSE;
+          parameters->write_keff = FALSE;
         else
           print_error("Invalid option for parameter 'write_keff': must be 'true' or 'false'");
       }
@@ -438,9 +438,9 @@ void read_CLI(int argc, char *argv[])
     else if(strcmp(arg, "-write_bank") == 0){
       if(++i < argc){
         if(strcasecmp(argv[i], "true") == 0)
-          params->write_bank = TRUE;
+          parameters->write_bank = TRUE;
         else if(strcasecmp(argv[i], "false") == 0)
-          params->write_bank = FALSE;
+          parameters->write_bank = FALSE;
         else
           print_error("Invalid option for parameter 'write_bank': must be 'true' or 'false'");
       }
@@ -451,9 +451,9 @@ void read_CLI(int argc, char *argv[])
     else if(strcmp(arg, "-write_source") == 0){
       if(++i < argc){
         if(strcasecmp(argv[i], "true") == 0)
-          params->write_source = TRUE;
+          parameters->write_source = TRUE;
         else if(strcasecmp(argv[i], "false") == 0)
-          params->write_source = FALSE;
+          parameters->write_source = FALSE;
         else
           print_error("Invalid option for parameter 'write_source': must be 'true' or 'false'");
       }
@@ -463,9 +463,9 @@ void read_CLI(int argc, char *argv[])
     // Path to write tallies to (-tally_file)
     else if(strcmp(arg, "-tally_file") == 0){
       if(++i < argc){
-        if(params->tally_file != NULL) free(params->tally_file);
-        params->tally_file = malloc(strlen(argv[i])*sizeof(char)+1);
-        strcpy(params->tally_file, argv[i]);
+        if(parameters->tally_file != NULL) free(parameters->tally_file);
+        parameters->tally_file = malloc(strlen(argv[i])*sizeof(char)+1);
+        strcpy(parameters->tally_file, argv[i]);
       }
       else print_error("Error reading command line input '-tally_file'");
     }
@@ -473,9 +473,9 @@ void read_CLI(int argc, char *argv[])
     // Path to write shannon entropy to (-entropy_file)
     else if(strcmp(arg, "-entropy_file") == 0){
       if(++i < argc){
-        if(params->entropy_file != NULL) free(params->entropy_file);
-        params->entropy_file = malloc(strlen(argv[i])*sizeof(char)+1);
-        strcpy(params->entropy_file, argv[i]);
+        if(parameters->entropy_file != NULL) free(parameters->entropy_file);
+        parameters->entropy_file = malloc(strlen(argv[i])*sizeof(char)+1);
+        strcpy(parameters->entropy_file, argv[i]);
       }
       else print_error("Error reading command line input '-entropy_file'");
     }
@@ -483,9 +483,9 @@ void read_CLI(int argc, char *argv[])
     // Path to write keff to (-keff_file)
     else if(strcmp(arg, "-keff_file") == 0){
       if(++i < argc){
-        if(params->keff_file != NULL) free(params->keff_file);
-        params->keff_file = malloc(strlen(argv[i])*sizeof(char)+1);
-        strcpy(params->keff_file, argv[i]);
+        if(parameters->keff_file != NULL) free(parameters->keff_file);
+        parameters->keff_file = malloc(strlen(argv[i])*sizeof(char)+1);
+        strcpy(parameters->keff_file, argv[i]);
       }
       else print_error("Error reading command line input '-keff_file'");
     }
@@ -493,9 +493,9 @@ void read_CLI(int argc, char *argv[])
     // Path to write bank to (-bank_file)
     else if(strcmp(arg, "-bank_file") == 0){
       if(++i < argc){
-        if(params->bank_file != NULL) free(params->bank_file);
-        params->bank_file = malloc(strlen(argv[i])*sizeof(char)+1);
-        strcpy(params->bank_file, argv[i]);
+        if(parameters->bank_file != NULL) free(parameters->bank_file);
+        parameters->bank_file = malloc(strlen(argv[i])*sizeof(char)+1);
+        strcpy(parameters->bank_file, argv[i]);
       }
       else print_error("Error reading command line input '-bank_file'");
     }
@@ -503,9 +503,9 @@ void read_CLI(int argc, char *argv[])
     // Path to write source distribution to (-source_file)
     else if(strcmp(arg, "-source_file") == 0){
       if(++i < argc){
-        if(params->source_file != NULL) free(params->source_file);
-        params->source_file = malloc(strlen(argv[i])*sizeof(char)+1);
-        strcpy(params->source_file, argv[i]);
+        if(parameters->source_file != NULL) free(parameters->source_file);
+        parameters->source_file = malloc(strlen(argv[i])*sizeof(char)+1);
+        strcpy(parameters->source_file, argv[i]);
       }
       else print_error("Error reading command line input '-source_file'");
     }
@@ -515,53 +515,53 @@ void read_CLI(int argc, char *argv[])
   }
 
   // Validate Inputs
-  if(params->write_tally == TRUE && params->tally_file == NULL)
-    params->tally_file = "tally.dat";
-  if(params->write_entropy == TRUE && params->entropy_file == NULL)
-    params->entropy_file = "entropy.dat";
-  if(params->write_keff == TRUE && params->keff_file == NULL)
-    params->keff_file = "keff.dat";
-  if(params->write_bank == TRUE && params->bank_file == NULL)
-    params->bank_file = "bank.dat";
-  if(params->write_source == TRUE && params->source_file == NULL)
-    params->source_file = "source.dat";
-  if(params->n_batches < 1 && params->n_generations < 1)
+  if(parameters->write_tally == TRUE && parameters->tally_file == NULL)
+    parameters->tally_file = "tally.dat";
+  if(parameters->write_entropy == TRUE && parameters->entropy_file == NULL)
+    parameters->entropy_file = "entropy.dat";
+  if(parameters->write_keff == TRUE && parameters->keff_file == NULL)
+    parameters->keff_file = "keff.dat";
+  if(parameters->write_bank == TRUE && parameters->bank_file == NULL)
+    parameters->bank_file = "bank.dat";
+  if(parameters->write_source == TRUE && parameters->source_file == NULL)
+    parameters->source_file = "source.dat";
+  if(parameters->n_batches < 1 && parameters->n_generations < 1)
     print_error("Must have at least one batch or one generation");
-  if(params->n_batches < 0)
+  if(parameters->n_batches < 0)
     print_error("Number of batches cannot be negative");
-  if(params->n_generations < 0)
+  if(parameters->n_generations < 0)
     print_error("Number of generations cannot be negative");
-  if(params->n_active > params->n_batches)
+  if(parameters->n_active > parameters->n_batches)
     print_error("Number of active batches cannot be greater than number of batches");
-  if(params->n_bins < 0)
+  if(parameters->n_bins < 0)
     print_error("Number of bins cannot be negative");
-  if(params->nu < 0)
+  if(parameters->nu < 0)
     print_error("Average number of fission neutrons produced cannot be negative");
-  if(params->gx <= 0 || params->gy <= 0 || params->gz <= 0)
+  if(parameters->gx <= 0 || parameters->gy <= 0 || parameters->gz <= 0)
     print_error("Length of domain must be positive in x, y, and z dimension");
-  if(params->xs_f < 0 || params->xs_a < 0 || params->xs_s < 0)
+  if(parameters->xs_f < 0 || parameters->xs_a < 0 || parameters->xs_s < 0)
     print_error("Macroscopic cross section values cannot be negative");
 
   return;
 }
 
-void print_params(void)
+void print_parameters(void)
 {
   char *bc = NULL;
-  if(params->bc == 0) bc = "Vacuum";
-  else if(params->bc == 1) bc = "Reflective";
-  else if(params->bc == 2) bc = "Periodic";
+  if(parameters->bc == 0) bc = "Vacuum";
+  else if(parameters->bc == 1) bc = "Reflective";
+  else if(parameters->bc == 2) bc = "Periodic";
   border_print();
   center_print("INPUT SUMMARY", 79);
   border_print();
-  printf("Number of particles:            "); fancy_int(params->n_particles);
-  printf("Number of batches:              %d\n", params->n_batches);
-  printf("Number of active batches:       %d\n", params->n_active);
-  printf("Number of generations:          %d\n", params->n_generations);
-  printf("Number of threads:              %d\n", params->n_threads);
+  printf("Number of particles:            "); fancy_int(parameters->n_particles);
+  printf("Number of batches:              %d\n", parameters->n_batches);
+  printf("Number of active batches:       %d\n", parameters->n_active);
+  printf("Number of generations:          %d\n", parameters->n_generations);
+  printf("Number of threads:              %d\n", parameters->n_threads);
   printf("Boundary conditions:            %s\n", bc);
-  printf("Number of nuclides in material: %d\n", params->n_nuclides);
-  printf("RNG seed:                       %llu\n", params->seed);
+  printf("Number of nuclides in material: %d\n", parameters->n_nuclides);
+  printf("RNG seed:                       %llu\n", parameters->seed);
   border_print();
 }
 
@@ -610,39 +610,39 @@ void init_output(void)
   FILE *fp = NULL; // file pointer for output
 
   // Set up file to output tallies
-  if(params->write_tally == TRUE){
-    fp = fopen(params->tally_file, "w");
+  if(parameters->write_tally == TRUE){
+    fp = fopen(parameters->tally_file, "w");
     fclose(fp);
   }
 
   // Set up file to output shannon entropy to assess source convergence
-  if(params->write_entropy == TRUE){
-    fp = fopen(params->entropy_file, "w");
+  if(parameters->write_entropy == TRUE){
+    fp = fopen(parameters->entropy_file, "w");
     fclose(fp);
   }
 
   // Set up file to output keff
-  if(params->write_keff == TRUE){
-    fp = fopen(params->keff_file, "w");
+  if(parameters->write_keff == TRUE){
+    fp = fopen(parameters->keff_file, "w");
     fclose(fp);
   }
 
   // Set up file to output particle bank
-  if(params->write_bank == TRUE){
-    fp = fopen(params->bank_file, "w");
+  if(parameters->write_bank == TRUE){
+    fp = fopen(parameters->bank_file, "w");
     fclose(fp);
   }
 
   // Set up file to output source distribution
-  if(params->write_source == TRUE){
-    fp = fopen(params->source_file, "w");
+  if(parameters->write_source == TRUE){
+    fp = fopen(parameters->source_file, "w");
     fclose(fp);
   }
 
   return;
 }
 
-void write_tally(char *filename)
+void write_tally(Tally *t, char *filename)
 {
   int i, j, k;
   FILE *fp;
@@ -718,12 +718,12 @@ void write_source(Bank *b, char *filename)
   FILE *fp;
 
   // Number of grid boxes in each dimension
-  n = params->n_bins;
+  n = parameters->n_bins;
 
   // Find grid spacing
-  dx = g->x/n;
-  dy = g->y/n;
-  dz = g->z/n;
+  dx = geometry->x/n;
+  dy = geometry->y/n;
+  dz = geometry->z/n;
 
   // Allocate array to keep track of number of sites in each grid box
   dist = calloc(n*n*n, sizeof(double));

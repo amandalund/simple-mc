@@ -2,7 +2,7 @@
 #include "global.h"
 
 // Simple flux tally
-void score_tally(Particle *p)
+void score_tally(Tally *t, Particle *p)
 {
   int ix, iy, iz;
   double vol;
@@ -19,7 +19,7 @@ void score_tally(Particle *p)
 #pragma omp atomic
 #endif
   // Scalar flux
-  t->flux[ix + t->n*iy + t->n*t->n*iz] += 1./(vol * m->xs_t * params->n_particles);
+  t->flux[ix + t->n*iy + t->n*t->n*iz] += 1./(vol * material->xs_t * parameters->n_particles);
 
   return;
 }

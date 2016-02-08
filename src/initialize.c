@@ -5,18 +5,18 @@ void init_problem(int argc, char *argv[])
 {
   // Get inputs: set parameters to default values, then parse parameter file,
   // then override with any command line inputs
-  params = init_params();
-  parse_params();
+  parameters = init_parameters();
+  parse_parameters();
   read_CLI(argc, argv);
-  print_params();
+  print_parameters();
 
   // Set initial RNG seed
-  set_initial_seed(params->seed);
+  set_initial_seed(parameters->seed);
   set_stream(STREAM_INIT);
 
   // Set OpenMP specific variables
 #ifdef _OPENMP
-  omp_set_num_threads(params->n_threads);
+  omp_set_num_threads(parameters->n_threads);
 #pragma omp parallel
 {
   n_threads = omp_get_num_threads();
@@ -28,13 +28,13 @@ void init_problem(int argc, char *argv[])
   init_output();
 
   // Set up geometry
-  g = init_geometry();
+  geometry = init_geometry();
 
   // Set up material
-  m = init_material();
+  material = init_material();
 
   // Set up tallies
-  t = init_tally();
+  tally = init_tally();
 
   // Set up fission banks
   init_fission_bank();
@@ -43,60 +43,60 @@ void init_problem(int argc, char *argv[])
   init_source_bank();
 
   // Set up array for keff
-  keff = calloc(params->n_active, sizeof(double));
+  keff = calloc(parameters->n_active, sizeof(double));
 
   return;
 }
 
-Parameters *init_params()
+Parameters *init_parameters()
 {
-  Parameters *params = malloc(sizeof(Parameters));
+  Parameters *parameters = malloc(sizeof(Parameters));
 
 #ifdef _OPENMP
-  params->n_threads = omp_get_num_procs();
+  parameters->n_threads = omp_get_num_procs();
 #else
-  params->n_threads = 1;
+  parameters->n_threads = 1;
 #endif
-  params->n_particles = 1000000;
-  params->n_batches = 10;
-  params->n_generations = 1;
-  params->n_active = 10;
-  params->bc = REFLECT;
-  params->n_nuclides = 1;
-  params->tally = TRUE;
-  params->n_bins = 16;
-  params->seed = 1;
-  params->nu = 2.5;
-  params->xs_f = 0.012;
-  params->xs_a = 0.03;
-  params->xs_s = 0.27;
-  params->gx = 400;
-  params->gy = 400;
-  params->gz = 400;
-  params->load_source = FALSE;
-  params->save_source = FALSE;
-  params->write_tally = FALSE;
-  params->write_entropy = FALSE;
-  params->write_keff = FALSE;
-  params->write_bank = FALSE;
-  params->write_source = FALSE;
-  params->tally_file = NULL;
-  params->entropy_file = NULL;
-  params->keff_file = NULL;
-  params->bank_file = NULL;
-  params->source_file = NULL;
+  parameters->n_particles = 1000000;
+  parameters->n_batches = 10;
+  parameters->n_generations = 1;
+  parameters->n_active = 10;
+  parameters->bc = REFLECT;
+  parameters->n_nuclides = 1;
+  parameters->tally = TRUE;
+  parameters->n_bins = 16;
+  parameters->seed = 1;
+  parameters->nu = 2.5;
+  parameters->xs_f = 0.012;
+  parameters->xs_a = 0.03;
+  parameters->xs_s = 0.27;
+  parameters->gx = 400;
+  parameters->gy = 400;
+  parameters->gz = 400;
+  parameters->load_source = FALSE;
+  parameters->save_source = FALSE;
+  parameters->write_tally = FALSE;
+  parameters->write_entropy = FALSE;
+  parameters->write_keff = FALSE;
+  parameters->write_bank = FALSE;
+  parameters->write_source = FALSE;
+  parameters->tally_file = NULL;
+  parameters->entropy_file = NULL;
+  parameters->keff_file = NULL;
+  parameters->bank_file = NULL;
+  parameters->source_file = NULL;
 
-  return params;
+  return parameters;
 }
 
 Geometry *init_geometry(void)
 {
   Geometry *g = malloc(sizeof(Geometry));
 
-  g->x = params->gx;
-  g->y = params->gy;
-  g->z = params->gz;
-  g->bc = params->bc;
+  g->x = parameters->gx;
+  g->y = parameters->gy;
+  g->z = parameters->gz;
+  g->bc = parameters->bc;
 
   return g;
 }
@@ -106,10 +106,10 @@ Tally *init_tally(void)
   Tally *t = malloc(sizeof(Tally));
 
   t->tallies_on = FALSE;
-  t->n = params->n_bins;
-  t->dx = params->gx/t->n;
-  t->dy = params->gy/t->n;
-  t->dz = params->gz/t->n;
+  t->n = parameters->n_bins;
+  t->dx = parameters->gx/t->n;
+  t->dy = parameters->gy/t->n;
+  t->dz = parameters->gz/t->n;
   t->flux = calloc(t->n*t->n*t->n, sizeof(double));
 
   return t;
@@ -122,11 +122,11 @@ Material *init_material(void)
 
   // Hardwire the material macroscopic cross sections for now to produce a keff
   // close to 1 (fission, absorption, scattering, total, atomic density)
-  Nuclide macro = {params->xs_f, params->xs_a, params->xs_s,
-     params->xs_f + params->xs_a + params->xs_s, 1.0};
+  Nuclide macro = {parameters->xs_f, parameters->xs_a, parameters->xs_s,
+     parameters->xs_f + parameters->xs_a + parameters->xs_s, 1.0};
 
   Material *m = malloc(sizeof(Material));
-  m->n_nuclides = params->n_nuclides;
+  m->n_nuclides = parameters->n_nuclides;
   m->nuclides = malloc(m->n_nuclides*sizeof(Nuclide));
 
   // Generate some arbitrary microscopic cross section values and atomic
@@ -154,10 +154,10 @@ Material *init_material(void)
     m->nuclides[i].xs_t = m->nuclides[i].xs_a + m->nuclides[i].xs_s;
   }
 
-  m->xs_f = params->xs_f;
-  m->xs_a = params->xs_a;
-  m->xs_s = params->xs_s;
-  m->xs_t = params->xs_a + params->xs_s;
+  m->xs_f = parameters->xs_f;
+  m->xs_a = parameters->xs_a;
+  m->xs_s = parameters->xs_s;
+  m->xs_t = parameters->xs_a + parameters->xs_s;
 
   return m;
 }
@@ -167,15 +167,15 @@ void init_source_bank(void)
   unsigned long i_p; // index over particles
 
   // Initialize source bank
-  source_bank = init_bank(params->n_particles);
+  source_bank = init_bank(parameters->n_particles);
 
   // Sample source particles or load a source
-  if(params->load_source == TRUE){
+  if(parameters->load_source == TRUE){
     load_source(source_bank);
-    source_bank->n = params->n_particles;
+    source_bank->n = parameters->n_particles;
   }
   else{
-    for(i_p=0; i_p<params->n_particles; i_p++){
+    for(i_p=0; i_p<parameters->n_particles; i_p++){
       sample_source_particle(&(source_bank->p[i_p]));
       source_bank->n++;
     }
@@ -192,15 +192,15 @@ void init_fission_bank(void)
 #pragma omp parallel
 {
   if(thread_id == 0){
-    fission_bank = init_bank(2*params->n_particles);
+    fission_bank = init_bank(2*parameters->n_particles);
   }
   else{
-    fission_bank = init_bank(2*params->n_particles/n_threads);
+    fission_bank = init_bank(2*parameters->n_particles/n_threads);
   }
 }
-  master_fission_bank = init_bank(2*params->n_particles);
+  master_fission_bank = init_bank(2*parameters->n_particles);
 #else
-  fission_bank = init_bank(2*params->n_particles);
+  fission_bank = init_bank(2*parameters->n_particles);
 #endif
 
   return;
@@ -227,9 +227,9 @@ void sample_source_particle(Particle *p)
   p->u = p->mu;
   p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
   p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);
-  p->x = rn()*g->x;
-  p->y = rn()*g->y;
-  p->z = rn()*g->z;
+  p->x = rn()*geometry->x;
+  p->y = rn()*geometry->y;
+  p->z = rn()*geometry->z;
 
   return;
 }
@@ -319,11 +319,11 @@ void free_problem(void)
   free_bank(fission_bank);
 #endif
   free_bank(source_bank);
-  free_tally(t);
-  free_material(m);
-  free(g);
+  free_tally(tally);
+  free_material(material);
+  free(geometry);
   free(keff);
-  free(params);
+  free(parameters);
 
   return;
 }

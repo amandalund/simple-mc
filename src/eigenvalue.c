@@ -15,41 +15,41 @@ void run_eigenvalue(void)
   Particle p;
 
   // Loop over batches
-  for(i_b=0; i_b<params->n_batches; i_b++){
+  for(i_b=0; i_b<parameters->n_batches; i_b++){
 
     keff_batch = 0;
 
     // Write coordinates of particles in source bank
-    if(params->write_bank == TRUE){
-      write_bank(source_bank, params->bank_file);
+    if(parameters->write_bank == TRUE){
+      write_bank(source_bank, parameters->bank_file);
     }
 
     // Turn on tallying and increment index in active batches
-    if(i_b >= params->n_batches - params->n_active){
+    if(i_b >= parameters->n_batches - parameters->n_active){
       i_a++;
-      if(params->tally == TRUE){
-        t->tallies_on = TRUE;
+      if(parameters->tally == TRUE){
+        tally->tallies_on = TRUE;
       }
     }
 
     // Loop over generations
-    for(i_g=0; i_g<params->n_generations; i_g++){
+    for(i_g=0; i_g<parameters->n_generations; i_g++){
 
       // Set RNG stream for tracking
       set_stream(STREAM_TRACK);
 
 #ifdef _OPENMP
-#pragma omp parallel default(none) private(i_p, p) shared(i_b, i_g, params, source_bank, g, m, t)
+#pragma omp parallel default(none) private(i_p, p) shared(i_b, i_g, parameters, source_bank, geometry, material, tally)
 {
 #pragma omp for
 #endif
       // Loop over particles
-      for(i_p=0; i_p<params->n_particles; i_p++){
+      for(i_p=0; i_p<parameters->n_particles; i_p++){
 
 	// Set seed for particle i_p by skipping ahead in the random number
 	// sequence stride*(total particles simulated) numbers. This allows for
 	// reproducibility of the particle history.
-        rn_skip((i_b*params->n_generations + i_g)*params->n_particles + i_p);
+        rn_skip((i_b*parameters->n_generations + i_g)*parameters->n_particles + i_p);
 
         // Copy next particle into p
         copy_particle(&p, &(source_bank->p[i_p]));
@@ -61,7 +61,7 @@ void run_eigenvalue(void)
 }
 #endif
       set_stream(STREAM_OTHER);
-      rn_skip(i_b*params->n_generations + i_g);
+      rn_skip(i_b*parameters->n_generations + i_g);
 
 #ifdef _OPENMP
       // Merge fission banks from threads
@@ -78,28 +78,28 @@ void run_eigenvalue(void)
 
       // Calculate shannon entropy to assess source convergence
       H = shannon_entropy(source_bank);
-      if(params->write_entropy == TRUE){
-        write_entropy(H, params->entropy_file);
+      if(parameters->write_entropy == TRUE){
+        write_entropy(H, parameters->entropy_file);
       }
 
       // Write the source distribution
-      if(params->write_source == TRUE){
-        write_source(source_bank, params->source_file);
+      if(parameters->write_source == TRUE){
+        write_source(source_bank, parameters->source_file);
       }
     }
 
     // Calculate k_effective
-    keff_batch /= params->n_generations;
+    keff_batch /= parameters->n_generations;
     if(i_a >= 0){
       keff[i_a] = keff_batch;
     }
 
     // Tallies for this realization
-    if(t->tallies_on == TRUE){
-      if(params->write_tally == TRUE){
-        write_tally(params->tally_file);
+    if(tally->tallies_on == TRUE){
+      if(parameters->write_tally == TRUE){
+        write_tally(tally, parameters->tally_file);
       }
-      memset(t->flux, 0, t->n*t->n*t->n*sizeof(double));
+      memset(tally->flux, 0, tally->n*tally->n*tally->n*sizeof(double));
     }
 
     // Calculate keff mean and standard deviation
@@ -115,11 +115,11 @@ void run_eigenvalue(void)
   }
 
   // Write out keff
-  if(params->write_keff == TRUE){
-    write_keff(keff, params->n_active, params->keff_file);
+  if(parameters->write_keff == TRUE){
+    write_keff(keff, parameters->n_active, parameters->keff_file);
   }
 
-  if(params->save_source == TRUE){
+  if(parameters->save_source == TRUE){
     save_source(source_bank);
   }
 
@@ -129,11 +129,28 @@ void run_eigenvalue(void)
 void merge_fission_banks(void)
 {
 #ifdef _OPENMP
+  unsigned long n = 0;
   unsigned long n_sites = 0; // total number of source sites in fission bank
   int i_t; // index over threads
 
 #pragma omp parallel
 {
+  // Count total number of source sites and resize master fission banks if
+  // necessary
+#pragma omp for ordered
+  for(i_t=0; i_t<n_threads; i_t++){
+#pragma omp ordered
+{
+    n += fission_bank->n;
+}
+  }
+#pragma omp barrier
+  if(thread_id == 0 && n > fission_bank->sz){
+    fission_bank->resize(fission_bank);
+    master_fission_bank->resize(master_fission_bank);
+  }
+
+  // Copy sites from each fission bank into master bank
 #pragma omp for ordered
   for(i_t=0; i_t<n_threads; i_t++){
 #pragma omp ordered
@@ -217,9 +234,9 @@ double shannon_entropy(Bank *b)
   n = ceil(pow(b->n/20, 1.0/3.0));
 
   // Find grid spacing
-  dx = g->x/n;
-  dy = g->y/n;
-  dz = g->z/n;
+  dx = geometry->x/n;
+  dy = geometry->y/n;
+  dz = geometry->z/n;
 
   // Allocate array to keep track of number of sites in each grid box
   count = calloc(n*n*n, sizeof(unsigned long));

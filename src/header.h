@@ -100,15 +100,15 @@ typedef struct Bank_{
 } Bank;
 
 // io.c function prototypes
-void parse_params(void);
+void parse_parameters(void);
 void read_CLI(int argc, char *argv[]);
 void print_error(char *message);
-void print_params(void);
+void print_parameters(void);
 void border_print(void);
 void fancy_int(long a);
 void center_print(const char *s, int width);
 void init_output(void);
-void write_tally(char *filename);
+void write_tally(Tally *t, char *filename);
 void write_entropy(double H, char *filename);
 void write_keff(double *keff, int n, char *filename);
 void write_bank(Bank *b, char *filename);
@@ -128,7 +128,7 @@ void rn_skip(long long n);
 
 // initialize.c function prototypes
 void init_problem(int argc, char *argv[]);
-Parameters *init_params(void);
+Parameters *init_parameters(void);
 Geometry *init_geometry(void);
 Tally *init_tally(void);
 Material *init_material(void);
@@ -146,7 +146,7 @@ void free_problem(void);
 
 // transport.c function prototypes
 void transport(Particle *p);
-void calculate_xs(Particle *p);
+void calculate_xs(void);
 double distance_to_boundary(Particle *p);
 double distance_to_collision(void);
 void cross_surface(Particle *p);
@@ -160,6 +160,6 @@ double shannon_entropy(Bank *b);
 void calculate_keff(double *mean, double *std, int n);
 
 // tally.c function prototypes
-void score_tally(Particle *p);
+void score_tally(Tally *t, Particle *p);
 
 #endif

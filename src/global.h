@@ -33,10 +33,10 @@
 #define STREAM_OTHER 2
 
 // Declare main structures used throughout simulation
-extern Parameters *params; // user defined parameters
-extern Geometry *g; // homogenous cube geometry
-extern Material *m; // problem material
-extern Tally *t; // scalar flux tally
+extern Parameters *parameters; // user defined parameters
+extern Geometry *geometry; // homogenous cube geometry
+extern Material *material; // problem material
+extern Tally *tally; // scalar flux tally
 extern Bank *source_bank; // bank for particle source sites
 extern Bank *fission_bank; // bank for particle fission sites
 extern double *keff; // effective multiplication factor

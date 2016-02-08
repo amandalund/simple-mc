@@ -12,7 +12,7 @@ void transport(Particle *p)
 
     // Recalculate macro xs if particle has changed energy
     if(p->energy != p->last_energy){
-      calculate_xs(p);
+      calculate_xs();
     }
 
     // Find distance to boundary
@@ -38,42 +38,42 @@ void transport(Particle *p)
       collision(p);
 
       // Score tallies
-      if(t->tallies_on == TRUE){
-        score_tally(p);
+      if(tally->tallies_on == TRUE){
+        score_tally(tally, p);
       }
     }
   }
   return;
 }
 
-// TODO fix for threading
+// TODO fix for threading. Not currently used since one-group homogenous cube
 // Calculates the macroscopic cross section of the material the particle is
 // traveling through
-void calculate_xs(Particle *p)
+void calculate_xs(void)
 {
   int i;
 
   // Reset macroscopic cross sections to 0
-  m->xs_t = 0.0;
-  m->xs_f = 0.0;
-  m->xs_a = 0.0;
-  m->xs_s = 0.0;
+  material->xs_t = 0.0;
+  material->xs_f = 0.0;
+  material->xs_a = 0.0;
+  material->xs_s = 0.0;
 
-  for(i=0; i<m->n_nuclides; i++){
+  for(i=0; i<material->n_nuclides; i++){
 
-    Nuclide nuc = m->nuclides[i];
+    Nuclide nuc = material->nuclides[i];
 
     // Add contribution from this nuclide to total macro xs
-    m->xs_t += nuc.atom_density * nuc.xs_t;
+    material->xs_t += nuc.atom_density * nuc.xs_t;
 
     // Add contribution from this nuclide to fission macro xs
-    m->xs_f += nuc.atom_density * nuc.xs_f;
+    material->xs_f += nuc.atom_density * nuc.xs_f;
 
     // Add contribution from this nuclide to absorption macro xs
-    m->xs_a += nuc.atom_density * nuc.xs_a;
+    material->xs_a += nuc.atom_density * nuc.xs_a;
 
     // Add contribution from this nuclide to scattering macro xs
-    m->xs_s += nuc.atom_density * nuc.xs_s;
+    material->xs_s += nuc.atom_density * nuc.xs_s;
   }
 
   return;
@@ -89,7 +89,7 @@ double distance_to_boundary(Particle *p)
   int    surfaces[6] = {X0, X1, Y0, Y1, Z0, Z1};
   double p_angles[6] = {p->u, p->u, p->v, p->v, p->w, p->w};
   double p_coords[6] = {p->x, p->x, p->y, p->y, p->z, p->z};
-  double s_coords[6] = {0, g->x, 0, g->y, 0, g->z};
+  double s_coords[6] = {0, geometry->x, 0, geometry->y, 0, geometry->z};
   
   for(i=0; i<6; i++){
     if(p_angles[i] == 0){
@@ -115,11 +115,11 @@ double distance_to_collision()
 {
   double d;
 
-  if(m->xs_t == 0){
+  if(material->xs_t == 0){
     d = D_INF;
   }
   else{
-    d = -log(rn())/m->xs_t;
+    d = -log(rn())/material->xs_t;
   }
 
   return d;
@@ -129,19 +129,19 @@ double distance_to_collision()
 void cross_surface(Particle *p)
 {
   // Handle vacuum boundary conditions (particle leaks out)
-  if(g->bc == VACUUM){
+  if(geometry->bc == VACUUM){
     p->alive = FALSE;
   }
 
   // Handle reflective boundary conditions
-  else if(g->bc == REFLECT){
+  else if(geometry->bc == REFLECT){
     if(p->surface_crossed == X0){
       p->u = -p->u;
       p->x = 0.0;
     }
     else if(p->surface_crossed == X1){
       p->u = -p->u;
-      p->x = g->x;
+      p->x = geometry->x;
     }
     else if(p->surface_crossed == Y0){
       p->v = -p->v;
@@ -149,7 +149,7 @@ void cross_surface(Particle *p)
     }
     else if(p->surface_crossed == Y1){
       p->v = -p->v;
-      p->y = g->y;
+      p->y = geometry->y;
     }
     else if(p->surface_crossed == Z0){
       p->w = -p->w;
@@ -157,26 +157,26 @@ void cross_surface(Particle *p)
     }
     else if(p->surface_crossed == Z1){
       p->w = -p->w;
-      p->z = g->z;
+      p->z = geometry->z;
     }
   }
   
   // Handle periodic boundary conditions
-  else if(g->bc == PERIODIC){
+  else if(geometry->bc == PERIODIC){
     if(p->surface_crossed == X0){
-      p->x = g->x;
+      p->x = geometry->x;
     }
     else if(p->surface_crossed == X1){
       p->x = 0;
     }
     else if(p->surface_crossed == Y0){
-      p->y = g->y;
+      p->y = geometry->y;
     }
     else if(p->surface_crossed == Y1){
       p->y = 0;
     }
     else if(p->surface_crossed == Z0){
-      p->z = g->z;
+      p->z = geometry->z;
     }
     else if(p->surface_crossed == Z1){
       p->z = 0;
@@ -192,15 +192,15 @@ void collision(Particle *p)
   int i = 0;
   double prob = 0.0;
   double cutoff;
-  double nu = params->nu;
+  double nu = parameters->nu;
   Nuclide nuc = {0, 0, 0, 0, 0};
 
   // Cutoff for sampling nuclide
-  cutoff = rn()*m->xs_t;
+  cutoff = rn()*material->xs_t;
 
   // Sample which nuclide particle has collision with
   while(prob < cutoff){
-    nuc = m->nuclides[i];
+    nuc = material->nuclides[i];
     prob += nuc.atom_density*nuc.xs_t;
     i++;
   }
