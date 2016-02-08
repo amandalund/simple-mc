@@ -42,16 +42,18 @@ void run_eigenvalue(void)
       for(i_p=0; i_p<parameters->n_particles; i_p++){
 
 	// Set seed for particle i_p by skipping ahead in the random number
-	// sequence stride*(total particles simulated) numbers. This allows for
-	// reproducibility of the particle history.
+	// sequence stride*(total particles simulated) numbers from the initial
+	// seed. This allows for reproducibility of the particle history.
         rn_skip((i_b*parameters->n_generations + i_g)*parameters->n_particles + i_p);
 
         // Copy next particle into p
         copy_particle(&p, &(source_bank->p[i_p]));
 
-        // Transport the next particle from source bank
+        // Transport the next particle
 	transport(&p);
       }
+
+      // Switch RNG stream off tracking
       set_stream(STREAM_OTHER);
       rn_skip(i_b*parameters->n_generations + i_g);
 

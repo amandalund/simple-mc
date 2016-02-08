@@ -3,8 +3,8 @@
 
 void init_problem(int argc, char *argv[])
 {
-  // Get inputs: set parameters to default values, then parse parameter file,
-  // then override with any command line inputs
+  // Get inputs: set parameters to default values, parse parameter file,
+  // override with any command line inputs, and print parameters
   parameters = init_parameters();
   parse_parameters();
   read_CLI(argc, argv);

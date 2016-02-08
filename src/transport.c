@@ -47,7 +47,8 @@ void transport(Particle *p)
 }
 
 // Calculates the macroscopic cross section of the material the particle is
-// traveling through
+// traveling through. Currently not used as the problem is one-group homogenous
+// cube
 void calculate_xs(void)
 {
   int i;
@@ -110,7 +111,7 @@ double distance_to_boundary(Particle *p)
 }
 
 // Returns the distance to the next collision for a particle
-double distance_to_collision()
+double distance_to_collision(void)
 {
   double d;
 
