@@ -3,8 +3,6 @@
 
 int main(int argc, char *argv[])
 {
-  unsigned long long seed1, seed2, seed3; // RNG seeds for different RN sequences
-  unsigned long long seed1_0, seed2_0, seed3_0; // initial RNG seeds
   int i_b; // index over batches
   int i_a = -1; // index over active batches
   int i_g; // index over generations
@@ -22,73 +20,8 @@ int main(int argc, char *argv[])
   // Initialize the global variables used throughout the simulation
   init_problem(argc, argv);
 
-  // Set OpenMP specific variables
-#ifdef _OPENMP
-  omp_set_num_threads(params->n_threads);
-#pragma omp parallel
-{
-  n_threads = omp_get_num_threads();
-  thread_id = omp_get_thread_num();
-}
-#endif
-
-  // Set RNG seeds for two different RN sequences: one for tracking and one for
-  // everything else
-  seed1 = params->seed;
-  seed2 = seed1 + 1;
-  seed3 = seed1 + 2;
-
-  // Set initial RNG seeds
-  seed1_0 = seed1;
-  seed2_0 = seed2;
-  seed3_0 = seed3;
-
-  // Set up output files
-  init_output(params, fp);
-
   // Set up array for keff
   keff = calloc(params->n_active, sizeof(double));
-
-  // Set up geometry
-  g = init_geometry(params);
-
-  // Set up material
-  m = init_material(params, &seed1);
-
-  // Set up tallies
-  t = init_tally(params);
-
-  // Allocate one fission bank for each thread and one master fission bank to
-  // collect fission sites at end of each generation
-#ifdef _OPENMP
-#pragma omp parallel
-{
-  if(thread_id == 0){
-    fission_bank = init_bank(2*params->n_particles);
-  }
-  else{
-    fission_bank = init_bank(2*params->n_particles/n_threads);
-  }
-}
-  master_fission_bank = init_bank(2*params->n_particles);
-#else
-  fission_bank = init_bank(2*params->n_particles);
-#endif
-
-  // Initialize source bank
-  source_bank = init_bank(params->n_particles);
-
-  // Sample source particles or load a source
-  if(params->load_source == TRUE){
-    load_source(source_bank);
-    source_bank->n = params->n_particles;
-  }
-  else{
-    for(i_p=0; i_p<params->n_particles; i_p++){
-      sample_source_particle(&(source_bank->p[i_p]), g, &seed1);
-      source_bank->n++;
-    }
-  }
 
   center_print("SIMULATION", 79);
   border_print();
@@ -118,7 +51,10 @@ int main(int argc, char *argv[])
     // Loop over generations
     for(i_g=0; i_g<params->n_generations; i_g++){
 
-#pragma omp parallel default(none) private(i_p, p, seed2) shared(i_b, i_g, params, source_bank, g, m, t, seed2_0)
+      // Set RNG stream for tracking
+      set_stream(STREAM_TRACK);
+
+#pragma omp parallel default(none) private(i_p, p) shared(i_b, i_g, params, source_bank, g, m, t)
 {
 #pragma omp for
       // Loop over particles
@@ -127,16 +63,17 @@ int main(int argc, char *argv[])
 	// Set seed for particle i_p by skipping ahead in the random number
 	// sequence stride*(total particles simulated) numbers. This allows for
 	// reproducibility of the particle history.
-        seed2 = rn_skip(seed2_0, (i_b*params->n_generations + i_g)*params->n_particles + i_p);
+        rn_skip((i_b*params->n_generations + i_g)*params->n_particles + i_p);
 
         // Copy next particle into p
         copy_particle(&p, &(source_bank->p[i_p]));
 
         // Transport the next particle from source bank
-	transport(&p, g, m, t, params, &seed2);
+	transport(&p);
       }
 }
-      seed3 = rn_skip(seed3_0, i_b*params->n_generations + i_g);
+      set_stream(STREAM_OTHER);
+      rn_skip(i_b*params->n_generations + i_g);
 
 #ifdef _OPENMP
       // Merge fission banks from threads
@@ -149,17 +86,17 @@ int main(int argc, char *argv[])
 
       // Sample new source particles from the particles that were added to the
       // fission bank during this generation
-      synchronize_bank(g, &seed3);
+      synchronize_bank();
 
       // Calculate shannon entropy to assess source convergence
-      H = shannon_entropy(g, source_bank);
+      H = shannon_entropy(source_bank);
       if(params->write_entropy == TRUE){
         write_entropy(H, fp, params->entropy_file);
       }
 
       // Write the source distribution
       if(params->write_source == TRUE){
-        write_source(g, source_bank, params, fp, params->source_file);
+        write_source(source_bank, fp, params->source_file);
       }
     }
 
@@ -172,7 +109,7 @@ int main(int argc, char *argv[])
     // Tallies for this realization
     if(t->tallies_on == TRUE){
       if(params->write_tally == TRUE){
-        write_tally(t, fp, params->tally_file);
+        write_tally(fp, params->tally_file);
       }
       memset(t->flux, 0, t->n*t->n*t->n*sizeof(double));
     }
@@ -204,21 +141,8 @@ int main(int argc, char *argv[])
   }
 
   // Free memory
-#ifdef _OPENMP
-#pragma omp parallel
-{
-  free_bank(fission_bank);
-}
-  free_bank(master_fission_bank);
-#else
-  free_bank(fission_bank);
-#endif
-  free_bank(source_bank);
-  free_tally(t);
-  free_material(m);
-  free(g);
+  free_problem();
   free(keff);
-  free(params);
 
   return 0;
 }

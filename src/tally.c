@@ -2,7 +2,7 @@
 #include "global.h"
 
 // Simple flux tally
-void score_tally(Tally *t, Particle *p, Material *m, Parameters *params)
+void score_tally(Particle *p)
 {
   int ix, iy, iz;
   double vol;

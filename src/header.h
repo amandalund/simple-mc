@@ -100,19 +100,19 @@ typedef struct Bank_{
 } Bank;
 
 // io.c function prototypes
-void parse_params();
+void parse_params(void);
 void read_CLI(int argc, char *argv[]);
 void print_error(char *message);
-void print_params();
+void print_params(void);
 void border_print(void);
 void fancy_int(long a);
 void center_print(const char *s, int width);
-void init_output(Parameters *params, FILE *fp);
-void write_tally(Tally *t, FILE *fp, char *filename);
+void init_output(void);
+void write_tally(FILE *fp, char *filename);
 void write_entropy(double H, FILE *fp, char *filename);
 void write_keff(double *keff, int n, FILE *fp, char *filename);
 void write_bank(Bank *b, FILE *fp, char *filename);
-void write_source(Geometry *g, Bank *b, Parameters *params, FILE *fp, char *filename);
+void write_source(Bank *b, FILE *fp, char *filename);
 void load_source(Bank *b);
 void save_source(Bank *b);
 
@@ -120,40 +120,45 @@ void save_source(Bank *b);
 double timer(void);
 
 // prng.c function prototypes
-double rn(unsigned long long *seed);
-int rni(unsigned long long *seed, int min, int max);
-unsigned long long rn_skip(unsigned long long seed, long long n);
+double rn(void);
+int rni(int min, int max);
+void set_stream(int rn_stream);
+void set_initial_seed(unsigned long long rn_seed0);
+void rn_skip(long long n);
 
 // initialize.c function prototypes
 void init_problem(int argc, char *argv[]);
 Parameters *init_params(void);
-Geometry *init_geometry(Parameters *params);
-Tally *init_tally(Parameters *params);
-Material *init_material(Parameters *params, unsigned long long *seed);
+Geometry *init_geometry(void);
+Tally *init_tally(void);
+Material *init_material(void);
+void init_fission_bank(void);
+void init_source_bank(void);
 Bank *init_bank(unsigned long n_particles);
-void sample_source_particle(Particle *p, Geometry *g, unsigned long long *seed);
-void sample_fission_particle(Particle *p, Particle *p_old, unsigned long long *seed);
+void sample_source_particle(Particle *p);
+void sample_fission_particle(Particle *p, Particle *p_old);
 void copy_particle(Particle *dest, Particle *source);
 void resize_particles(Bank *b);
 void free_bank(Bank *b);
 void free_material(Material *m);
 void free_tally(Tally *t);
+void free_problem(void);
 
 // transport.c function prototypes
-void transport(Particle *p, Geometry *g, Material *m, Tally *t, Parameters *params, unsigned long long *seed);
-void calculate_xs(Particle *p, Material *m);
-double distance_to_boundary(Particle *p, Geometry *g);
-double distance_to_collision(Material *m, unsigned long long *seed);
-void cross_surface(Particle *p, Geometry *g);
-void collision(Particle *p, Material *m, double nu, unsigned long long *seed);
+void transport(Particle *p);
+void calculate_xs(Particle *p);
+double distance_to_boundary(Particle *p);
+double distance_to_collision(void);
+void cross_surface(Particle *p);
+void collision(Particle *p);
 
 // eigenvalue.c function prototypes
-void merge_fission_banks();
-void synchronize_bank(Geometry *g, unsigned long long *seed);
-double shannon_entropy(Geometry *g, Bank *b);
+void merge_fission_banks(void);
+void synchronize_bank(void);
+double shannon_entropy(Bank *b);
 void calculate_keff(double *keff, double *mean, double *std, int n);
 
 // tally.c function prototypes
-void score_tally(Tally *t, Particle *p, Material *m, Parameters *params);
+void score_tally(Particle *p);
 
 #endif

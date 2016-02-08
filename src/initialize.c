@@ -10,12 +10,42 @@ void init_problem(int argc, char *argv[])
   read_CLI(argc, argv);
   print_params();
 
+  // Set initial RNG seed
+  set_initial_seed(params->seed);
+  set_stream(STREAM_INIT);
 
+  // Set OpenMP specific variables
+#ifdef _OPENMP
+  omp_set_num_threads(params->n_threads);
+#pragma omp parallel
+{
+  n_threads = omp_get_num_threads();
+  thread_id = omp_get_thread_num();
+}
+#endif
+
+  // Set up output files
+  init_output();
+
+  // Set up geometry
+  g = init_geometry();
+
+  // Set up material
+  m = init_material();
+
+  // Set up tallies
+  t = init_tally();
+
+  // Set up fission banks
+  init_fission_bank();
+
+  // Set up source bank and initial source distribution
+  init_source_bank();
 
   return;
 }
 
-Parameters *init_params(void)
+Parameters *init_params()
 {
   Parameters *params = malloc(sizeof(Parameters));
 
@@ -54,7 +84,7 @@ Parameters *init_params(void)
   return params;
 }
 
-Geometry *init_geometry(Parameters *params)
+Geometry *init_geometry(void)
 {
   Geometry *g = malloc(sizeof(Geometry));
 
@@ -66,7 +96,7 @@ Geometry *init_geometry(Parameters *params)
   return g;
 }
 
-Tally *init_tally(Parameters *params)
+Tally *init_tally(void)
 {
   Tally *t = malloc(sizeof(Tally));
 
@@ -80,7 +110,7 @@ Tally *init_tally(Parameters *params)
   return t;
 }
 
-Material *init_material(Parameters *params, unsigned long long *seed)
+Material *init_material(void)
 {
   int i;
   Nuclide sum = {0, 0, 0, 0, 0};
@@ -99,17 +129,17 @@ Material *init_material(Parameters *params, unsigned long long *seed)
   // cross sections evaluate to what is hardwired above
   for(i=0; i<m->n_nuclides; i++){
     if(i<m->n_nuclides-1){
-      m->nuclides[i].atom_density = rn(seed)*macro.atom_density;
+      m->nuclides[i].atom_density = rn()*macro.atom_density;
       macro.atom_density -= m->nuclides[i].atom_density;
     }
     else{
       m->nuclides[i].atom_density = macro.atom_density;
     }
-    m->nuclides[i].xs_a = rn(seed);
+    m->nuclides[i].xs_a = rn();
     sum.xs_a += m->nuclides[i].xs_a * m->nuclides[i].atom_density;
-    m->nuclides[i].xs_f = rn(seed);
+    m->nuclides[i].xs_f = rn();
     sum.xs_f += m->nuclides[i].xs_f * m->nuclides[i].atom_density;
-    m->nuclides[i].xs_s = rn(seed);
+    m->nuclides[i].xs_s = rn();
     sum.xs_s += m->nuclides[i].xs_s * m->nuclides[i].atom_density;
   }
   for(i=0; i<m->n_nuclides; i++){
@@ -127,6 +157,50 @@ Material *init_material(Parameters *params, unsigned long long *seed)
   return m;
 }
 
+void init_source_bank(void)
+{
+  unsigned long i_p; // index over particles
+
+  // Initialize source bank
+  source_bank = init_bank(params->n_particles);
+
+  // Sample source particles or load a source
+  if(params->load_source == TRUE){
+    load_source(source_bank);
+    source_bank->n = params->n_particles;
+  }
+  else{
+    for(i_p=0; i_p<params->n_particles; i_p++){
+      sample_source_particle(&(source_bank->p[i_p]));
+      source_bank->n++;
+    }
+  }
+
+  return;
+}
+
+void init_fission_bank(void)
+{
+  // Allocate one fission bank for each thread and one master fission bank to
+  // collect fission sites at end of each generation
+#ifdef _OPENMP
+#pragma omp parallel
+{
+  if(thread_id == 0){
+    fission_bank = init_bank(2*params->n_particles);
+  }
+  else{
+    fission_bank = init_bank(2*params->n_particles/n_threads);
+  }
+}
+  master_fission_bank = init_bank(2*params->n_particles);
+#else
+  fission_bank = init_bank(2*params->n_particles);
+#endif
+
+  return;
+}
+
 Bank *init_bank(unsigned long n_particles)
 {
   Bank *b = malloc(sizeof(Bank));
@@ -138,30 +212,30 @@ Bank *init_bank(unsigned long n_particles)
   return b;
 }
 
-void sample_source_particle(Particle *p, Geometry *g, unsigned long long *seed)
+void sample_source_particle(Particle *p)
 {
   p->alive = TRUE;
   p->energy = 1;
   p->last_energy = 1;
-  p->mu = rn(seed)*2 - 1;
-  p->phi = rn(seed)*2*PI;
+  p->mu = rn()*2 - 1;
+  p->phi = rn()*2*PI;
   p->u = p->mu;
   p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
   p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);
-  p->x = rn(seed)*g->x;
-  p->y = rn(seed)*g->y;
-  p->z = rn(seed)*g->z;
+  p->x = rn()*g->x;
+  p->y = rn()*g->y;
+  p->z = rn()*g->z;
 
   return;
 }
 
-void sample_fission_particle(Particle *p, Particle *p_old, unsigned long long *seed)
+void sample_fission_particle(Particle *p, Particle *p_old)
 {
   p->alive = TRUE;
   p->energy = 1;
   p->last_energy = 1;
-  p->mu = rn(seed)*2 - 1;
-  p->phi = rn(seed)*2*PI;
+  p->mu = rn()*2 - 1;
+  p->phi = rn()*2*PI;
   p->u = p->mu;
   p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
   p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);
@@ -224,6 +298,26 @@ void free_tally(Tally *t)
   t->flux = NULL;
   free(t);
   t = NULL;
+
+  return;
+}
+
+void free_problem(void)
+{
+#ifdef _OPENMP
+#pragma omp parallel
+{
+  free_bank(fission_bank);
+}
+  free_bank(master_fission_bank);
+#else
+  free_bank(fission_bank);
+#endif
+  free_bank(source_bank);
+  free_tally(t);
+  free_material(m);
+  free(g);
+  free(params);
 
   return;
 }

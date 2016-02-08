@@ -2,7 +2,7 @@
 #include "global.h"
 
 // Main logic to move particle
-void transport(Particle *p, Geometry *g, Material *m, Tally *t, Parameters *params, unsigned long long *seed)
+void transport(Particle *p)
 {
   double d_b;
   double d_c;
@@ -12,14 +12,14 @@ void transport(Particle *p, Geometry *g, Material *m, Tally *t, Parameters *para
 
     // Recalculate macro xs if particle has changed energy
     if(p->energy != p->last_energy){
-      calculate_xs(p, m);
+      calculate_xs(p);
     }
 
     // Find distance to boundary
-    d_b = distance_to_boundary(p, g);
+    d_b = distance_to_boundary(p);
 
     // Find distance to collision
-    d_c = distance_to_collision(m, seed);
+    d_c = distance_to_collision();
 
     // Take smaller of two distances
     d = d_b < d_c ? d_b : d_c;
@@ -31,24 +31,25 @@ void transport(Particle *p, Geometry *g, Material *m, Tally *t, Parameters *para
 
     // Case where particle crosses boundary
     if(d_b < d_c){
-      cross_surface(p, g);
+      cross_surface(p);
     }
     // Case where particle has collision
     else{
-      collision(p, m, params->nu, seed);
+      collision(p);
 
       // Score tallies
       if(t->tallies_on == TRUE){
-        score_tally(t, p, m, params);
+        score_tally(p);
       }
     }
   }
   return;
 }
 
+// TODO fix for threading
 // Calculates the macroscopic cross section of the material the particle is
 // traveling through
-void calculate_xs(Particle *p, Material *m)
+void calculate_xs(Particle *p)
 {
   int i;
 
@@ -80,7 +81,7 @@ void calculate_xs(Particle *p, Material *m)
 
 // Returns the distance to the nearest boundary for a particle traveling in a
 // certain direction
-double distance_to_boundary(Particle *p, Geometry *g)
+double distance_to_boundary(Particle *p)
 {
   int i;
   double dist;
@@ -110,7 +111,7 @@ double distance_to_boundary(Particle *p, Geometry *g)
 }
 
 // Returns the distance to the next collision for a particle
-double distance_to_collision(Material *m, unsigned long long *seed)
+double distance_to_collision()
 {
   double d;
 
@@ -118,14 +119,14 @@ double distance_to_collision(Material *m, unsigned long long *seed)
     d = D_INF;
   }
   else{
-    d = -log(rn(seed))/m->xs_t;
+    d = -log(rn())/m->xs_t;
   }
 
   return d;
 }
 
 // Handles a particle crossing a surface in the geometry
-void cross_surface(Particle *p, Geometry *g)
+void cross_surface(Particle *p)
 {
   // Handle vacuum boundary conditions (particle leaks out)
   if(g->bc == VACUUM){
@@ -185,16 +186,17 @@ void cross_surface(Particle *p, Geometry *g)
   return;
 }
 
-void collision(Particle *p, Material *m, double nu, unsigned long long *seed)
+void collision(Particle *p)
 {
   int n;
   int i = 0;
   double prob = 0.0;
   double cutoff;
+  double nu = params->nu;
   Nuclide nuc = {0, 0, 0, 0, 0};
 
   // Cutoff for sampling nuclide
-  cutoff = rn(seed)*m->xs_t;
+  cutoff = rn()*m->xs_t;
 
   // Sample which nuclide particle has collision with
   while(prob < cutoff){
@@ -204,13 +206,13 @@ void collision(Particle *p, Material *m, double nu, unsigned long long *seed)
   }
 
   // Cutoff for sampling reaction
-  cutoff = rn(seed)*nuc.xs_t;
+  cutoff = rn()*nuc.xs_t;
 
   // Sample fission
   if(nuc.xs_f > cutoff){
 
     // Sample number of fission neutrons produced
-    if(rn(seed) > nu - (int)nu){
+    if(rn() > nu - (int)nu){
       n = nu;
     }
     else{
@@ -223,7 +225,7 @@ void collision(Particle *p, Material *m, double nu, unsigned long long *seed)
       fission_bank->resize(fission_bank);
     }
     for(i=0; i<n; i++){
-      sample_fission_particle(&(fission_bank->p[fission_bank->n]), p, seed);
+      sample_fission_particle(&(fission_bank->p[fission_bank->n]), p);
       fission_bank->n++;
     }
     p->alive = FALSE;
@@ -238,8 +240,8 @@ void collision(Particle *p, Material *m, double nu, unsigned long long *seed)
 
   // Sample scattering
   else{
-    p->mu = rn(seed)*2 - 1;
-    p->phi = rn(seed)*2*PI;
+    p->mu = rn()*2 - 1;
+    p->phi = rn()*2*PI;
     p->u = p->mu;
     p->v = sqrt(1 - p->mu*p->mu) * cos(p->phi);
     p->w = sqrt(1 - p->mu*p->mu) * sin(p->phi);

@@ -11,31 +11,54 @@ typedef struct RNG_Parameters_{
 } RNG_Parameters;
 
 // LCG parameters from 'The MCNP5 Random Number Generator', Forrest Brown
-// Period 2^46:
-//static const RNG_Parameters RNG = {19073486328125ULL, 281474976710656ULL, 1ULL, 152917, 281474976710655ULL, 70368744177664ULL};
-// Period 2^63: (additional multiplier values: 2806196910506780709ULL,
-// 3249286849523012805ULL
-static const RNG_Parameters RNG = {9219741426499971445ULL, 9223372036854775808ULL, 1ULL, 152917, 9223372036854775807ULL, 9223372036854775808ULL};
+// Additional mult for M=63: 2806196910506780709ULL  3249286849523012805ULL
+//static const RNG_Parameters RNG = {19073486328125ULL, 281474976710656ULL, 1ULL, 152917, 281474976710655ULL, 70368744177664ULL}; // period 2^46
+static const RNG_Parameters RNG = {9219741426499971445ULL, 9223372036854775808ULL, 1ULL, 152917, 9223372036854775807ULL, 9223372036854775808ULL}; // period 2^63
+
+int stream;
+unsigned long long seed0;
+unsigned long long seed[N_STREAMS];
+#pragma omp threadprivate(seed)
 
 // Linear congruential random number generator: seed = (mult*seed + inc) % mod
-double rn(unsigned long long *seed)
+double rn(void)
 {
-  *seed = (RNG.mult*(*seed) + RNG.inc) & RNG.mask;
+  seed[stream] = (RNG.mult*seed[stream] + RNG.inc) & RNG.mask;
 
-  return (double) *seed/RNG.mod;
+  return (double) seed[stream]/RNG.mod;
 }
 
 // Linear congruential random number generator for integer in range [a b)
-int rni(unsigned long long *seed, int a, int b)
+int rni(int a, int b)
 {
-  *seed = (RNG.mult*(*seed) + RNG.inc) & RNG.mask;
+  seed[stream] = (RNG.mult*seed[stream] + RNG.inc) & RNG.mask;
 
-  return a + (int) (b*(*seed)/(RNG.mod + a));
+  return a + (int) (b*seed[stream]/(RNG.mod + a));
+}
+
+// Set random number stream
+void set_stream(int rn_stream)
+{
+  stream = rn_stream;
+
+  return;
+}
+
+// Set inital seed
+void set_initial_seed(unsigned long long rn_seed0)
+{
+  int i;
+
+  for(i=0; i<N_STREAMS; i++){
+    seed[i] = seed0 + i;
+  }
+
+  return;
 }
 
 // Algorithm to skip ahead n*RNG.stride random numbers in O(log2(n)) operation,
 // from 'The MCNP5 Random Number Generator', Forrest Brown, LA-UR-07K-7961.
-unsigned long long rn_skip(unsigned long long seed, long long n)
+void rn_skip(long long n)
 {
   unsigned long long g = RNG.mult;
   unsigned long long c = RNG.inc;
@@ -61,5 +84,5 @@ unsigned long long rn_skip(unsigned long long seed, long long n)
     n >>= 1;
   }
 
-  return (g_new*seed + c_new) & RNG.mask;
+  seed[stream] = (g_new*seed[stream] + c_new) & RNG.mask;
 }

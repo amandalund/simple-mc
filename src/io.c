@@ -2,7 +2,7 @@
 #include "global.h"
 
 // Read in parameters from file
-void parse_params()
+void parse_params(void)
 {
   char line[256], *s;
   FILE *fp = fopen("parameters", "r");
@@ -545,7 +545,7 @@ void read_CLI(int argc, char *argv[])
   return;
 }
 
-void print_params()
+void print_params(void)
 {
   char *bc = NULL;
   if(params->bc == 0) bc = "Vacuum";
@@ -605,8 +605,10 @@ void center_print(const char *s, int width)
   fputs("\n", stdout);
 }
 
-void init_output(Parameters *params, FILE *fp)
+void init_output(void)
 {
+  FILE *fp = NULL; // file pointer for output
+
   // Set up file to output tallies
   if(params->write_tally == TRUE){
     fp = fopen(params->tally_file, "w");
@@ -640,7 +642,7 @@ void init_output(Parameters *params, FILE *fp)
   return;
 }
 
-void write_tally(Tally *t, FILE *fp, char *filename)
+void write_tally(FILE *fp, char *filename)
 {
   int i, j, k;
 
@@ -698,7 +700,7 @@ void write_bank(Bank *b, FILE *fp, char *filename)
   return;
 }
 
-void write_source(Geometry *g, Bank *b, Parameters *params, FILE *fp, char *filename)
+void write_source(Bank *b, FILE *fp, char *filename)
 {
   int i, j, k;
   double dx, dy, dz;
