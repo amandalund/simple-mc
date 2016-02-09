@@ -1,5 +1,4 @@
 #include "header.h"
-#include "global.h"
 
 typedef struct RNG_Parameters_{
   unsigned long long mult;   // multiplier g

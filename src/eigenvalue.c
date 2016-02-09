@@ -1,7 +1,6 @@
 #include "header.h"
-#include "global.h"
 
-void run_eigenvalue(void)
+void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *material, Bank *source_bank, Bank *fission_bank, Tally *tally, double *keff)
 {
   int i_b; // index over batches
   int i_a = -1; // index over active batches
@@ -50,7 +49,7 @@ void run_eigenvalue(void)
         copy_particle(&p, &(source_bank->p[i_p]));
 
         // Transport the next particle
-	transport(&p);
+        transport(parameters, geometry, material, source_bank, fission_bank, tally, &p);
       }
 
       // Switch RNG stream off tracking
@@ -63,17 +62,17 @@ void run_eigenvalue(void)
 
       // Sample new source particles from the particles that were added to the
       // fission bank during this generation
-      synchronize_bank();
+      synchronize_bank(source_bank, fission_bank);
 
       // Calculate shannon entropy to assess source convergence
-      H = shannon_entropy(source_bank);
+      H = shannon_entropy(geometry, source_bank);
       if(parameters->write_entropy == TRUE){
         write_entropy(H, parameters->entropy_file);
       }
 
       // Write the source distribution
       if(parameters->write_source == TRUE){
-        write_source(source_bank, parameters->source_file);
+        write_source(parameters, geometry, source_bank, parameters->source_file);
       }
     }
 
@@ -92,7 +91,7 @@ void run_eigenvalue(void)
     }
 
     // Calculate keff mean and standard deviation
-    calculate_keff(&keff_mean, &keff_std, i_a+1);
+    calculate_keff(keff, &keff_mean, &keff_std, i_a+1);
 
     // Status text
     if(i_a < 0){
@@ -115,7 +114,7 @@ void run_eigenvalue(void)
   return;
 }
 
-void synchronize_bank(void)
+void synchronize_bank(Bank *source_bank, Bank *fission_bank)
 {
   unsigned long i, j;
   unsigned long n_s = source_bank->n;
@@ -161,7 +160,7 @@ void synchronize_bank(void)
 
 // Calculates the shannon entropy of the source distribution to assess
 // convergence
-double shannon_entropy(Bank *b)
+double shannon_entropy(Geometry *geometry, Bank *b)
 {
   unsigned long i;
   double H = 0.0;
@@ -205,7 +204,7 @@ double shannon_entropy(Bank *b)
   return H;
 }
 
-void calculate_keff(double *mean, double *std, int n)
+void calculate_keff(double *keff, double *mean, double *std, int n)
 {
   int i;
 

@@ -9,8 +9,7 @@ DEBUG    = no
 PROGRAM = transport
 
 HEADERS = \
-header.h \
-global.h
+header.h
 
 SOURCE = \
 main.c \
@@ -20,8 +19,7 @@ utils.c \
 io.c \
 transport.c \
 tally.c \
-eigenvalue.c \
-global.c
+eigenvalue.c
 
 OBJECTS = $(SOURCE:.c=.o)
 

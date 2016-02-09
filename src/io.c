@@ -1,8 +1,7 @@
 #include "header.h"
-#include "global.h"
 
 // Read in parameters from file
-void parse_parameters(void)
+void parse_parameters(Parameters *parameters)
 {
   char line[256], *s;
   FILE *fp = fopen("parameters", "r");
@@ -232,7 +231,7 @@ void parse_parameters(void)
   return;
 }
 
-void read_CLI(int argc, char *argv[])
+void read_CLI(int argc, char *argv[], Parameters *parameters)
 {
   int i;
   char *arg;
@@ -534,7 +533,7 @@ void read_CLI(int argc, char *argv[])
   return;
 }
 
-void print_parameters(void)
+void print_parameters(Parameters *parameters)
 {
   char *bc = NULL;
   if(parameters->bc == 0) bc = "Vacuum";
@@ -593,7 +592,7 @@ void center_print(const char *s, int width)
   fputs("\n", stdout);
 }
 
-void init_output(void)
+void init_output(Parameters *parameters)
 {
   FILE *fp = NULL; // file pointer for output
 
@@ -694,7 +693,7 @@ void write_bank(Bank *b, char *filename)
   return;
 }
 
-void write_source(Bank *b, char *filename)
+void write_source(Parameters *parameters, Geometry *geometry, Bank *b, char *filename)
 {
   int i, j, k;
   double dx, dy, dz;

@@ -1,80 +1,42 @@
 #include "header.h"
-#include "global.h"
 
-void init_problem(int argc, char *argv[])
+Parameters *init_parameters(void)
 {
-  // Get inputs: set parameters to default values, parse parameter file,
-  // override with any command line inputs, and print parameters
-  parameters = init_parameters();
-  parse_parameters();
-  read_CLI(argc, argv);
-  print_parameters();
+  Parameters *p = malloc(sizeof(Parameters));
 
-  // Set initial RNG seed
-  set_initial_seed(parameters->seed);
-  set_stream(STREAM_INIT);
+  p->n_particles = 1000000;
+  p->n_batches = 10;
+  p->n_generations = 1;
+  p->n_active = 10;
+  p->bc = REFLECT;
+  p->n_nuclides = 1;
+  p->tally = TRUE;
+  p->n_bins = 16;
+  p->seed = 1;
+  p->nu = 2.5;
+  p->xs_f = 0.012;
+  p->xs_a = 0.03;
+  p->xs_s = 0.27;
+  p->gx = 400;
+  p->gy = 400;
+  p->gz = 400;
+  p->load_source = FALSE;
+  p->save_source = FALSE;
+  p->write_tally = FALSE;
+  p->write_entropy = FALSE;
+  p->write_keff = FALSE;
+  p->write_bank = FALSE;
+  p->write_source = FALSE;
+  p->tally_file = NULL;
+  p->entropy_file = NULL;
+  p->keff_file = NULL;
+  p->bank_file = NULL;
+  p->source_file = NULL;
 
-  // Set up output files
-  init_output();
-
-  // Set up geometry
-  geometry = init_geometry();
-
-  // Set up material
-  material = init_material();
-
-  // Set up tallies
-  tally = init_tally();
-
-  // Set up fission banks
-  init_fission_bank();
-
-  // Set up source bank and initial source distribution
-  init_source_bank();
-
-  // Set up array for keff
-  keff = calloc(parameters->n_active, sizeof(double));
-
-  return;
+  return p;
 }
 
-Parameters *init_parameters()
-{
-  Parameters *parameters = malloc(sizeof(Parameters));
-
-  parameters->n_particles = 1000000;
-  parameters->n_batches = 10;
-  parameters->n_generations = 1;
-  parameters->n_active = 10;
-  parameters->bc = REFLECT;
-  parameters->n_nuclides = 1;
-  parameters->tally = TRUE;
-  parameters->n_bins = 16;
-  parameters->seed = 1;
-  parameters->nu = 2.5;
-  parameters->xs_f = 0.012;
-  parameters->xs_a = 0.03;
-  parameters->xs_s = 0.27;
-  parameters->gx = 400;
-  parameters->gy = 400;
-  parameters->gz = 400;
-  parameters->load_source = FALSE;
-  parameters->save_source = FALSE;
-  parameters->write_tally = FALSE;
-  parameters->write_entropy = FALSE;
-  parameters->write_keff = FALSE;
-  parameters->write_bank = FALSE;
-  parameters->write_source = FALSE;
-  parameters->tally_file = NULL;
-  parameters->entropy_file = NULL;
-  parameters->keff_file = NULL;
-  parameters->bank_file = NULL;
-  parameters->source_file = NULL;
-
-  return parameters;
-}
-
-Geometry *init_geometry(void)
+Geometry *init_geometry(Parameters *parameters)
 {
   Geometry *g = malloc(sizeof(Geometry));
 
@@ -86,7 +48,7 @@ Geometry *init_geometry(void)
   return g;
 }
 
-Tally *init_tally(void)
+Tally *init_tally(Parameters *parameters)
 {
   Tally *t = malloc(sizeof(Tally));
 
@@ -100,7 +62,7 @@ Tally *init_tally(void)
   return t;
 }
 
-Material *init_material(void)
+Material *init_material(Parameters *parameters)
 {
   int i;
   Nuclide sum = {0, 0, 0, 0, 0};
@@ -147,9 +109,10 @@ Material *init_material(void)
   return m;
 }
 
-void init_source_bank(void)
+Bank *init_source_bank(Parameters *parameters, Geometry *geometry)
 {
   unsigned long i_p; // index over particles
+  Bank *source_bank;
 
   // Initialize source bank
   source_bank = init_bank(parameters->n_particles);
@@ -161,19 +124,20 @@ void init_source_bank(void)
   }
   else{
     for(i_p=0; i_p<parameters->n_particles; i_p++){
-      sample_source_particle(&(source_bank->p[i_p]));
+      sample_source_particle(geometry, &(source_bank->p[i_p]));
       source_bank->n++;
     }
   }
 
-  return;
+  return source_bank;
 }
 
-void init_fission_bank(void)
+Bank *init_fission_bank(Parameters *parameters)
 {
+  Bank *fission_bank;
   fission_bank = init_bank(2*parameters->n_particles);
 
-  return;
+  return fission_bank;
 }
 
 Bank *init_bank(unsigned long n_particles)
@@ -187,7 +151,7 @@ Bank *init_bank(unsigned long n_particles)
   return b;
 }
 
-void sample_source_particle(Particle *p)
+void sample_source_particle(Geometry *geometry, Particle *p)
 {
   p->alive = TRUE;
   p->energy = 1;
@@ -273,19 +237,6 @@ void free_tally(Tally *t)
   t->flux = NULL;
   free(t);
   t = NULL;
-
-  return;
-}
-
-void free_problem(void)
-{
-  free_bank(fission_bank);
-  free_bank(source_bank);
-  free_tally(tally);
-  free_material(material);
-  free(geometry);
-  free(keff);
-  free(parameters);
 
   return;
 }

@@ -1,5 +1,4 @@
 #include "header.h"
-#include "global.h"
 
 double timer(void)
 {

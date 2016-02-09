@@ -1,8 +1,7 @@
 #include "header.h"
-#include "global.h"
 
 // Main logic to move particle
-void transport(Particle *p)
+void transport(Parameters *parameters, Geometry *geometry, Material *material, Bank *source_bank, Bank *fission_bank, Tally *tally, Particle *p)
 {
   double d_b;
   double d_c;
@@ -12,14 +11,14 @@ void transport(Particle *p)
 
     // Recalculate macro xs if particle has changed energy
     if(p->energy != p->last_energy){
-      calculate_xs();
+      calculate_xs(material);
     }
 
     // Find distance to boundary
-    d_b = distance_to_boundary(p);
+    d_b = distance_to_boundary(geometry, p);
 
     // Find distance to collision
-    d_c = distance_to_collision();
+    d_c = distance_to_collision(material);
 
     // Take smaller of two distances
     d = d_b < d_c ? d_b : d_c;
@@ -31,15 +30,15 @@ void transport(Particle *p)
 
     // Case where particle crosses boundary
     if(d_b < d_c){
-      cross_surface(p);
+      cross_surface(geometry, p);
     }
     // Case where particle has collision
     else{
-      collision(p);
+      collision(material, fission_bank, parameters->nu, p);
 
       // Score tallies
       if(tally->tallies_on == TRUE){
-        score_tally(tally, p);
+        score_tally(parameters, material, tally, p);
       }
     }
   }
@@ -49,7 +48,7 @@ void transport(Particle *p)
 // Calculates the macroscopic cross section of the material the particle is
 // traveling through. Currently not used as the problem is one-group homogenous
 // cube
-void calculate_xs(void)
+void calculate_xs(Material *material)
 {
   int i;
 
@@ -81,7 +80,7 @@ void calculate_xs(void)
 
 // Returns the distance to the nearest boundary for a particle traveling in a
 // certain direction
-double distance_to_boundary(Particle *p)
+double distance_to_boundary(Geometry *geometry, Particle *p)
 {
   int i;
   double dist;
@@ -111,7 +110,7 @@ double distance_to_boundary(Particle *p)
 }
 
 // Returns the distance to the next collision for a particle
-double distance_to_collision(void)
+double distance_to_collision(Material *material)
 {
   double d;
 
@@ -126,7 +125,7 @@ double distance_to_collision(void)
 }
 
 // Handles a particle crossing a surface in the geometry
-void cross_surface(Particle *p)
+void cross_surface(Geometry *geometry, Particle *p)
 {
   // Handle vacuum boundary conditions (particle leaks out)
   if(geometry->bc == VACUUM){
@@ -186,13 +185,12 @@ void cross_surface(Particle *p)
   return;
 }
 
-void collision(Particle *p)
+void collision(Material *material, Bank *fission_bank, double nu, Particle *p)
 {
   int n;
   int i = 0;
   double prob = 0.0;
   double cutoff;
-  double nu = parameters->nu;
   Nuclide nuc = {0, 0, 0, 0, 0};
 
   // Cutoff for sampling nuclide
