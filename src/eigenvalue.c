@@ -10,18 +10,11 @@ void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *materi
   double keff_batch; // keff of batch
   double keff_mean; // keff mean over active batches
   double keff_std; // keff standard deviation over active batches
-  double H; // shannon entropy
-  Particle p;
 
   // Loop over batches
   for(i_b=0; i_b<parameters->n_batches; i_b++){
 
     keff_batch = 0;
-
-    // Write coordinates of particles in source bank
-    if(parameters->write_bank == TRUE){
-      write_bank(source_bank, parameters->bank_file);
-    }
 
     // Turn on tallying and increment index in active batches
     if(i_b >= parameters->n_batches - parameters->n_active){
@@ -45,11 +38,8 @@ void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *materi
 	// seed. This allows for reproducibility of the particle history.
         rn_skip((i_b*parameters->n_generations + i_g)*parameters->n_particles + i_p);
 
-        // Copy next particle into p
-        copy_particle(&p, &(source_bank->p[i_p]));
-
         // Transport the next particle
-        transport(parameters, geometry, material, source_bank, fission_bank, tally, &p);
+        transport(parameters, geometry, material, source_bank, fission_bank, tally, &(source_bank->p[i_p]));
       }
 
       // Switch RNG stream off tracking
@@ -63,52 +53,30 @@ void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *materi
       // Sample new source particles from the particles that were added to the
       // fission bank during this generation
       synchronize_bank(source_bank, fission_bank);
-
-      // Calculate shannon entropy to assess source convergence
-      H = shannon_entropy(geometry, source_bank);
-      if(parameters->write_entropy == TRUE){
-        write_entropy(H, parameters->entropy_file);
-      }
-
-      // Write the source distribution
-      if(parameters->write_source == TRUE){
-        write_source(parameters, geometry, source_bank, parameters->source_file);
-      }
     }
 
-    // Calculate k_effective
+    // Calculate k effective
     keff_batch /= parameters->n_generations;
     if(i_a >= 0){
       keff[i_a] = keff_batch;
     }
+    calculate_keff(keff, &keff_mean, &keff_std, i_a+1);
 
     // Tallies for this realization
     if(tally->tallies_on == TRUE){
       if(parameters->write_tally == TRUE){
         write_tally(tally, parameters->tally_file);
       }
-      memset(tally->flux, 0, tally->n*tally->n*tally->n*sizeof(double));
+      reset_tally(tally);
     }
-
-    // Calculate keff mean and standard deviation
-    calculate_keff(keff, &keff_mean, &keff_std, i_a+1);
 
     // Status text
-    if(i_a < 0){
-      printf("%-15d %-15f %-15f\n", i_b+1, H, keff_batch);
-    }
-    else{
-      printf("%-15d %-15f %-15f %f +/- %-15f\n", i_b+1, H, keff_batch, keff_mean, keff_std);
-    }
+    print_status(i_a, i_b, keff_batch, keff_mean, keff_std);
   }
 
   // Write out keff
   if(parameters->write_keff == TRUE){
     write_keff(keff, parameters->n_active, parameters->keff_file);
-  }
-
-  if(parameters->save_source == TRUE){
-    save_source(source_bank);
   }
 
   return;
@@ -156,52 +124,6 @@ void synchronize_bank(Bank *source_bank, Bank *fission_bank)
   fission_bank->n = 0;
 
   return;
-}
-
-// Calculates the shannon entropy of the source distribution to assess
-// convergence
-double shannon_entropy(Geometry *geometry, Bank *b)
-{
-  unsigned long i;
-  double H = 0.0;
-  double dx, dy, dz;
-  unsigned long ix, iy, iz;
-  unsigned long n;
-  unsigned long *count;
-  Particle *p;
-
-  // Determine an appropriate number of grid boxes in each dimension
-  n = ceil(pow(b->n/20, 1.0/3.0));
-
-  // Find grid spacing
-  dx = geometry->x/n;
-  dy = geometry->y/n;
-  dz = geometry->z/n;
-
-  // Allocate array to keep track of number of sites in each grid box
-  count = calloc(n*n*n, sizeof(unsigned long));
-
-  for(i=0; i<b->n; i++){
-    p = &(b->p[i]);
-
-    // Find the indices of the grid box of the particle
-    ix = p->x/dx;
-    iy = p->y/dy;
-    iz = p->z/dz;
-
-    count[ix*n*n + iy*n + iz]++;
-  }
-
-  // Calculate the shannon entropy
-  for(i=0; i<n*n*n; i++){
-    if(count[i] > 0){
-      H -= ((double)count[i]/b->n) * log2((double)count[i]/b->n);
-    }
-  }
-
-  free(count);
-
-  return H;
 }
 
 void calculate_keff(double *keff, double *mean, double *std, int n)

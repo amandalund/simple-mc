@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 
   center_print("SIMULATION", 79);
   border_print();
-  printf("%-15s %-15s %-15s %-15s\n", "BATCH", "ENTROPY", "KEFF", "MEAN KEFF");
+  printf("%-15s %-15s %-15s\n", "BATCH", "KEFF", "MEAN KEFF");
 
   // Start time
   t1 = timer();

@@ -9,11 +9,6 @@ void transport(Parameters *parameters, Geometry *geometry, Material *material, B
 
   while(p->alive){
 
-    // Recalculate macro xs if particle has changed energy
-    if(p->energy != p->last_energy){
-      calculate_xs(material);
-    }
-
     // Find distance to boundary
     d_b = distance_to_boundary(geometry, p);
 
@@ -42,39 +37,6 @@ void transport(Parameters *parameters, Geometry *geometry, Material *material, B
       }
     }
   }
-  return;
-}
-
-// Calculates the macroscopic cross section of the material the particle is
-// traveling through. Currently not used as the problem is one-group homogenous
-// cube
-void calculate_xs(Material *material)
-{
-  int i;
-
-  // Reset macroscopic cross sections to 0
-  material->xs_t = 0.0;
-  material->xs_f = 0.0;
-  material->xs_a = 0.0;
-  material->xs_s = 0.0;
-
-  for(i=0; i<material->n_nuclides; i++){
-
-    Nuclide nuc = material->nuclides[i];
-
-    // Add contribution from this nuclide to total macro xs
-    material->xs_t += nuc.atom_density * nuc.xs_t;
-
-    // Add contribution from this nuclide to fission macro xs
-    material->xs_f += nuc.atom_density * nuc.xs_f;
-
-    // Add contribution from this nuclide to absorption macro xs
-    material->xs_a += nuc.atom_density * nuc.xs_a;
-
-    // Add contribution from this nuclide to scattering macro xs
-    material->xs_s += nuc.atom_density * nuc.xs_s;
-  }
-
   return;
 }
 
@@ -227,13 +189,11 @@ void collision(Material *material, Bank *fission_bank, double nu, Particle *p)
       fission_bank->n++;
     }
     p->alive = FALSE;
-    p->event = FISSION;
   }
 
   // Sample absorption (disappearance)
   else if(nuc.xs_a > cutoff){
     p->alive = FALSE;
-    p->event = ABSORPTION;
   }
 
   // Sample scattering
@@ -243,7 +203,6 @@ void collision(Material *material, Bank *fission_bank, double nu, Particle *p)
     p->u = p->mu;
     p->v = sqrt(1 - p->mu*p->mu) * cos(p->phi);
     p->w = sqrt(1 - p->mu*p->mu) * sin(p->phi);
-    p->event = SCATTER;
   }
 
   return;

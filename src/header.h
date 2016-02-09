@@ -59,24 +59,14 @@ typedef struct Parameters_{
   double gx; // geometry size in x
   double gy; // geometry size in y
   double gz; // geometry size in z
-  int load_source; // load the source bank from source.dat
-  int save_source; // save the source bank at end of simulation
   int write_tally; // whether to output tallies
-  int write_entropy; // whether to output shannon entropy
   int write_keff; // whether to output keff
-  int write_bank; // whether to output particle bank
-  int write_source; // whether to output source distribution
   char *tally_file; // path to write tallies to
-  char *entropy_file; // path to write shannon entropy to
   char *keff_file; // path to write keff to
-  char *bank_file; // path to write particle bank to
-  char *source_file; // path to write source distribution to
 } Parameters;
 
 typedef struct Particle_{
   int alive;
-  double energy;
-  double last_energy;
   double mu; // cosine of polar angle
   double phi; // azimuthal angle
   double u; // direction
@@ -86,7 +76,6 @@ typedef struct Particle_{
   double y;
   double z;
   int surface_crossed;
-  int event;
 } Particle;
 
 typedef struct Geometry_{
@@ -137,14 +126,10 @@ void print_parameters(Parameters *parameters);
 void border_print(void);
 void fancy_int(long a);
 void center_print(const char *s, int width);
+void print_status(int i_a, int i_b, double keff_batch, double keff_mean, double keff_std);
 void init_output(Parameters *parameters);
 void write_tally(Tally *t, char *filename);
-void write_entropy(double H, char *filename);
 void write_keff(double *keff, int n, char *filename);
-void write_bank(Bank *b, char *filename);
-void write_source(Parameters *parameters, Geometry *geometry, Bank *b, char *filename);
-void load_source(Bank *b);
-void save_source(Bank *b);
 
 // utils.c funtion prototypes
 double timer(void);
@@ -166,15 +151,13 @@ Bank *init_source_bank(Parameters *parameters, Geometry *geometry);
 Bank *init_bank(unsigned long n_particles);
 void sample_source_particle(Geometry *geometry, Particle *p);
 void sample_fission_particle(Particle *p, Particle *p_old);
-void copy_particle(Particle *dest, Particle *source);
 void resize_particles(Bank *b);
 void free_bank(Bank *b);
-void free_material(Material *m);
-void free_tally(Tally *t);
+void free_material(Material *material);
+void free_tally(Tally *tally);
 
 // transport.c function prototypes
 void transport(Parameters *parameters, Geometry *geometry, Material *material, Bank *source_bank, Bank *fission_bank, Tally *tally, Particle *p);
-void calculate_xs(Material *material);
 double distance_to_boundary(Geometry *geometry, Particle *p);
 double distance_to_collision(Material *material);
 void cross_surface(Geometry *geometry, Particle *p);
@@ -183,10 +166,10 @@ void collision(Material *material, Bank *fission_bank, double nu, Particle *p);
 // eigenvalue.c function prototypes
 void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *material, Bank *source_bank, Bank *fission_bank, Tally *tally, double *keff);
 void synchronize_bank(Bank *source_bank, Bank *fission_bank);
-double shannon_entropy(Geometry *geometry, Bank *b);
 void calculate_keff(double *keff, double *mean, double *std, int n);
 
 // tally.c function prototypes
-void score_tally(Parameters *parameters, Material *material, Tally *t, Particle *p);
+void score_tally(Parameters *parameters, Material *material, Tally *tally, Particle *p);
+void reset_tally(Tally *tally);
 
 #endif

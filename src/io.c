@@ -110,28 +110,6 @@ void parse_parameters(Parameters *parameters)
         print_error("Invalid boundary condition");
     }
 
-    // Whether to load source
-    else if(strcmp(s, "load_source") == 0){
-      s = strtok(NULL, "=\n");
-      if(strcasecmp(s, "true") == 0)
-        parameters->load_source = TRUE;
-      else if(strcasecmp(s, "false") == 0)
-        parameters->load_source = FALSE;
-      else
-        print_error("Invalid option for parameter 'load_source': must be 'true' or 'false'");
-    }
-
-    // Whether to save source
-    else if(strcmp(s, "save_source") == 0){
-      s = strtok(NULL, "=\n");
-      if(strcasecmp(s, "true") == 0)
-        parameters->save_source = TRUE;
-      else if(strcasecmp(s, "false") == 0)
-        parameters->save_source = FALSE;
-      else
-        print_error("Invalid option for parameter 'save_source': must be 'true' or 'false'");
-    }
-
     // Whether to output tally
     else if(strcmp(s, "write_tally") == 0){
       s = strtok(NULL, "=\n");
@@ -141,17 +119,6 @@ void parse_parameters(Parameters *parameters)
         parameters->write_tally = FALSE;
       else
         print_error("Invalid option for parameter 'write_tally': must be 'true' or 'false'");
-    }
-
-    // Whether to output shannon entropy
-    else if(strcmp(s, "write_entropy") == 0){
-      s = strtok(NULL, "=\n");
-      if(strcasecmp(s, "true") == 0)
-        parameters->write_entropy = TRUE;
-      else if(strcasecmp(s, "false") == 0)
-        parameters->write_entropy = FALSE;
-      else
-        print_error("Invalid option for parameter 'write_entropy': must be 'true' or 'false'");
     }
 
     // Whether to output keff
@@ -165,28 +132,6 @@ void parse_parameters(Parameters *parameters)
         print_error("Invalid option for parameter 'write_keff': must be 'true' or 'false'");
     }
 
-    // Whether to output particle bank
-    else if(strcmp(s, "write_bank") == 0){
-      s = strtok(NULL, "=\n");
-      if(strcasecmp(s, "true") == 0)
-        parameters->write_bank = TRUE;
-      else if(strcasecmp(s, "false") == 0)
-        parameters->write_bank = FALSE;
-      else
-        print_error("Invalid option for parameter 'write_bank': must be 'true' or 'false'");
-    }
-
-    // Whether to output source distribution
-    else if(strcmp(s, "write_source") == 0){
-      s = strtok(NULL, "=\n");
-      if(strcasecmp(s, "true") == 0)
-        parameters->write_source = TRUE;
-      else if(strcasecmp(s, "false") == 0)
-        parameters->write_source = FALSE;
-      else
-        print_error("Invalid option for parameter 'write_source': must be 'true' or 'false'");
-    }
-
     // Path to write tallies to
     else if(strcmp(s, "tally_file") == 0){
       s = strtok(NULL, "=\n");
@@ -194,32 +139,11 @@ void parse_parameters(Parameters *parameters)
       strcpy(parameters->tally_file, s);
     }
 
-    // Path to write shannon entropy to
-    else if(strcmp(s, "entropy_file") == 0){
-      s = strtok(NULL, "=\n");
-      parameters->entropy_file = malloc(strlen(s)*sizeof(char)+1);
-      strcpy(parameters->entropy_file, s);
-    }
-
     // Path to write keff to
     else if(strcmp(s, "keff_file") == 0){
       s = strtok(NULL, "=\n");
       parameters->keff_file = malloc(strlen(s)*sizeof(char)+1);
       strcpy(parameters->keff_file, s);
-    }
-
-    // Path to write bank to
-    else if(strcmp(s, "bank_file") == 0){
-      s = strtok(NULL, "=\n");
-      parameters->bank_file = malloc(strlen(s)*sizeof(char)+1);
-      strcpy(parameters->bank_file, s);
-    }
-
-    // Path to write source distribution to
-    else if(strcmp(s, "source_file") == 0){
-      s = strtok(NULL, "=\n");
-      parameters->source_file = malloc(strlen(s)*sizeof(char)+1);
-      strcpy(parameters->source_file, s);
     }
 
     // Unknown config file option
@@ -357,32 +281,6 @@ void read_CLI(int argc, char *argv[], Parameters *parameters)
       else print_error("Error reading command line input '-z'");
     }
 
-    // Whether to load source (-load_source)
-    else if(strcmp(arg, "-load_source") == 0){
-      if(++i < argc){
-        if(strcasecmp(argv[i], "true") == 0)
-          parameters->load_source = TRUE;
-        else if(strcasecmp(argv[i], "false") == 0)
-          parameters->load_source = FALSE;
-        else
-          print_error("Invalid option for parameter 'load_source': must be 'true' or 'false'");
-      }
-      else print_error("Error reading command line input '-load_source'");
-    }
-
-    // Whether to save source (-save_source)
-    else if(strcmp(arg, "-save_source") == 0){
-      if(++i < argc){
-        if(strcasecmp(argv[i], "true") == 0)
-          parameters->save_source = TRUE;
-        else if(strcasecmp(argv[i], "false") == 0)
-          parameters->save_source = FALSE;
-        else
-          print_error("Invalid option for parameter 'save_source': must be 'true' or 'false'");
-      }
-      else print_error("Error reading command line input '-save_source'");
-    }
-
     // Whether to output tally (-write_tally)
     else if(strcmp(arg, "-write_tally") == 0){
       if(++i < argc){
@@ -394,19 +292,6 @@ void read_CLI(int argc, char *argv[], Parameters *parameters)
           print_error("Invalid option for parameter 'write_tally': must be 'true' or 'false'");
       }
       else print_error("Error reading command line input '-write_tally'");
-    }
-
-    // Whether to output shannon entropy (-write_entropy)
-    else if(strcmp(arg, "-write_entropy") == 0){
-      if(++i < argc){
-        if(strcasecmp(argv[i], "true") == 0)
-          parameters->write_entropy = TRUE;
-        else if(strcasecmp(argv[i], "false") == 0)
-          parameters->write_entropy = FALSE;
-        else
-          print_error("Invalid option for parameter 'write_entropy': must be 'true' or 'false'");
-      }
-      else print_error("Error reading command line input '-write_entropy'");
     }
 
     // Whether to output keff (-write_keff)
@@ -422,32 +307,6 @@ void read_CLI(int argc, char *argv[], Parameters *parameters)
       else print_error("Error reading command line input '-write_keff'");
     }
 
-    // Whether to output particle bank (-write_bank)
-    else if(strcmp(arg, "-write_bank") == 0){
-      if(++i < argc){
-        if(strcasecmp(argv[i], "true") == 0)
-          parameters->write_bank = TRUE;
-        else if(strcasecmp(argv[i], "false") == 0)
-          parameters->write_bank = FALSE;
-        else
-          print_error("Invalid option for parameter 'write_bank': must be 'true' or 'false'");
-      }
-      else print_error("Error reading command line input '-write_bank'");
-    }
-
-    // Whether to output source distribution (-write_source)
-    else if(strcmp(arg, "-write_source") == 0){
-      if(++i < argc){
-        if(strcasecmp(argv[i], "true") == 0)
-          parameters->write_source = TRUE;
-        else if(strcasecmp(argv[i], "false") == 0)
-          parameters->write_source = FALSE;
-        else
-          print_error("Invalid option for parameter 'write_source': must be 'true' or 'false'");
-      }
-      else print_error("Error reading command line input '-write_source'");
-    }
-
     // Path to write tallies to (-tally_file)
     else if(strcmp(arg, "-tally_file") == 0){
       if(++i < argc){
@@ -456,16 +315,6 @@ void read_CLI(int argc, char *argv[], Parameters *parameters)
         strcpy(parameters->tally_file, argv[i]);
       }
       else print_error("Error reading command line input '-tally_file'");
-    }
-
-    // Path to write shannon entropy to (-entropy_file)
-    else if(strcmp(arg, "-entropy_file") == 0){
-      if(++i < argc){
-        if(parameters->entropy_file != NULL) free(parameters->entropy_file);
-        parameters->entropy_file = malloc(strlen(argv[i])*sizeof(char)+1);
-        strcpy(parameters->entropy_file, argv[i]);
-      }
-      else print_error("Error reading command line input '-entropy_file'");
     }
 
     // Path to write keff to (-keff_file)
@@ -478,26 +327,6 @@ void read_CLI(int argc, char *argv[], Parameters *parameters)
       else print_error("Error reading command line input '-keff_file'");
     }
 
-    // Path to write bank to (-bank_file)
-    else if(strcmp(arg, "-bank_file") == 0){
-      if(++i < argc){
-        if(parameters->bank_file != NULL) free(parameters->bank_file);
-        parameters->bank_file = malloc(strlen(argv[i])*sizeof(char)+1);
-        strcpy(parameters->bank_file, argv[i]);
-      }
-      else print_error("Error reading command line input '-bank_file'");
-    }
-
-    // Path to write source distribution to (-source_file)
-    else if(strcmp(arg, "-source_file") == 0){
-      if(++i < argc){
-        if(parameters->source_file != NULL) free(parameters->source_file);
-        parameters->source_file = malloc(strlen(argv[i])*sizeof(char)+1);
-        strcpy(parameters->source_file, argv[i]);
-      }
-      else print_error("Error reading command line input '-source_file'");
-    }
-
     // Unknown command line option
     else print_error("Error reading command line input");
   }
@@ -505,14 +334,8 @@ void read_CLI(int argc, char *argv[], Parameters *parameters)
   // Validate Inputs
   if(parameters->write_tally == TRUE && parameters->tally_file == NULL)
     parameters->tally_file = "tally.dat";
-  if(parameters->write_entropy == TRUE && parameters->entropy_file == NULL)
-    parameters->entropy_file = "entropy.dat";
   if(parameters->write_keff == TRUE && parameters->keff_file == NULL)
     parameters->keff_file = "keff.dat";
-  if(parameters->write_bank == TRUE && parameters->bank_file == NULL)
-    parameters->bank_file = "bank.dat";
-  if(parameters->write_source == TRUE && parameters->source_file == NULL)
-    parameters->source_file = "source.dat";
   if(parameters->n_batches < 1 && parameters->n_generations < 1)
     print_error("Must have at least one batch or one generation");
   if(parameters->n_batches < 0)
@@ -592,6 +415,18 @@ void center_print(const char *s, int width)
   fputs("\n", stdout);
 }
 
+void print_status(int i_a, int i_b, double keff_batch, double keff_mean, double keff_std)
+{
+  if(i_a < 0){
+    printf("%-15d %-15f\n", i_b+1, keff_batch);
+  }
+  else{
+    printf("%-15d %-15f %f +/- %-15f\n", i_b+1, keff_batch, keff_mean, keff_std);
+  }
+
+  return;
+}
+
 void init_output(Parameters *parameters)
 {
   FILE *fp = NULL; // file pointer for output
@@ -602,27 +437,9 @@ void init_output(Parameters *parameters)
     fclose(fp);
   }
 
-  // Set up file to output shannon entropy to assess source convergence
-  if(parameters->write_entropy == TRUE){
-    fp = fopen(parameters->entropy_file, "w");
-    fclose(fp);
-  }
-
   // Set up file to output keff
   if(parameters->write_keff == TRUE){
     fp = fopen(parameters->keff_file, "w");
-    fclose(fp);
-  }
-
-  // Set up file to output particle bank
-  if(parameters->write_bank == TRUE){
-    fp = fopen(parameters->bank_file, "w");
-    fclose(fp);
-  }
-
-  // Set up file to output source distribution
-  if(parameters->write_source == TRUE){
-    fp = fopen(parameters->source_file, "w");
     fclose(fp);
   }
 
@@ -650,17 +467,6 @@ void write_tally(Tally *t, char *filename)
   return;
 }
 
-void write_entropy(double H, char *filename)
-{
-  FILE *fp;
-
-  fp = fopen(filename, "a");
-  fprintf(fp, "%.10f\n", H);
-  fclose(fp);
-
-  return;
-}
-
 void write_keff(double *keff, int n, char *filename)
 {
   int i;
@@ -677,107 +483,3 @@ void write_keff(double *keff, int n, char *filename)
   return;
 }
 
-void write_bank(Bank *b, char *filename)
-{
-  int i;
-  FILE *fp;
-
-  fp = fopen(filename, "a");
-
-  for(i=0; i<b->n; i++){
-    fprintf(fp, "%.10f %.10f %.10f ", b->p[i].x, b->p[i].y, b->p[i].z);
-  }
-  fprintf(fp, "\n");
-
-  fclose(fp);
-  return;
-}
-
-void write_source(Parameters *parameters, Geometry *geometry, Bank *b, char *filename)
-{
-  int i, j, k;
-  double dx, dy, dz;
-  unsigned long ix, iy, iz;
-  unsigned long l;
-  unsigned long n;
-  double *dist;
-  Particle *p;
-  FILE *fp;
-
-  // Number of grid boxes in each dimension
-  n = parameters->n_bins;
-
-  // Find grid spacing
-  dx = geometry->x/n;
-  dy = geometry->y/n;
-  dz = geometry->z/n;
-
-  // Allocate array to keep track of number of sites in each grid box
-  dist = calloc(n*n*n, sizeof(double));
-
-  for(l=0; l<b->n; l++){
-    p = &(b->p[l]);
-
-    // Find the indices of the grid box of the particle
-    ix = p->x/dx;
-    iy = p->y/dy;
-    iz = p->z/dz;
-
-    dist[ix + n*iy + n*n*iz]++;
-  }
-
-  // Normalize by number of particles
-  for(l=0; l<n*n*n; l++){
-    dist[l] /= b->n;
-  }
-
-  fp = fopen(filename, "a");
-
-  for(i=0; i<n; i++){
-    for(j=0; j<n; j++){
-      for(k=0; k<n; k++){
-        fprintf(fp, "%e ", dist[i + n*j + n*n*k]);
-      }
-      fprintf(fp, "\n");
-    }
-  }
-
-  fclose(fp);
-
-  free(dist);
-
-  return;
-}
-
-void load_source(Bank *b)
-{
-  unsigned long stat;
-  FILE *fp;
-
-  fp = fopen("source.dat", "rb");
-  if(fp == NULL){
-    print_error("Couldn't open source file.");
-  }
-  stat = fread(b->p, sizeof(Particle), b->sz, fp);
-  if(stat != b->sz){
-    print_error("Error loading source.");
-  }
-  fclose(fp);
-
-  return;
-}
-
-void save_source(Bank *b)
-{
-  unsigned long stat;
-  FILE *fp;
-
-  fp = fopen("source.dat", "wb");
-  stat = fwrite(b->p, sizeof(Particle), b->n, fp);
-  if(stat != b->n){
-    print_error("Error saving source.");
-  }
-  fclose(fp);
-
-  return;
-}

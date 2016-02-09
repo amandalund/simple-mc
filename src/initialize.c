@@ -20,18 +20,10 @@ Parameters *init_parameters(void)
   p->gx = 400;
   p->gy = 400;
   p->gz = 400;
-  p->load_source = FALSE;
-  p->save_source = FALSE;
   p->write_tally = FALSE;
-  p->write_entropy = FALSE;
   p->write_keff = FALSE;
-  p->write_bank = FALSE;
-  p->write_source = FALSE;
   p->tally_file = NULL;
-  p->entropy_file = NULL;
   p->keff_file = NULL;
-  p->bank_file = NULL;
-  p->source_file = NULL;
 
   return p;
 }
@@ -117,16 +109,10 @@ Bank *init_source_bank(Parameters *parameters, Geometry *geometry)
   // Initialize source bank
   source_bank = init_bank(parameters->n_particles);
 
-  // Sample source particles or load a source
-  if(parameters->load_source == TRUE){
-    load_source(source_bank);
-    source_bank->n = parameters->n_particles;
-  }
-  else{
-    for(i_p=0; i_p<parameters->n_particles; i_p++){
-      sample_source_particle(geometry, &(source_bank->p[i_p]));
-      source_bank->n++;
-    }
+  // Sample source particles
+  for(i_p=0; i_p<parameters->n_particles; i_p++){
+    sample_source_particle(geometry, &(source_bank->p[i_p]));
+    source_bank->n++;
   }
 
   return source_bank;
@@ -154,8 +140,6 @@ Bank *init_bank(unsigned long n_particles)
 void sample_source_particle(Geometry *geometry, Particle *p)
 {
   p->alive = TRUE;
-  p->energy = 1;
-  p->last_energy = 1;
   p->mu = rn()*2 - 1;
   p->phi = rn()*2*PI;
   p->u = p->mu;
@@ -171,8 +155,6 @@ void sample_source_particle(Geometry *geometry, Particle *p)
 void sample_fission_particle(Particle *p, Particle *p_old)
 {
   p->alive = TRUE;
-  p->energy = 1;
-  p->last_energy = 1;
   p->mu = rn()*2 - 1;
   p->phi = rn()*2*PI;
   p->u = p->mu;
@@ -181,24 +163,6 @@ void sample_fission_particle(Particle *p, Particle *p_old)
   p->x = p_old->x;
   p->y = p_old->y;
   p->z = p_old->z;
-
-  return;
-}
-
-void copy_particle(Particle *dest, Particle *source)
-{
-  dest->alive = source->alive;
-  dest->energy = source->energy;
-  dest->last_energy = source->last_energy;
-  dest->mu = source->mu;
-  dest->phi = source->phi;
-  dest->u = source->u;
-  dest->v = source->v;
-  dest->w = source->w;
-  dest->x = source->x;
-  dest->y = source->y;
-  dest->z = source->z;
-  dest->event = source->event;
 
   return;
 }
@@ -221,22 +185,22 @@ void free_bank(Bank *b)
   return;
 }
 
-void free_material(Material *m)
+void free_material(Material *material)
 {
-  free(m->nuclides);
-  m->nuclides = NULL;
-  free(m);
-  m = NULL;
+  free(material->nuclides);
+  material->nuclides = NULL;
+  free(material);
+  material = NULL;
 
   return;
 }
 
-void free_tally(Tally *t)
+void free_tally(Tally *tally)
 {
-  free(t->flux);
-  t->flux = NULL;
-  free(t);
-  t = NULL;
+  free(tally->flux);
+  tally->flux = NULL;
+  free(tally);
+  tally = NULL;
 
   return;
 }
