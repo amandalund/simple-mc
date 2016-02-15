@@ -54,7 +54,6 @@ void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *materi
 
       // Switch RNG stream off tracking
       set_stream(STREAM_OTHER);
-      rn_skip(i_b*parameters->n_generations + i_g);
 
       // Calculate generation k_effective and accumulate batch k_effective
       keff_gen = (double) fission_bank->n / source_bank->n;
