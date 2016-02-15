@@ -211,8 +211,6 @@ void collision(Material *material, Bank *fission_bank, double nu, Particle *p)
 void sample_fission_particle(Particle *p, Particle *p_old)
 {
   p->alive = TRUE;
-  p->energy = 1;
-  p->last_energy = 1;
   p->mu = rn()*2 - 1;
   p->phi = rn()*2*PI;
   p->u = p->mu;
