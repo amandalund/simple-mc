@@ -1,4 +1,4 @@
-#include "header.h"
+#include "simple_mc.h"
 
 void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *material, Bank *source_bank, Bank *fission_bank, Tally *tally, double *keff)
 {
@@ -173,9 +173,9 @@ double shannon_entropy(Geometry *geometry, Bank *b)
   n = ceil(pow(b->n/20, 1.0/3.0));
 
   // Find grid spacing
-  dx = geometry->x/n;
-  dy = geometry->y/n;
-  dz = geometry->z/n;
+  dx = geometry->Lx/n;
+  dy = geometry->Ly/n;
+  dz = geometry->Lz/n;
 
   // Allocate array to keep track of number of sites in each grid box
   count = calloc(n*n*n, sizeof(unsigned long));

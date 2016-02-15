@@ -1,4 +1,4 @@
-#include "header.h"
+#include "simple_mc.h"
 
 // Main logic to move particle
 void transport(Parameters *parameters, Geometry *geometry, Material *material, Bank *source_bank, Bank *fission_bank, Tally *tally, Particle *p)
@@ -88,7 +88,7 @@ double distance_to_boundary(Geometry *geometry, Particle *p)
   int    surfaces[6] = {X0, X1, Y0, Y1, Z0, Z1};
   double p_angles[6] = {p->u, p->u, p->v, p->v, p->w, p->w};
   double p_coords[6] = {p->x, p->x, p->y, p->y, p->z, p->z};
-  double s_coords[6] = {0, geometry->x, 0, geometry->y, 0, geometry->z};
+  double s_coords[6] = {0, geometry->Lx, 0, geometry->Ly, 0, geometry->Lz};
   
   for(i=0; i<6; i++){
     if(p_angles[i] == 0){
@@ -140,7 +140,7 @@ void cross_surface(Geometry *geometry, Particle *p)
     }
     else if(p->surface_crossed == X1){
       p->u = -p->u;
-      p->x = geometry->x;
+      p->x = geometry->Lx;
     }
     else if(p->surface_crossed == Y0){
       p->v = -p->v;
@@ -148,7 +148,7 @@ void cross_surface(Geometry *geometry, Particle *p)
     }
     else if(p->surface_crossed == Y1){
       p->v = -p->v;
-      p->y = geometry->y;
+      p->y = geometry->Ly;
     }
     else if(p->surface_crossed == Z0){
       p->w = -p->w;
@@ -156,26 +156,26 @@ void cross_surface(Geometry *geometry, Particle *p)
     }
     else if(p->surface_crossed == Z1){
       p->w = -p->w;
-      p->z = geometry->z;
+      p->z = geometry->Lz;
     }
   }
   
   // Handle periodic boundary conditions
   else if(geometry->bc == PERIODIC){
     if(p->surface_crossed == X0){
-      p->x = geometry->x;
+      p->x = geometry->Lx;
     }
     else if(p->surface_crossed == X1){
       p->x = 0;
     }
     else if(p->surface_crossed == Y0){
-      p->y = geometry->y;
+      p->y = geometry->Ly;
     }
     else if(p->surface_crossed == Y1){
       p->y = 0;
     }
     else if(p->surface_crossed == Z0){
-      p->z = geometry->z;
+      p->z = geometry->Lz;
     }
     else if(p->surface_crossed == Z1){
       p->z = 0;
@@ -187,7 +187,7 @@ void cross_surface(Geometry *geometry, Particle *p)
 
 void collision(Material *material, Bank *fission_bank, double nu, Particle *p)
 {
-  int n;
+  int nf;
   int i = 0;
   double prob = 0.0;
   double cutoff;
@@ -211,18 +211,18 @@ void collision(Material *material, Bank *fission_bank, double nu, Particle *p)
 
     // Sample number of fission neutrons produced
     if(rn() > nu - (int)nu){
-      n = nu;
+      nf = nu;
     }
     else{
-      n = nu + 1;
+      nf = nu + 1;
     }
 
     // Sample n new particles from the source distribution but at the current
     // particle's location
-    if(fission_bank->n+n >= fission_bank->sz){
+    if(fission_bank->n+nf >= fission_bank->sz){
       fission_bank->resize(fission_bank);
     }
-    for(i=0; i<n; i++){
+    for(i=0; i<nf; i++){
       sample_fission_particle(&(fission_bank->p[fission_bank->n]), p);
       fission_bank->n++;
     }
@@ -245,6 +245,23 @@ void collision(Material *material, Bank *fission_bank, double nu, Particle *p)
     p->w = sqrt(1 - p->mu*p->mu) * sin(p->phi);
     p->event = SCATTER;
   }
+
+  return;
+}
+
+void sample_fission_particle(Particle *p, Particle *p_old)
+{
+  p->alive = TRUE;
+  p->energy = 1;
+  p->last_energy = 1;
+  p->mu = rn()*2 - 1;
+  p->phi = rn()*2*PI;
+  p->u = p->mu;
+  p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
+  p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);
+  p->x = p_old->x;
+  p->y = p_old->y;
+  p->z = p_old->z;
 
   return;
 }

@@ -9,7 +9,7 @@ DEBUG    = no
 PROGRAM = transport
 
 HEADERS = \
-header.h
+simple_mc.h
 
 SOURCE = \
 main.c \

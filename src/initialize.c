@@ -1,4 +1,4 @@
-#include "header.h"
+#include "simple_mc.h"
 
 Parameters *init_parameters(void)
 {
@@ -17,9 +17,9 @@ Parameters *init_parameters(void)
   p->xs_f = 0.012;
   p->xs_a = 0.03;
   p->xs_s = 0.27;
-  p->gx = 400;
-  p->gy = 400;
-  p->gz = 400;
+  p->Lx = 400;
+  p->Ly = 400;
+  p->Lz = 400;
   p->load_source = FALSE;
   p->save_source = FALSE;
   p->write_tally = FALSE;
@@ -40,9 +40,9 @@ Geometry *init_geometry(Parameters *parameters)
 {
   Geometry *g = malloc(sizeof(Geometry));
 
-  g->x = parameters->gx;
-  g->y = parameters->gy;
-  g->z = parameters->gz;
+  g->Lx = parameters->Lx;
+  g->Ly = parameters->Ly;
+  g->Lz = parameters->Lz;
   g->bc = parameters->bc;
 
   return g;
@@ -54,9 +54,9 @@ Tally *init_tally(Parameters *parameters)
 
   t->tallies_on = FALSE;
   t->n = parameters->n_bins;
-  t->dx = parameters->gx/t->n;
-  t->dy = parameters->gy/t->n;
-  t->dz = parameters->gz/t->n;
+  t->dx = parameters->Lx/t->n;
+  t->dy = parameters->Ly/t->n;
+  t->dz = parameters->Lz/t->n;
   t->flux = calloc(t->n*t->n*t->n, sizeof(double));
 
   return t;
@@ -161,44 +161,9 @@ void sample_source_particle(Geometry *geometry, Particle *p)
   p->u = p->mu;
   p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
   p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);
-  p->x = rn()*geometry->x;
-  p->y = rn()*geometry->y;
-  p->z = rn()*geometry->z;
-
-  return;
-}
-
-void sample_fission_particle(Particle *p, Particle *p_old)
-{
-  p->alive = TRUE;
-  p->energy = 1;
-  p->last_energy = 1;
-  p->mu = rn()*2 - 1;
-  p->phi = rn()*2*PI;
-  p->u = p->mu;
-  p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
-  p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);
-  p->x = p_old->x;
-  p->y = p_old->y;
-  p->z = p_old->z;
-
-  return;
-}
-
-void copy_particle(Particle *dest, Particle *source)
-{
-  dest->alive = source->alive;
-  dest->energy = source->energy;
-  dest->last_energy = source->last_energy;
-  dest->mu = source->mu;
-  dest->phi = source->phi;
-  dest->u = source->u;
-  dest->v = source->v;
-  dest->w = source->w;
-  dest->x = source->x;
-  dest->y = source->y;
-  dest->z = source->z;
-  dest->event = source->event;
+  p->x = rn()*geometry->Lx;
+  p->y = rn()*geometry->Ly;
+  p->z = rn()*geometry->Lz;
 
   return;
 }
