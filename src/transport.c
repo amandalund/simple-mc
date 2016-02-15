@@ -188,7 +188,7 @@ void cross_surface(Particle *p)
 
 void collision(Particle *p)
 {
-  int n;
+  int nf;
   int i = 0;
   double prob = 0.0;
   double cutoff;
@@ -213,18 +213,18 @@ void collision(Particle *p)
 
     // Sample number of fission neutrons produced
     if(rn() > nu - (int)nu){
-      n = nu;
+      nf = nu;
     }
     else{
-      n = nu + 1;
+      nf = nu + 1;
     }
 
     // Sample n new particles from the source distribution but at the current
     // particle's location
-    if(fission_bank->n+n >= fission_bank->sz){
+    if(fission_bank->n+nf >= fission_bank->sz){
       fission_bank->resize(fission_bank);
     }
-    for(i=0; i<n; i++){
+    for(i=0; i<nf; i++){
       sample_fission_particle(&(fission_bank->p[fission_bank->n]), p);
       fission_bank->n++;
     }
