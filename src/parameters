@@ -41,14 +41,14 @@ xs_s=0.27
 # bc: boundary conditions (vacuum, reflective, periodic)
 bc=reflective
 
-# x: length of domain in x dimension
-x=400
+# Lx: length of domain in x dimension
+Lx=400
 
-# y: length of domain in y dimension
-y=400
+# Ly: length of domain in y dimension
+Ly=400
 
-# z: length of domain in z dimension
-z=400
+# Lz: length of domain in z dimension
+Lz=400
 
 # write_tally: whether to output tallies
 write_tally=false

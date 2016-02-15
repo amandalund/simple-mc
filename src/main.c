@@ -1,4 +1,4 @@
-#include "header.h"
+#include "simple_mc.h"
 
 int main(int argc, char *argv[])
 {

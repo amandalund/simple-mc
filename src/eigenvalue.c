@@ -1,4 +1,4 @@
-#include "header.h"
+#include "simple_mc.h"
 
 void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *material, Bank *source_bank, Bank *fission_bank, Tally *tally, double *keff)
 {

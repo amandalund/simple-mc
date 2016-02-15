@@ -1,5 +1,5 @@
-#ifndef HEADER
-#define HEADER
+#ifndef SIMPLE_MC
+#define SIMPLE_MC
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -56,9 +56,9 @@ typedef struct Parameters_{
   double xs_a; // absorption macro xs
   double xs_s; // scattering macro xs
   double xs_f; // fission macro xs
-  double gx; // geometry size in x
-  double gy; // geometry size in y
-  double gz; // geometry size in z
+  double Lx; // domain length in x
+  double Ly; // domain length in y
+  double Lz; // domain length in z
   int write_tally; // whether to output tallies
   int write_keff; // whether to output keff
   char *tally_file; // path to write tallies to
@@ -80,9 +80,9 @@ typedef struct Particle_{
 
 typedef struct Geometry_{
   int bc;
-  double x;
-  double y;
-  double z;
+  double Lx;
+  double Ly;
+  double Lz;
 } Geometry;
 
 typedef struct Nuclide_{
@@ -133,6 +133,7 @@ void write_keff(double *keff, int n, char *filename);
 
 // utils.c funtion prototypes
 double timer(void);
+void copy_particle(Particle *dest, Particle *source);
 
 // prng.c function prototypes
 double rn(void);
@@ -150,7 +151,6 @@ Bank *init_fission_bank(Parameters *parameters);
 Bank *init_source_bank(Parameters *parameters, Geometry *geometry);
 Bank *init_bank(unsigned long n_particles);
 void sample_source_particle(Geometry *geometry, Particle *p);
-void sample_fission_particle(Particle *p, Particle *p_old);
 void resize_particles(Bank *b);
 void free_bank(Bank *b);
 void free_material(Material *material);
@@ -162,6 +162,7 @@ double distance_to_boundary(Geometry *geometry, Particle *p);
 double distance_to_collision(Material *material);
 void cross_surface(Geometry *geometry, Particle *p);
 void collision(Material *material, Bank *fission_bank, double nu, Particle *p);
+void sample_fission_particle(Particle *p, Particle *p_old);
 
 // eigenvalue.c function prototypes
 void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *material, Bank *source_bank, Bank *fission_bank, Tally *tally, double *keff);

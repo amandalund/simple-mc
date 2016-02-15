@@ -1,4 +1,4 @@
-#include "header.h"
+#include "simple_mc.h"
 
 // Simple flux tally
 void score_tally(Parameters *parameters, Material *material, Tally *tally, Particle *p)

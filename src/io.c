@@ -1,4 +1,4 @@
-#include "header.h"
+#include "simple_mc.h"
 
 // Read in parameters from file
 void parse_parameters(Parameters *parameters)
@@ -82,19 +82,19 @@ void parse_parameters(Parameters *parameters)
       parameters->xs_s = atof(strtok(NULL, "=\n"));
     }
 
-    // Geometry size in x
-    else if(strcmp(s, "x") == 0){
-      parameters->gx = atof(strtok(NULL, "=\n"));
+    // Domain length in x
+    else if(strcmp(s, "Lx") == 0){
+      parameters->Lx = atof(strtok(NULL, "=\n"));
     }
 
-    // Geometry size in y
-    else if(strcmp(s, "y") == 0){
-      parameters->gy = atof(strtok(NULL, "=\n"));
+    // Domain length in y
+    else if(strcmp(s, "Ly") == 0){
+      parameters->Ly = atof(strtok(NULL, "=\n"));
     }
 
-    // Geometry size in z
-    else if(strcmp(s, "z") == 0){
-      parameters->gz = atof(strtok(NULL, "=\n"));
+    // Domain length in z
+    else if(strcmp(s, "Lz") == 0){
+      parameters->Lz = atof(strtok(NULL, "=\n"));
     }
 
     // Boundary conditions
@@ -263,22 +263,22 @@ void read_CLI(int argc, char *argv[], Parameters *parameters)
       else print_error("Error reading command line input '-xs_f'");
     }
 
-    // Geometry size in x (-x)
-    else if(strcmp(arg, "-x") == 0){
-      if(++i < argc) parameters->gx = atof(argv[i]);
-      else print_error("Error reading command line input '-x'");
+    // Domain length in x (-Lx)
+    else if(strcmp(arg, "-Lx") == 0){
+      if(++i < argc) parameters->Lx = atof(argv[i]);
+      else print_error("Error reading command line input '-Lx'");
     }
 
-    // Geometry size in y (-y)
-    else if(strcmp(arg, "-y") == 0){
-      if(++i < argc) parameters->gy = atof(argv[i]);
-      else print_error("Error reading command line input '-y'");
+    // Domain length in y (-Ly)
+    else if(strcmp(arg, "-Ly") == 0){
+      if(++i < argc) parameters->Ly = atof(argv[i]);
+      else print_error("Error reading command line input '-Ly'");
     }
 
-    // Geometry size in z (-z)
-    else if(strcmp(arg, "-z") == 0){
-      if(++i < argc) parameters->gz = atof(argv[i]);
-      else print_error("Error reading command line input '-z'");
+    // Geometry size in z (-Lz)
+    else if(strcmp(arg, "-Lz") == 0){
+      if(++i < argc) parameters->Lz = atof(argv[i]);
+      else print_error("Error reading command line input '-Lz'");
     }
 
     // Whether to output tally (-write_tally)
@@ -348,7 +348,7 @@ void read_CLI(int argc, char *argv[], Parameters *parameters)
     print_error("Number of bins cannot be negative");
   if(parameters->nu < 0)
     print_error("Average number of fission neutrons produced cannot be negative");
-  if(parameters->gx <= 0 || parameters->gy <= 0 || parameters->gz <= 0)
+  if(parameters->Lx <= 0 || parameters->Ly <= 0 || parameters->Lz <= 0)
     print_error("Length of domain must be positive in x, y, and z dimension");
   if(parameters->xs_f < 0 || parameters->xs_a < 0 || parameters->xs_s < 0)
     print_error("Macroscopic cross section values cannot be negative");
