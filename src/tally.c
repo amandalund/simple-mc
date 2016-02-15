@@ -1,7 +1,7 @@
-#include "header.h"
+#include "simple_mc.h"
 
 // Simple flux tally
-void score_tally(Tally *t, Particle *p, Material *m, Parameters *params)
+void score_tally(Parameters *parameters, Material *material, Tally *t, Particle *p)
 {
   int ix, iy, iz;
   double vol;
@@ -15,7 +15,7 @@ void score_tally(Tally *t, Particle *p, Material *m, Parameters *params)
   iz = p->z/t->dz;
 
   // Scalar flux
-  t->flux[ix + t->n*iy + t->n*t->n*iz] += 1./(vol * m->xs_t * params->n_particles);
+  t->flux[ix + t->n*iy + t->n*t->n*iz] += 1./(vol * material->xs_t * parameters->n_particles);
 
   return;
 }

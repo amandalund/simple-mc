@@ -1,18 +1,20 @@
 # User options
 
 COMPILER = gnu
-
-DEBUG = true
+OPTIMIZE = yes
+DEBUG    = no
 
 # Program and source code
 
 PROGRAM = transport
 
-HEADERS = header.h
+HEADERS = \
+simple_mc.h
 
 SOURCE = \
 main.c \
 initialize.c \
+prng.c \
 utils.c \
 io.c \
 transport.c \
@@ -26,12 +28,17 @@ OBJECTS = $(SOURCE:.c=.o)
 CFLAGS = -Wall
 LDFLAGS = -lm
 
-ifeq ($(COMPILER),gnu)
-  CC = gcc
+ifeq ($(DEBUG),yes)
+  CFLAGS += -g
+  LDFLAGS  += -g
 endif
 
-ifeq ($(DEBUG),true)
-  CFLAGS += -g
+ifeq ($(OPTIMIZE),yes)
+  CFLAGS += -O3
+endif
+
+ifeq ($(COMPILER),gnu)
+  CC = gcc
 endif
 
 # Targets to build

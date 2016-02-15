@@ -1,48 +1,47 @@
-#include "header.h"
+#include "simple_mc.h"
 
 int main(int argc, char *argv[])
 {
-  FILE *fp = NULL;               // file pointer for output
-  double t1, t2;                 // timers
-  double *keff;                  // effective multiplication factor
-  Parameters *params;            // user defined parameters
-  Geometry *g;
-  Material *m;
-  Tally *t;
-  Bank *source_bank;
-  Bank *fission_bank;
-  unsigned long n_histories = 0;
+  Parameters *parameters; // user defined parameters
+  Geometry *geometry; // homogenous cube geometry
+  Material *material; // problem material
+  Bank *source_bank; // array for particle source sites
+  Bank *fission_bank; // array for particle fission sites
+  Tally *tally; // scalar flux tally
+  double *keff; // effective multiplication factor
+  double t1, t2; // timers
 
-  // Get inputs
-  params = set_default_params();
-  parse_params("parameters", params);
-  read_CLI(argc, argv, params);
-  print_params(params);
-  if(params->cnvg_method == 1){};
+  // Get inputs: set parameters to default values, parse parameter file,
+  // override with any command line inputs, and print parameters
+  parameters = init_parameters();
+  parse_parameters(parameters);
+  read_CLI(argc, argv, parameters);
+  print_parameters(parameters);
 
-  // Set up output files
-  init_output(params, fp);
+  // Set initial RNG seed
+  set_initial_seed(parameters->seed);
+  set_stream(STREAM_OTHER);
 
-  // Seed RNG
-  srand(params->seed);
-
-  // Set up array for keff
-  keff = calloc(params->n_active, sizeof(double));
+  // Create files for writing results to
+  init_output(parameters);
 
   // Set up geometry
-  g = init_geometry(params);
+  geometry = init_geometry(parameters);
 
   // Set up material
-  m = init_material(params);
+  material = init_material(parameters);
 
   // Set up tallies
-  t = init_tally(params);
+  tally = init_tally(parameters);
 
-  // Initialize source bank
-  source_bank = init_bank(params->n_particles);
+  // Create source bank and initial source distribution
+  source_bank = init_source_bank(parameters, geometry);
 
-  // Initialize fission bank
-  fission_bank = init_bank(params->n_particles);
+  // Create fission bank
+  fission_bank = init_fission_bank(parameters);
+
+  // Set up array for k effective
+  keff = calloc(parameters->n_active, sizeof(double));
 
   center_print("SIMULATION", 79);
   border_print();
@@ -51,47 +50,24 @@ int main(int argc, char *argv[])
   // Start time
   t1 = timer();
 
-  // Converge source (inactive batches)
-  if(params->cnvg_method == 1){
-    printf("Converging source...\n");
-    ramp_up(params, source_bank, fission_bank, g, m, t, &n_histories);
+  if(parameters->ramp_up == TRUE){
+    ramp_up(parameters, geometry, material, source_bank, fission_bank, tally);
   }
-  else{
-    converge_source(params, source_bank, fission_bank, g, m, t, &n_histories);
-  }
+  run_eigenvalue(parameters, geometry, material, source_bank, fission_bank, tally, keff);
 
   // Stop time
-  t1 = timer() - t1;
-
-  // Start time
   t2 = timer();
 
-  // Run eigenvalue problem (active batches)
-  run_eigenvalue(params, source_bank, fission_bank, g, m, t, keff, &n_histories);
-
-  // Stop time
-  t2 = timer() - t2;
-
-  printf("Inactive batches time: %f secs\n", t1);
-  printf("Active batches time: %f secs\n", t2);
-
-  // Write out keff
-  if(params->write_keff == TRUE){
-    write_keff(keff, params->n_active, fp, params->keff_file);
-  }
-
-  if(params->save_source == TRUE){
-    save_source(source_bank);
-  }
+  printf("Simulation time: %f secs\n", t2-t1);
 
   // Free memory
+  free(keff);
+  free_tally(tally);
   free_bank(fission_bank);
   free_bank(source_bank);
-  free_tally(t);
-  free_material(m);
-  free(g);
-  free(keff);
-  free(params);
+  free_material(material);
+  free(geometry);
+  free_parameters(parameters);
 
   return 0;
 }

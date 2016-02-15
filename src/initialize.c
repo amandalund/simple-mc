@@ -1,128 +1,85 @@
-#include "header.h"
+#include "simple_mc.h"
 
-Parameters *set_default_params(void)
+Parameters *init_parameters(void)
 {
-  Parameters *params = malloc(sizeof(Parameters));
+  Parameters *p = malloc(sizeof(Parameters));
 
-  params->n_particles = 10000;
-  params->n_batches = 20;
-  params->n_generations = 1;
-  params->n_active = 10;
-  params->bc = REFLECT;
-  params->n_nuclides = 60;
-  params->tally = FALSE;
-  params->n_bins = 10;
-  params->seed = 1;
-  params->nu = 1.5;
-  params->xs_f = 2.29;
-  params->xs_a = 3.42;
-  params->xs_s = 2.29;
-  params->gx = 1000;
-  params->gy = 1000;
-  params->gz = 1000;
-  params->entropy_bins = 0;
-  params->load_source = FALSE;
-  params->save_source = FALSE;
-  params->write_tally = FALSE;
-  params->write_entropy = FALSE;
-  params->write_keff = FALSE;
-  params->write_bank = FALSE;
-  params->write_source = FALSE;
-  params->write_histories = FALSE;
-  params->tally_file = NULL;
-  params->entropy_file = NULL;
-  params->keff_file = NULL;
-  params->bank_file = NULL;
-  params->source_file = NULL;
-  params->histories_file = NULL;
-  params->cnvg_method = 1;
-  params->cnvg_n_stages = 0;
-  params->cnvg_n_particles = NULL;
-  params->cnvg_n_generations = NULL;
+  p->n_particles = 1000000;
+  p->n_batches = 10;
+  p->n_generations = 1;
+  p->n_histories = 0;
+  p->n_active = 10;
+  p->bc = REFLECT;
+  p->n_nuclides = 1;
+  p->tally = TRUE;
+  p->n_bins = 16;
+  p->entropy_bins = 0;
+  p->seed = 1;
+  p->nu = 2.5;
+  p->xs_f = 0.012;
+  p->xs_a = 0.03;
+  p->xs_s = 0.27;
+  p->Lx = 400;
+  p->Ly = 400;
+  p->Lz = 400;
+  p->load_source = FALSE;
+  p->save_source = FALSE;
+  p->write_tally = FALSE;
+  p->write_entropy = FALSE;
+  p->write_keff = FALSE;
+  p->write_bank = FALSE;
+  p->write_source = FALSE;
+  p->write_histories = FALSE;
+  p->tally_file = NULL;
+  p->entropy_file = NULL;
+  p->keff_file = NULL;
+  p->bank_file = NULL;
+  p->source_file = NULL;
+  p->histories_file = NULL;
+  p->ramp_up = TRUE;
+  p->cnvg_n_stages = 0;
 
-  return params;
+  return p;
 }
 
-void init_output(Parameters *params, FILE *fp)
-{
-  // Set up file to output tallies
-  if(params->write_tally == TRUE){
-    fp = fopen(params->tally_file, "w");
-    fclose(fp);
-  }
-
-  // Set up file to output shannon entropy to assess source convergence
-  if(params->write_entropy == TRUE){
-    fp = fopen(params->entropy_file, "w");
-    fclose(fp);
-  }
-
-  // Set up file to output keff
-  if(params->write_keff == TRUE){
-    fp = fopen(params->keff_file, "w");
-    fclose(fp);
-  }
-
-  // Set up file to output particle bank
-  if(params->write_bank == TRUE){
-    fp = fopen(params->bank_file, "w");
-    fclose(fp);
-  }
-
-  // Set up file to output source distribution
-  if(params->write_source == TRUE){
-    fp = fopen(params->source_file, "w");
-    fclose(fp);
-  }
-
-  // Set up file to output histories
-  if(params->write_histories == TRUE){
-    fp = fopen(params->histories_file, "w");
-    fclose(fp);
-  }
-
-  return;
-}
-
-Geometry *init_geometry(Parameters *params)
+Geometry *init_geometry(Parameters *parameters)
 {
   Geometry *g = malloc(sizeof(Geometry));
 
-  g->x = params->gx;
-  g->y = params->gy;
-  g->z = params->gz;
-  g->bc = params->bc;
-  g->surface_crossed = -1;
+  g->Lx = parameters->Lx;
+  g->Ly = parameters->Ly;
+  g->Lz = parameters->Lz;
+  g->bc = parameters->bc;
 
   return g;
 }
 
-Tally *init_tally(Parameters *params)
+Tally *init_tally(Parameters *parameters)
 {
   Tally *t = malloc(sizeof(Tally));
 
   t->tallies_on = FALSE;
-  t->n = params->n_bins;
-  t->dx = params->gx/t->n;
-  t->dy = params->gy/t->n;
-  t->dz = params->gz/t->n;
+  t->n = parameters->n_bins;
+  t->dx = parameters->Lx/t->n;
+  t->dy = parameters->Ly/t->n;
+  t->dz = parameters->Lz/t->n;
   t->flux = calloc(t->n*t->n*t->n, sizeof(double));
 
   return t;
 }
 
-Material *init_material(Parameters *params)
+Material *init_material(Parameters *parameters)
 {
   int i;
   Nuclide sum = {0, 0, 0, 0, 0};
 
   // Hardwire the material macroscopic cross sections for now to produce a keff
   // close to 1 (fission, absorption, scattering, total, atomic density)
-  Nuclide macro = {params->xs_f, params->xs_a, params->xs_s,
-     params->xs_f + params->xs_a + params->xs_s, 1.0};
+  Nuclide macro = {parameters->xs_f, parameters->xs_a, parameters->xs_s,
+     parameters->xs_f + parameters->xs_a + parameters->xs_s, 1.0};
 
   Material *m = malloc(sizeof(Material));
-  m->n_nuclides = params->n_nuclides;
+  m->n_nuclides = parameters->n_nuclides;
   m->nuclides = malloc(m->n_nuclides*sizeof(Nuclide));
 
   // Generate some arbitrary microscopic cross section values and atomic
@@ -150,12 +107,43 @@ Material *init_material(Parameters *params)
     m->nuclides[i].xs_t = m->nuclides[i].xs_a + m->nuclides[i].xs_s;
   }
 
-  m->xs_f = params->xs_f;
-  m->xs_a = params->xs_a;
-  m->xs_s = params->xs_s;
-  m->xs_t = params->xs_a + params->xs_s;
+  m->xs_f = parameters->xs_f;
+  m->xs_a = parameters->xs_a;
+  m->xs_s = parameters->xs_s;
+  m->xs_t = parameters->xs_a + parameters->xs_s;
 
   return m;
+}
+
+Bank *init_source_bank(Parameters *parameters, Geometry *geometry)
+{
+  unsigned long i_p; // index over particles
+  Bank *source_bank;
+
+  // Initialize source bank
+  source_bank = init_bank(parameters->n_particles);
+
+  // Sample source particles or load a source
+  if(parameters->load_source == TRUE){
+    load_source(source_bank);
+    source_bank->n = parameters->n_particles;
+  }
+  else{
+    for(i_p=0; i_p<parameters->n_particles; i_p++){
+      sample_source_particle(geometry, &(source_bank->p[i_p]));
+      source_bank->n++;
+    }
+  }
+
+  return source_bank;
+}
+
+Bank *init_fission_bank(Parameters *parameters)
+{
+  Bank *fission_bank;
+  fission_bank = init_bank(2*parameters->n_particles);
+
+  return fission_bank;
 }
 
 Bank *init_bank(unsigned long n_particles)
@@ -169,30 +157,26 @@ Bank *init_bank(unsigned long n_particles)
   return b;
 }
 
-void sample_source_particle(Particle *p, Geometry *g)
+void sample_source_particle(Geometry *geometry, Particle *p)
 {
   p->alive = TRUE;
   p->energy = 1;
-  p->last_energy = 0;
+  p->last_energy = 1;
   p->mu = rn()*2 - 1;
   p->phi = rn()*2*PI;
   p->u = p->mu;
   p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
   p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);
-  p->x = rn()*g->x;
-  p->y = rn()*g->y;
-  p->z = rn()*g->z;
-  // Point source at center
-//  p->x = g->x/2;
-//  p->y = g->y/2;
-//  p->z = g->z/2;
+  p->x = rn()*geometry->Lx;
+  p->y = rn()*geometry->Ly;
+  p->z = rn()*geometry->Lz;
 
   return;
 }
 
 void resize_particles(Bank *b)
 {
-  b->p = realloc(b->p, 2*b->sz*sizeof(Particle));
+  b->p = realloc(b->p, sizeof(Particle)*2*b->sz);
   b->sz = 2*b->sz;
 
   return;
@@ -224,6 +208,15 @@ void free_tally(Tally *t)
   t->flux = NULL;
   free(t);
   t = NULL;
+
+  return;
+}
+
+void free_parameters(Parameters *parameters)
+{
+  free(parameters->cnvg_n_particles);
+  free(parameters->cnvg_n_generations);
+  free(parameters);
 
   return;
 }

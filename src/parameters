@@ -41,18 +41,14 @@ xs_s=0.27
 # bc: boundary conditions (vacuum, reflective, periodic)
 bc=reflective
 
-# x: length of domain in x dimension
-x=400
+# Lx: length of domain in x dimension
+Lx=400
 
-# y: length of domain in y dimension
-y=400
+# Ly: length of domain in y dimension
+Ly=400
 
-# z: length of domain in z dimension
-z=400
-
-# cnvg_method: converge source in traditional way (defualt) or by ramping up
-# number of particles (accel)
-cnvg_method=accel
+# Lz: length of domain in z dimension
+Lz=400
 
 # load_source: load the source from binary file source.dat
 load_source=false
@@ -72,7 +68,7 @@ write_keff=false
 # write_bank: whether to output particle bank
 write_bank=false
 
-# write_histories: whether to output number of histories
+# write_histories: whether to output total number of histories at each generation
 write_histories=false
 
 # tally_file: path to tally output
@@ -87,5 +83,8 @@ keff_file=keff.dat
 # bank_file: path to particle bank output
 bank_file=bank.dat
 
-# histories_file: path to histories output
+# histories_file: path to write total number of histories to
 histories_file=histories.dat
+
+# ramp_up: whether to use ramp up method to converge source: true or false
+ramp_up=true
