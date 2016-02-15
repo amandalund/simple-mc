@@ -12,7 +12,7 @@ void init_problem(int argc, char *argv[])
 
   // Set initial RNG seed
   set_initial_seed(parameters->seed);
-  set_stream(STREAM_INIT);
+  set_stream(STREAM_OTHER);
 
   // Set OpenMP specific variables
 #ifdef _OPENMP

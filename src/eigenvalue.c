@@ -61,7 +61,6 @@ void run_eigenvalue(void)
 }
 #endif
       set_stream(STREAM_OTHER);
-      rn_skip(i_b*parameters->n_generations + i_g);
 
 #ifdef _OPENMP
       // Merge fission banks from threads

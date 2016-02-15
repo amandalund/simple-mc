@@ -27,10 +27,9 @@
 #define Z1 5
 
 // RNG streams
-#define N_STREAMS 3
-#define STREAM_INIT 0
-#define STREAM_TRACK 1
-#define STREAM_OTHER 2
+#define N_STREAMS 2
+#define STREAM_TRACK 0
+#define STREAM_OTHER 1
 
 // Declare main structures used throughout simulation
 extern Parameters *parameters; // user defined parameters
