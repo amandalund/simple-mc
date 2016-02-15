@@ -10,7 +10,7 @@ OPENMP   = yes
 PROGRAM = transport
 
 HEADERS = \
-header.h \
+simple_mc.h \
 global.h
 
 SOURCE = \

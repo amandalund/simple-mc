@@ -1,5 +1,5 @@
-#ifndef HEADER
-#define HEADER
+#ifndef SIMPLE_MC
+#define SIMPLE_MC
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -26,9 +26,9 @@ typedef struct Parameters_{
   double xs_a; // absorption macro xs
   double xs_s; // scattering macro xs
   double xs_f; // fission macro xs
-  double gx; // geometry size in x
-  double gy; // geometry size in y
-  double gz; // geometry size in z
+  double Lx; // domain length in x
+  double Ly; // domain length in y
+  double Lz; // domain length in z
   int load_source; // load the source bank from source.dat
   int save_source; // save the source bank at end of simulation
   int write_tally; // whether to output tallies
@@ -61,9 +61,9 @@ typedef struct Particle_{
 
 typedef struct Geometry_{
   int bc;
-  double x;
-  double y;
-  double z;
+  double Lx;
+  double Ly;
+  double Lz;
 } Geometry;
 
 typedef struct Nuclide_{
@@ -118,6 +118,7 @@ void save_source(Bank *b);
 
 // utils.c funtion prototypes
 double timer(void);
+void copy_particle(Particle *dest, Particle *source);
 
 // prng.c function prototypes
 double rn(void);
@@ -136,8 +137,6 @@ void init_fission_bank(void);
 void init_source_bank(void);
 Bank *init_bank(unsigned long n_particles);
 void sample_source_particle(Particle *p);
-void sample_fission_particle(Particle *p, Particle *p_old);
-void copy_particle(Particle *dest, Particle *source);
 void resize_particles(Bank *b);
 void free_bank(Bank *b);
 void free_material(Material *m);
@@ -151,6 +150,7 @@ double distance_to_boundary(Particle *p);
 double distance_to_collision(void);
 void cross_surface(Particle *p);
 void collision(Particle *p);
+void sample_fission_particle(Particle *p, Particle *p_old);
 
 // eigenvalue.c function prototypes
 void run_eigenvalue(void);

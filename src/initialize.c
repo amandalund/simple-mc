@@ -1,4 +1,4 @@
-#include "header.h"
+#include "simple_mc.h"
 #include "global.h"
 
 void init_problem(int argc, char *argv[])
@@ -70,9 +70,9 @@ Parameters *init_parameters()
   parameters->xs_f = 0.012;
   parameters->xs_a = 0.03;
   parameters->xs_s = 0.27;
-  parameters->gx = 400;
-  parameters->gy = 400;
-  parameters->gz = 400;
+  parameters->Lx = 400;
+  parameters->Ly = 400;
+  parameters->Lz = 400;
   parameters->load_source = FALSE;
   parameters->save_source = FALSE;
   parameters->write_tally = FALSE;
@@ -93,9 +93,9 @@ Geometry *init_geometry(void)
 {
   Geometry *g = malloc(sizeof(Geometry));
 
-  g->x = parameters->gx;
-  g->y = parameters->gy;
-  g->z = parameters->gz;
+  g->Lx = parameters->Lx;
+  g->Ly = parameters->Ly;
+  g->Lz = parameters->Lz;
   g->bc = parameters->bc;
 
   return g;
@@ -107,9 +107,9 @@ Tally *init_tally(void)
 
   t->tallies_on = FALSE;
   t->n = parameters->n_bins;
-  t->dx = parameters->gx/t->n;
-  t->dy = parameters->gy/t->n;
-  t->dz = parameters->gz/t->n;
+  t->dx = parameters->Lx/t->n;
+  t->dy = parameters->Ly/t->n;
+  t->dz = parameters->Lz/t->n;
   t->flux = calloc(t->n*t->n*t->n, sizeof(double));
 
   return t;
@@ -227,44 +227,9 @@ void sample_source_particle(Particle *p)
   p->u = p->mu;
   p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
   p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);
-  p->x = rn()*geometry->x;
-  p->y = rn()*geometry->y;
-  p->z = rn()*geometry->z;
-
-  return;
-}
-
-void sample_fission_particle(Particle *p, Particle *p_old)
-{
-  p->alive = TRUE;
-  p->energy = 1;
-  p->last_energy = 1;
-  p->mu = rn()*2 - 1;
-  p->phi = rn()*2*PI;
-  p->u = p->mu;
-  p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
-  p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);
-  p->x = p_old->x;
-  p->y = p_old->y;
-  p->z = p_old->z;
-
-  return;
-}
-
-void copy_particle(Particle *dest, Particle *source)
-{
-  dest->alive = source->alive;
-  dest->energy = source->energy;
-  dest->last_energy = source->last_energy;
-  dest->mu = source->mu;
-  dest->phi = source->phi;
-  dest->u = source->u;
-  dest->v = source->v;
-  dest->w = source->w;
-  dest->x = source->x;
-  dest->y = source->y;
-  dest->z = source->z;
-  dest->event = source->event;
+  p->x = rn()*geometry->Lx;
+  p->y = rn()*geometry->Ly;
+  p->z = rn()*geometry->Lz;
 
   return;
 }

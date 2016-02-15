@@ -1,4 +1,4 @@
-#include "header.h"
+#include "simple_mc.h"
 #include "global.h"
 
 typedef struct RNG_Parameters_{

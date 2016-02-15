@@ -1,4 +1,4 @@
-#include "header.h"
+#include "simple_mc.h"
 
 #define TRUE 1
 #define FALSE 0
