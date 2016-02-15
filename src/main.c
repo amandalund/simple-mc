@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 
   // Set initial RNG seed
   set_initial_seed(parameters->seed);
-  set_stream(STREAM_INIT);
+  set_stream(STREAM_OTHER);
 
   // Create files for writing results to
   init_output(parameters);
