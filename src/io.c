@@ -578,18 +578,6 @@ void read_CLI(int argc, char *argv[], Parameters *parameters)
     else print_error("Error reading command line input");
   }
 
-  if(parameters->ramp_up == TRUE){
-    read_convergence_parameters(parameters);
-    if(parameters->cnvg_n_particles[parameters->cnvg_n_stages-1] != parameters->n_particles){
-      printf("WARNING: Number of particles in ramp-up does not match number of particles in parameters file.\n");
-      parameters->n_particles = parameters->cnvg_n_particles[parameters->cnvg_n_stages-1];
-    }
-    if(parameters->n_active < parameters->n_batches){
-      printf("WARNING: Setting number of active batches equal to number of total batches.\n"); 
-      parameters->n_active = parameters->n_batches;
-    }
-  }
-
   // Validate Inputs
   if(parameters->entropy_bins <= 0)
     parameters->entropy_bins = ceil(pow(parameters->n_particles/20, 1.0/3.0));
@@ -664,6 +652,15 @@ void read_convergence_parameters(Parameters *parameters)
   }
 
   fclose(fp);
+
+  if(parameters->cnvg_n_particles[parameters->cnvg_n_stages-1] != parameters->n_particles){
+    printf("WARNING: Number of particles in ramp-up does not match number of particles in parameters file.\n");
+    parameters->n_particles = parameters->cnvg_n_particles[parameters->cnvg_n_stages-1];
+  }
+  if(parameters->n_active < parameters->n_batches){
+    printf("WARNING: Setting number of active batches equal to number of total batches.\n"); 
+    parameters->n_active = parameters->n_batches;
+  }
 
   return;
 }

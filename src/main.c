@@ -16,6 +16,9 @@ int main(int argc, char *argv[])
   parameters = init_parameters();
   parse_parameters(parameters);
   read_CLI(argc, argv, parameters);
+  if(parameters->ramp_up == TRUE){
+    read_convergence_parameters(parameters);
+  }
   print_parameters(parameters);
 
   // Set initial RNG seed
@@ -45,7 +48,6 @@ int main(int argc, char *argv[])
 
   center_print("SIMULATION", 79);
   border_print();
-  printf("%-15s %-15s %-15s %-15s\n", "BATCH", "ENTROPY", "KEFF", "MEAN KEFF");
 
   // Start time
   t1 = timer();

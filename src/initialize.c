@@ -128,7 +128,7 @@ Bank *init_source_bank(Parameters *parameters, Geometry *geometry)
     load_source(source_bank);
     source_bank->n = parameters->n_particles;
   }
-  else{
+  else if(parameters->ramp_up == FALSE){
     for(i_p=0; i_p<parameters->n_particles; i_p++){
       sample_source_particle(geometry, &(source_bank->p[i_p]));
       source_bank->n++;

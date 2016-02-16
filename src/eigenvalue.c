@@ -2,21 +2,26 @@
 
 void ramp_up(Parameters *parameters, Geometry *geometry, Material *material, Bank *source_bank, Bank *fission_bank, Tally *tally)
 {
-  int i_s;            // index over stages
-  int i_g;            // index over generations
+  int i_s; // index over stages
+  int i_g; // index over generations
   unsigned long i_p;  // index over particles
-  double keff_gen = 1;// keff of generation
-  double H;           // shannon entropy
-  int n;              // total number of particles in stage
-  int n_prev;         // total number of particles in previousstage
+  double keff_gen = 1; // keff of generation
+  double keff_stage; // keff of stage
+  double H; // shannon entropy
+  int n; // total number of particles in stage
+  int n_prev; // total number of particles in previousstage
   int i;
   Particle p;
+
+  printf("%-15s %-15s %-15s\n", "STAGE", "ENTROPY", "KEFF");
 
   // Loop over stages
   for(i_s=0; i_s<parameters->cnvg_n_stages; i_s++){
 
     // Switch RNG stream off tracking
     set_stream(STREAM_OTHER);
+
+    keff_stage = 0;
 
     n = parameters->cnvg_n_particles[i_s];
 
@@ -77,7 +82,7 @@ void ramp_up(Parameters *parameters, Geometry *geometry, Material *material, Ban
       set_stream(STREAM_TRACK);
 
       // Loop over particles
-      for(i_p=0; i_p<parameters->n_particles; i_p++){
+      for(i_p=0; i_p<source_bank->n; i_p++){
 
 	// Set seed for particle i_p by skipping ahead in the random number
 	// sequence stride*(total particles simulated) numbers from the initial
@@ -99,6 +104,7 @@ void ramp_up(Parameters *parameters, Geometry *geometry, Material *material, Ban
 
       // Calculate generation k_effective and accumulate batch k_effective
       keff_gen = (double) fission_bank->n / source_bank->n;
+      keff_stage += keff_gen;
 
       // Sample new source particles from the particles that were added to the
       // fission bank during this generation
@@ -115,6 +121,11 @@ void ramp_up(Parameters *parameters, Geometry *geometry, Material *material, Ban
         write_histories(parameters->n_histories, parameters->histories_file);
       }
     }
+
+    // Calculate k_effective
+    keff_stage /= parameters->cnvg_n_generations[i_s];
+
+    printf("%-15d %-15f %-15f\n", i_s+1, H, keff_stage);
   }
 
   printf("Converged after %lu histories.\n", parameters->n_histories);
@@ -134,6 +145,8 @@ void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *materi
   double keff_std; // keff standard deviation over active batches
   double H; // shannon entropy
   Particle p;
+
+  printf("%-15s %-15s %-15s %-15s\n", "BATCH", "ENTROPY", "KEFF", "MEAN KEFF");
 
   // Loop over batches
   for(i_b=0; i_b<parameters->n_batches; i_b++){
