@@ -1,63 +1,51 @@
-#include "header.h"
+#include "simple_mc.h"
 
 int main(int argc, char *argv[])
 {
-  FILE *fp = NULL;    // file pointer for output
-  double t1, t2;      // timers
-  double *keff;       // effective multiplication factor
-  unsigned long i_p;  // index over particles
-  Parameters *params; // user defined parameters
-  Geometry *g;
-  Material *m;
-  Tally *t;
-  Bank *source_bank;
-  Bank *fission_bank;
-  Queue *delay_queue;
+  Parameters *parameters; // user defined parameters
+  Geometry *geometry; // homogenous cube geometry
+  Material *material; // problem material
+  Bank *source_bank; // array for particle source sites
+  Bank *fission_bank; // array for particle fission sites
+  Queue *delay_queue; // queue for delay bank particles
+  Tally *tally; // scalar flux tally
+  double *keff; // effective multiplication factor
+  double t1, t2; // timers
 
-  // Get inputs
-  params = set_default_params();
-  parse_params("parameters", params);
-  read_CLI(argc, argv, params);
-  print_params(params);
+  // Get inputs: set parameters to default values, parse parameter file,
+  // override with any command line inputs, and print parameters
+  parameters = init_parameters();
+  parse_parameters(parameters);
+  read_CLI(argc, argv, parameters);
+  print_parameters(parameters);
 
-  // Set up output files
-  init_output(params, fp);
+  // Set initial RNG seed
+  set_initial_seed(parameters->seed);
+  set_stream(STREAM_OTHER);
 
-  // Seed RNG
-  srand(params->seed);
-
-  // Set up array for keff
-  keff = calloc(params->n_active, sizeof(double));
+  // Create files for writing results to
+  init_output(parameters);
 
   // Set up geometry
-  g = init_geometry(params);
+  geometry = init_geometry(parameters);
 
   // Set up material
-  m = init_material(params);
+  material = init_material(parameters);
 
   // Set up tallies
-  t = init_tally(params);
+  tally = init_tally(parameters);
 
-  // Initialize source bank
-  source_bank = init_bank(params->n_particles);
+  // Create source bank and initial source distribution
+  source_bank = init_source_bank(parameters, geometry);
 
-  // Initialize fission bank
-  fission_bank = init_bank(params->n_particles);
+  // Create fission bank
+  fission_bank = init_fission_bank(parameters);
+
+  // Set up array for k effective
+  keff = calloc(parameters->n_active, sizeof(double));
 
   // Initialize delay queue
-  delay_queue = init_queue(params->n_particles*params->lag);
-
-  // Sample source particles or load a source
-  if(params->load_source == TRUE){
-    load_source(source_bank);
-    source_bank->n = params->n_particles;
-  }
-  else{
-    for(i_p=0; i_p<params->n_particles; i_p++){
-      sample_source_particle(&(source_bank->p[i_p]), g, params);
-      source_bank->n++;
-    }
-  }
+  delay_queue = init_queue(parameters->n_particles*parameters->lag);
 
   center_print("SIMULATION", 79);
   border_print();
@@ -68,39 +56,30 @@ int main(int argc, char *argv[])
 
   // Converge source (inactive batches)
   printf("CONVERGING SOURCE...\n");
-  converge_source(params, source_bank, fission_bank, g, m, t, delay_queue);
+  converge_source(parameters, geometry, material, source_bank, fission_bank, tally, delay_queue);
 
   // Build the delay bank before beginning active batches
   printf("BUILDING DELAY BANK...\n");
-  build_delay_bank(params, source_bank, fission_bank, g, m, t, delay_queue);
+  build_delay_bank(parameters, geometry, material, source_bank, fission_bank, tally, delay_queue);
 
   // Run eigenvalue problem (active batches)
   printf("BEGINNING ACTIVE CYCLES...\n");
-  run_eigenvalue(params, source_bank, fission_bank, g, m, t, keff, delay_queue);
+  run_eigenvalue(parameters, geometry, material, source_bank, fission_bank, tally, delay_queue, keff);
 
   // Stop time
   t2 = timer();
 
   printf("Simulation time: %f secs\n", t2-t1);
 
-  // Write out keff
-  if(params->write_keff == TRUE){
-    write_keff(keff, params->n_active, fp, params->keff_file);
-  }
-
-  if(params->save_source == TRUE){
-    save_source(source_bank);
-  }
-
   // Free memory
+  free(keff);
+  free_tally(tally);
   free_bank(fission_bank);
   free_bank(source_bank);
   free_queue(delay_queue);
-  free_tally(t);
-  free_material(m);
-  free(g);
-  free(keff);
-  free(params);
+  free_material(material);
+  free(geometry);
+  free(parameters);
 
   return 0;
 }

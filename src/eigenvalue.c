@@ -1,34 +1,48 @@
-#include "header.h"
+#include "simple_mc.h"
 
-void converge_source(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t, Queue *delay_queue)
+void converge_source(Parameters *parameters, Geometry *geometry, Material *material, Bank *source_bank, Bank *fission_bank, Tally *tally, Queue *delay_queue)
 {
-  int i_b;            // index over batches
-  int i_g;            // index over generations
-  unsigned long i_p;  // index over particles
-  double keff_batch;  // keff of batch
-  double keff_gen = 1;// keff of generation
-  double H;           // shannon entropy
-  FILE *fp = NULL;    // file pointer for output
+  int i_b; // index over batches
+  int i_g; // index over generations
+  unsigned long i_p; // index over particles
+  double keff_batch; // keff of batch
+  double keff_gen = 1; // keff of generation
+  double H; // shannon entropy
+  Particle p;
 
   // Loop over inactive batches
-  for(i_b=0; i_b<params->n_batches - params->n_active; i_b++){
+  for(i_b=0; i_b<parameters->n_batches - parameters->n_active; i_b++){
 
     keff_batch = 0;
 
     // Write coordinates of particles in source bank
-    if(params->write_bank == TRUE){
-      write_bank(source_bank, fp, params->bank_file);
+    if(parameters->write_bank == TRUE){
+      write_bank(source_bank, parameters->bank_file);
     }
 
     // Loop over generations
-    for(i_g=0; i_g<params->n_generations; i_g++){
+    for(i_g=0; i_g<parameters->n_generations; i_g++){
+
+      // Set RNG stream for tracking
+      set_stream(STREAM_TRACK);
 
       // Loop over particles
-      for(i_p=0; i_p<source_bank->n; i_p++){
+      for(i_p=0; i_p<parameters->n_particles; i_p++){
 
-        // Transport the next particle from source bank
-        transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params, IGNORE_DB, delay_queue);
+	// Set seed for particle i_p by skipping ahead in the random number
+	// sequence stride*(total particles simulated) numbers from the initial
+	// seed. This allows for reproducibility of the particle history.
+        rn_skip((i_b*parameters->n_generations + i_g)*parameters->n_particles + i_p);
+
+        // Copy next particle into p
+        copy_particle(&p, &(source_bank->p[i_p]));
+
+        // Transport the next particle
+        transport(parameters, geometry, material, source_bank, fission_bank, tally, IGNORE_DB, delay_queue, &p);
       }
+
+      // Switch RNG stream off tracking
+      set_stream(STREAM_OTHER);
 
       // Calculate generation k_effective and accumulate batch k_effective
       keff_gen = (double) fission_bank->n / source_bank->n;
@@ -36,22 +50,22 @@ void converge_source(Parameters *params, Bank *source_bank, Bank *fission_bank, 
 
       // Sample new source particles from the particles that were added to the
       // fission bank during this generation
-      synchronize_bank(source_bank, fission_bank, g, params);
+      synchronize_bank(source_bank, fission_bank);
 
       // Calculate shannon entropy to assess source convergence
-      H = shannon_entropy(g, source_bank, params);
-      if(params->write_entropy == TRUE){
-        write_entropy(H, fp, params->entropy_file);
+      H = shannon_entropy(geometry, source_bank);
+      if(parameters->write_entropy == TRUE){
+        write_entropy(H, parameters->entropy_file);
       }
 
       // Write the source distribution
-      if(params->write_source == TRUE){
-        write_source(g, source_bank, params, fp, params->source_file);
+      if(parameters->write_source == TRUE){
+        write_source(parameters, geometry, source_bank, parameters->source_file);
       }
     }
 
     // Calculate k_effective
-    keff_batch /= params->n_generations;
+    keff_batch /= parameters->n_generations;
 
     // Status text
     printf("%-15d %-15f %-15f\n", i_b+1, H, keff_batch);
@@ -60,77 +74,103 @@ void converge_source(Parameters *params, Bank *source_bank, Bank *fission_bank, 
   return;
 }
 
-void build_delay_bank(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t, Queue *delay_queue)
+void build_delay_bank(Parameters *parameters, Geometry *geometry, Material *material, Bank *source_bank, Bank *fission_bank, Tally *tally, Queue *delay_queue)
 {
-  int i_g;            // index over generations
-  unsigned long i_p;  // index over particles
-  double keff_gen = 1;// keff of generation
-  double H;           // shannon entropy
-  FILE *fp = NULL;    // file pointer for output
+  int i_g; // index over generations
+  int n_b = parameters->n_batches - parameters->n_active; // overall batches
+  unsigned long i_p; // index over particles
+  double H; // shannon entropy
+  Particle p;
 
   // Loop over generations
-  for(i_g=0; i_g<params->lag; i_g++){
+  for(i_g=0; i_g<parameters->lag; i_g++){
+
+    // Set RNG stream for tracking
+    set_stream(STREAM_TRACK);
 
     // Loop over particles
-    for(i_p=0; i_p<source_bank->n; i_p++){
+    for(i_p=0; i_p<parameters->n_particles; i_p++){
 
-      // Transport the next particle from source bank
-      transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params, BUILD_DB, delay_queue);
+      // Set seed for particle i_p by skipping ahead in the random number
+      // sequence stride*(total particles simulated) numbers from the initial
+      // seed. This allows for reproducibility of the particle history.
+      rn_skip((n_b*parameters->lag + i_g)*parameters->n_particles + i_p);
+
+      // Copy next particle into p
+      copy_particle(&p, &(source_bank->p[i_p]));
+
+      // Transport the next particle
+      transport(parameters, geometry, material, source_bank, fission_bank, tally, BUILD_DB, delay_queue, &p);
     }
 
-    // Calculate generation k_effective and accumulate batch k_effective
-    keff_gen = (double) fission_bank->n / source_bank->n;
+    // Switch RNG stream off tracking
+    set_stream(STREAM_OTHER);
 
     // Sample new source particles from the particles that were added to the
     // fission bank during this generation
-    synchronize_bank(source_bank, fission_bank, g, params);
+    synchronize_bank(source_bank, fission_bank);
 
     // Calculate shannon entropy to assess source convergence
-    H = shannon_entropy(g, source_bank, params);
-    if(params->write_entropy == TRUE){
-      write_entropy(H, fp, params->entropy_file);
+    H = shannon_entropy(geometry, source_bank);
+    if(parameters->write_entropy == TRUE){
+      write_entropy(H, parameters->entropy_file);
     }
   }
 
   return;
 }
 
-void run_eigenvalue(Parameters *params, Bank *source_bank, Bank *fission_bank, Geometry *g, Material *m, Tally *t, double *keff, Queue *delay_queue)
+void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *material, Bank *source_bank, Bank *fission_bank, Tally *tally, Queue *delay_queue, double *keff)
 {
-  int i_b;            // index over batches
-  int i_g;            // index over generations
-  unsigned long i_p;  // index over particles
-  FILE *fp = NULL;    // file pointer for output
-  double keff_gen = 1;// keff of generation
-  double keff_batch;  // keff of batch
-  double keff_mean;   // keff mean over active batches
-  double keff_std;    // keff standard deviation over active batches
-  double H;           // shannon entropy
+  int i_b; // index over batches
+  int i_g; // index over generations
+  unsigned long i_p; // index over particles
+  int n_b = parameters->n_batches - parameters->n_active + 1;
+  double keff_gen = 1; // keff of generation
+  double keff_batch; // keff of batch
+  double keff_mean; // keff mean over active batches
+  double keff_std; // keff standard deviation over active batches
+  double H; // shannon entropy
+  Particle p;
 
   // Turn on tallying
-  if(params->tally == TRUE){
-    t->tallies_on = TRUE;
+  if(parameters->tally == TRUE){
+    tally->tallies_on = TRUE;
   }
 
   // Loop over active batches
-  for(i_b=0; i_b<params->n_active; i_b++){
+  for(i_b=0; i_b<parameters->n_active; i_b++){
 
     keff_batch = 0;
 
     // Write coordinates of particles in source bank
-    if(params->write_bank == TRUE){
-      write_bank(source_bank, fp, params->bank_file);
+    if(parameters->write_bank == TRUE){
+      write_bank(source_bank, parameters->bank_file);
     }
 
     // Loop over generations
-    for(i_g=0; i_g<params->n_generations; i_g++){
+    for(i_g=0; i_g<parameters->n_generations; i_g++){
+
+      // Set RNG stream for tracking
+      set_stream(STREAM_TRACK);
 
       // Loop over particles
-      for(i_p=0; i_p<source_bank->n; i_p++){
+      for(i_p=0; i_p<parameters->n_particles; i_p++){
 
-        // Transport the next particle from source bank
-        transport(&(source_bank->p[i_p]), g, m, t, fission_bank, keff_gen, params, USE_DB, delay_queue);
+	// Set seed for particle i_p by skipping ahead in the random number
+	// sequence stride*(total particles simulated) numbers from the initial
+	// seed. This allows for reproducibility of the particle history.
+        rn_skip(((i_b + n_b)*parameters->n_generations + i_g)*parameters->n_particles + i_p);
+
+        // Copy next particle into p
+        copy_particle(&p, &(source_bank->p[i_p]));
+
+        // Transport the next particle
+        transport(parameters, geometry, material, source_bank, fission_bank, tally, USE_DB, delay_queue, &p);
       }
+
+      // Switch RNG stream off tracking
+      set_stream(STREAM_OTHER);
 
       // Calculate generation k_effective and accumulate batch k_effective
       keff_gen = (double) fission_bank->n / source_bank->n;
@@ -138,43 +178,52 @@ void run_eigenvalue(Parameters *params, Bank *source_bank, Bank *fission_bank, G
 
       // Sample new source particles from the particles that were added to the
       // fission bank during this generation
-      synchronize_bank(source_bank, fission_bank, g, params);
+      synchronize_bank(source_bank, fission_bank);
 
       // Calculate shannon entropy to assess source convergence
-      H = shannon_entropy(g, source_bank, params);
-      if(params->write_entropy == TRUE){
-        write_entropy(H, fp, params->entropy_file);
+      H = shannon_entropy(geometry, source_bank);
+      if(parameters->write_entropy == TRUE){
+        write_entropy(H, parameters->entropy_file);
       }
 
       // Write the source distribution
-      if(params->write_source == TRUE){
-        write_source(g, source_bank, params, fp, params->source_file);
+      if(parameters->write_source == TRUE){
+        write_source(parameters, geometry, source_bank, parameters->source_file);
       }
     }
 
     // Calculate k_effective
-    keff_batch /= params->n_generations;
+    keff_batch /= parameters->n_generations;
     keff[i_b] = keff_batch;
 
     // Tallies for this realization
-    if(t->tallies_on == TRUE){
-      if(params->write_tally == TRUE){
-        write_tally(t, fp, params->tally_file);
+    if(tally->tallies_on == TRUE){
+      if(parameters->write_tally == TRUE){
+        write_tally(tally, parameters->tally_file);
       }
-      memset(t->flux, 0, t->n*t->n*t->n*sizeof(double));
+      memset(tally->flux, 0, tally->n*tally->n*tally->n*sizeof(double));
     }
 
     // Calculate keff mean and standard deviation
     calculate_keff(keff, &keff_mean, &keff_std, i_b+1);
 
     // Status text
-    printf("%-15d %-15f %-15f %f +/- %-15f\n", params->n_batches - params->n_active + i_b + 1, H, keff_batch, keff_mean, keff_std);
+    printf("%-15d %-15f %-15f %f +/- %-15f\n", parameters->n_batches - parameters->n_active + i_b + 1, H, keff_batch, keff_mean, keff_std);
+  }
+
+  // Write out keff
+  if(parameters->write_keff == TRUE){
+    write_keff(keff, parameters->n_active, parameters->keff_file);
+  }
+
+  if(parameters->save_source == TRUE){
+    save_source(source_bank);
   }
 
   return;
 }
 
-void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g, Parameters *params)
+void synchronize_bank(Bank *source_bank, Bank *fission_bank)
 {
   unsigned long i, j;
   unsigned long n_s = source_bank->n;
@@ -191,7 +240,7 @@ void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g, Parame
     // iteration each particle in fission bank will have equal probability of
     // being selected for source bank
     for(i=n_s; i<n_f; i++){
-      j = rni(&(params->seed), 0, i+1);
+      j = rni(0, i+1);
       if(j<n_s){
         memcpy(&(source_bank->p[j]), &(fission_bank->p[i]), sizeof(Particle));
       }
@@ -205,7 +254,7 @@ void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g, Parame
 
     // First randomly sample particles from fission bank
     for(i=0; i<(n_s-n_f); i++){
-      j = rni(&(params->seed), 0, n_f);
+      j = rni(0, n_f);
       memcpy(&(source_bank->p[i]), &(fission_bank->p[j]), sizeof(Particle));
     }
 
@@ -220,7 +269,7 @@ void synchronize_bank(Bank *source_bank, Bank *fission_bank, Geometry *g, Parame
 
 // Calculates the shannon entropy of the source distribution to assess
 // convergence
-double shannon_entropy(Geometry *g, Bank *b, Parameters *params)
+double shannon_entropy(Geometry *geometry, Bank *b)
 {
   unsigned long i;
   double H = 0.0;
@@ -234,9 +283,9 @@ double shannon_entropy(Geometry *g, Bank *b, Parameters *params)
   n = ceil(pow(b->n/20, 1.0/3.0));
 
   // Find grid spacing
-  dx = g->x/n;
-  dy = g->y/n;
-  dz = g->z/n;
+  dx = geometry->Lx/n;
+  dy = geometry->Ly/n;
+  dz = geometry->Lz/n;
 
   // Allocate array to keep track of number of sites in each grid box
   count = calloc(n*n*n, sizeof(unsigned long));

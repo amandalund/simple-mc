@@ -8,11 +8,13 @@ DEBUG    = no
 
 PROGRAM = transport
 
-HEADERS = header.h
+HEADERS = \
+simple_mc.h
 
 SOURCE = \
 main.c \
 initialize.c \
+prng.c \
 utils.c \
 io.c \
 transport.c \
