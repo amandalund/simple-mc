@@ -217,14 +217,31 @@ void collision(Material *material, Bank *fission_bank, double nu, int delay_tag,
       nf = nu + 1;
     }
 
+    if(fission_bank->n+nf >= fission_bank->sz){
+      fission_bank->resize(fission_bank);
+    }
+
+    // Sample n new particles from the source distribution but at the current
+    // particle's location. When building the delay bank, queue all particles to
+    // delay bank and add all to fission bank. When using the delay bank, queue
+    // all particles to delay bank and dequeue the same number of particle from
+    // delay bank to add to fission bank
+    for(i=0; i<nf; i++){
+      sample_fission_particle(&(fission_bank->p[fission_bank->n]), p);
+      fission_bank->n++;
+      if(delay_tag != IGNORE_DB){
+        enqueue(delay_queue, &(fission_bank->p[fission_bank->n-1]));
+      }
+      if(delay_tag == USE_DB){
+        dequeue(delay_queue, &(fission_bank->p[fission_bank->n-1]));
+      }
+    }
     // Sample n new particles from the source distribution but at the current
     // particle's location. When building the delay bank, queue one particle to
     // delay bank and add all to fission bank. When using the delay bank, queue
     // one particle to delay bank, add remaining particles to fission bank, and
     // dequeue one particle from delay bank to add to fission bank
-    if(fission_bank->n+nf >= fission_bank->sz){
-      fission_bank->resize(fission_bank);
-    }
+/*
     for(i=0; i<nf; i++){
       sample_fission_particle(&(fission_bank->p[fission_bank->n]), p);
       fission_bank->n++;
@@ -235,6 +252,7 @@ void collision(Material *material, Bank *fission_bank, double nu, int delay_tag,
     if(delay_tag == USE_DB){
       dequeue(delay_queue, &(fission_bank->p[fission_bank->n-1]));
     }
+*/
     p->alive = FALSE;
     p->event = FISSION;
   }
