@@ -1,4 +1,5 @@
 #include "simple_mc.h"
+#include "global.h"
 
 int main(int argc, char *argv[])
 {
@@ -6,7 +7,6 @@ int main(int argc, char *argv[])
   Geometry *geometry; // homogenous cube geometry
   Material *material; // problem material
   Bank *source_bank; // array for particle source sites
-  Bank *fission_bank; // array for particle fission sites
   Tally *tally; // scalar flux tally
   double *keff; // effective multiplication factor
   double t1, t2; // timers
@@ -21,6 +21,16 @@ int main(int argc, char *argv[])
   // Set initial RNG seed
   set_initial_seed(parameters->seed);
   set_stream(STREAM_OTHER);
+
+  // Set OpenMP specific variables
+#ifdef _OPENMP
+  omp_set_num_threads(parameters->n_threads);
+#pragma omp parallel
+{
+  n_threads = omp_get_num_threads();
+  thread_id = omp_get_thread_num();
+}
+#endif
 
   // Create files for writing results to
   init_output(parameters);
@@ -38,7 +48,7 @@ int main(int argc, char *argv[])
   source_bank = init_source_bank(parameters, geometry);
 
   // Create fission bank
-  fission_bank = init_fission_bank(parameters);
+  init_fission_bank(parameters);
 
   // Set up array for k effective
   keff = calloc(parameters->n_active, sizeof(double));
@@ -50,7 +60,7 @@ int main(int argc, char *argv[])
   // Start time
   t1 = timer();
 
-  run_eigenvalue(parameters, geometry, material, source_bank, fission_bank, tally, keff);
+  run_eigenvalue(parameters, geometry, material, source_bank, tally, keff);
 
   // Stop time
   t2 = timer();
@@ -60,7 +70,15 @@ int main(int argc, char *argv[])
   // Free memory
   free(keff);
   free_tally(tally);
+#ifdef _OPENMP
+#pragma omp parallel
+{
   free_bank(fission_bank);
+}
+  free_bank(master_fission_bank);
+#else
+  free_bank(fission_bank);
+#endif
   free_bank(source_bank);
   free_material(material);
   free(geometry);

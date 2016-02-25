@@ -1,7 +1,8 @@
 #include "simple_mc.h"
+#include "global.h"
 
 // Main logic to move particle
-void transport(Parameters *parameters, Geometry *geometry, Material *material, Bank *source_bank, Bank *fission_bank, Tally *tally, Particle *p)
+void transport(Parameters *parameters, Geometry *geometry, Material *material, Bank *source_bank, Tally *tally, Particle *p)
 {
   double d_b;
   double d_c;
@@ -34,7 +35,7 @@ void transport(Parameters *parameters, Geometry *geometry, Material *material, B
     }
     // Case where particle has collision
     else{
-      collision(material, fission_bank, parameters->nu, p);
+      collision(material, parameters->nu, p);
 
       // Score tallies
       if(tally->tallies_on == TRUE){
@@ -185,7 +186,7 @@ void cross_surface(Geometry *geometry, Particle *p)
   return;
 }
 
-void collision(Material *material, Bank *fission_bank, double nu, Particle *p)
+void collision(Material *material, double nu, Particle *p)
 {
   int nf;
   int i = 0;

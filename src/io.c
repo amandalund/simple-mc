@@ -1,4 +1,5 @@
 #include "simple_mc.h"
+#include "global.h"
 
 // Read in parameters from file
 void parse_parameters(Parameters *parameters)
@@ -19,6 +20,11 @@ void parse_parameters(Parameters *parameters)
       if(n_particles < 1)
         print_error("Number of particles must be greater than 0");
       parameters->n_particles = n_particles;
+    }
+
+    // Number of openmp threads
+    else if(strcmp(s, "threads") == 0){
+      parameters->n_threads = atoi(strtok(NULL, "=\n"));
     }
 
     // Number of batches
@@ -249,6 +255,12 @@ void read_CLI(int argc, char *argv[], Parameters *parameters)
         parameters->n_particles = n_particles;
       }
       else print_error("Error reading command line input '-particles'");
+    }
+
+    // Number of openmp threads (-threads)
+    else if(strcmp(arg, "-threads") == 0){
+      if(++i < argc) parameters->n_threads = atoi(argv[i]);
+      else print_error("Error reading command line input '-threads'");
     }
 
     // Number of batches (-batches)
@@ -543,6 +555,7 @@ void print_parameters(Parameters *parameters)
   center_print("INPUT SUMMARY", 79);
   border_print();
   printf("Number of particles:            "); fancy_int(parameters->n_particles);
+  printf("Number of threads:              %d\n", parameters->n_threads);
   printf("Number of batches:              %d\n", parameters->n_batches);
   printf("Number of active batches:       %d\n", parameters->n_active);
   printf("Number of generations:          %d\n", parameters->n_generations);

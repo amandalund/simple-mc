@@ -3,13 +3,15 @@
 COMPILER = gnu
 OPTIMIZE = yes
 DEBUG    = no
+OPENMP   = yes
 
 # Program and source code
 
 PROGRAM = transport
 
 HEADERS = \
-simple_mc.h
+simple_mc.h \
+global.h
 
 SOURCE = \
 main.c \
@@ -19,7 +21,8 @@ utils.c \
 io.c \
 transport.c \
 tally.c \
-eigenvalue.c
+eigenvalue.c \
+global.c
 
 OBJECTS = $(SOURCE:.c=.o)
 
@@ -39,6 +42,9 @@ endif
 
 ifeq ($(COMPILER),gnu)
   CC = gcc
+  ifeq ($(OPENMP),yes)
+    CFLAGS += -fopenmp
+  endif
 endif
 
 # Targets to build

@@ -1,6 +1,7 @@
 #include "simple_mc.h"
+#include "global.h"
 
-void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *material, Bank *source_bank, Bank *fission_bank, Tally *tally, double *keff)
+void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *material, Bank *source_bank, Tally *tally, double *keff)
 {
   int i_b; // index over batches
   int i_a = -1; // index over active batches
@@ -37,6 +38,7 @@ void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *materi
       // Set RNG stream for tracking
       set_stream(STREAM_TRACK);
 
+#pragma omp parallel for default(none) private(i_p, p) shared(i_b, i_g, parameters, source_bank, geometry, material, tally)
       // Loop over particles
       for(i_p=0; i_p<parameters->n_particles; i_p++){
 
@@ -49,11 +51,16 @@ void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *materi
         copy_particle(&p, &(source_bank->p[i_p]));
 
         // Transport the next particle
-        transport(parameters, geometry, material, source_bank, fission_bank, tally, &p);
+        transport(parameters, geometry, material, source_bank, tally, &p);
       }
 
       // Switch RNG stream off tracking
       set_stream(STREAM_OTHER);
+
+#ifdef _OPENMP
+      // Merge fission banks from threads
+      merge_fission_banks();
+#endif
 
       // Calculate generation k_effective and accumulate batch k_effective
       keff_gen = (double) fission_bank->n / source_bank->n;
@@ -61,7 +68,7 @@ void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *materi
 
       // Sample new source particles from the particles that were added to the
       // fission bank during this generation
-      synchronize_bank(source_bank, fission_bank);
+      synchronize_bank(source_bank);
 
       // Calculate shannon entropy to assess source convergence
       H = shannon_entropy(geometry, source_bank);
@@ -113,7 +120,55 @@ void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *materi
   return;
 }
 
-void synchronize_bank(Bank *source_bank, Bank *fission_bank)
+void merge_fission_banks(void)
+{
+#ifdef _OPENMP
+  unsigned long n = 0;
+  unsigned long n_sites = 0; // total number of source sites in fission bank
+  int i_t; // index over threads
+
+#pragma omp parallel
+{
+  // Count total number of source sites and resize master fission banks if
+  // necessary
+#pragma omp for ordered
+  for(i_t=0; i_t<n_threads; i_t++){
+#pragma omp ordered
+{
+    n += fission_bank->n;
+}
+  }
+#pragma omp barrier
+  if(thread_id == 0 && n > fission_bank->sz){
+    fission_bank->resize(fission_bank);
+    master_fission_bank->resize(master_fission_bank);
+  }
+
+  // Copy sites from each fission bank into master bank
+#pragma omp for ordered
+  for(i_t=0; i_t<n_threads; i_t++){
+#pragma omp ordered
+{
+    memcpy(&(master_fission_bank->p[n_sites]), fission_bank->p, fission_bank->n*sizeof(Particle));
+    n_sites += fission_bank->n;
+}
+  }
+#pragma omp barrier
+  // Copy shared fission bank sites into master thread's fission bank
+  if(thread_id == 0){
+    memcpy(fission_bank->p, master_fission_bank->p, n_sites*sizeof(Particle));
+    fission_bank->n = n_sites;
+  }
+  else{
+    fission_bank->n = 0;
+  }
+}
+#endif
+
+  return;
+}
+
+void synchronize_bank(Bank *source_bank)
 {
   unsigned long i, j;
   unsigned long n_s = source_bank->n;

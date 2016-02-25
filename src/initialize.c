@@ -1,10 +1,16 @@
 #include "simple_mc.h"
+#include "global.h"
 
 Parameters *init_parameters(void)
 {
   Parameters *p = malloc(sizeof(Parameters));
 
   p->n_particles = 1000000;
+#ifdef _OPENMP
+  p->n_threads = omp_get_num_procs();
+#else
+  p->n_threads = 1;
+#endif
   p->n_batches = 10;
   p->n_generations = 1;
   p->n_active = 10;
@@ -132,12 +138,26 @@ Bank *init_source_bank(Parameters *parameters, Geometry *geometry)
   return source_bank;
 }
 
-Bank *init_fission_bank(Parameters *parameters)
+void init_fission_bank(Parameters *parameters)
 {
-  Bank *fission_bank;
+  // Allocate one fission bank for each thread and one master fission bank to
+  // collect fission sites at end of each generation
+#ifdef _OPENMP
+#pragma omp parallel
+{
+  if(thread_id == 0){
+    fission_bank = init_bank(2*parameters->n_particles);
+  }
+  else{
+    fission_bank = init_bank(2*parameters->n_particles/n_threads);
+  }
+}
+  master_fission_bank = init_bank(2*parameters->n_particles);
+#else
   fission_bank = init_bank(2*parameters->n_particles);
+#endif
 
-  return fission_bank;
+  return;
 }
 
 Bank *init_bank(unsigned long n_particles)
