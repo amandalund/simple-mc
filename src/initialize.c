@@ -37,7 +37,7 @@ Parameters *init_parameters(void)
   p->source_file = NULL;
   p->histories_file = NULL;
   p->ramp_up = TRUE;
-  p->cnvg_n_stages = 0;
+  p->n_stages = 0;
 
   return p;
 }
@@ -214,8 +214,8 @@ void free_tally(Tally *t)
 
 void free_parameters(Parameters *parameters)
 {
-  free(parameters->cnvg_n_particles);
-  free(parameters->cnvg_n_generations);
+  free(parameters->particles_per_stage);
+  free(parameters->gen_per_stage);
   free(parameters);
 
   return;

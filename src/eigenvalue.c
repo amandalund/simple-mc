@@ -13,7 +13,7 @@ void ramp_up(Parameters *parameters, Geometry *geometry, Material *material, Ban
   printf("%-15s %-15s %-15s\n", "STAGE", "ENTROPY", "KEFF");
 
   // Loop over stages
-  for(i_s=0; i_s<parameters->cnvg_n_stages; i_s++){
+  for(i_s=0; i_s<parameters->n_stages; i_s++){
 
     // Switch RNG stream off tracking
     set_stream(STREAM_OTHER);
@@ -23,7 +23,7 @@ void ramp_up(Parameters *parameters, Geometry *geometry, Material *material, Ban
     add_particles(parameters, geometry, source_bank, i_s);
 
     // Loop over generations
-    for(i_g=0; i_g<parameters->cnvg_n_generations[i_s]; i_g++){
+    for(i_g=0; i_g<parameters->gen_per_stage[i_s]; i_g++){
 
       // Set RNG stream for tracking
       set_stream(STREAM_TRACK);
@@ -70,75 +70,12 @@ void ramp_up(Parameters *parameters, Geometry *geometry, Material *material, Ban
     }
 
     // Calculate k_effective
-    keff_stage /= parameters->cnvg_n_generations[i_s];
+    keff_stage /= parameters->gen_per_stage[i_s];
 
     printf("%-15d %-15f %-15f\n", i_s+1, H, keff_stage);
   }
 
   printf("Converged after %lu histories.\n", parameters->n_histories);
-
-  return;
-}
-
-void add_particles(Parameters *parameters, Geometry *geometry, Bank *source_bank, int i_s)
-{
-  unsigned long i_p;  // index over particles
-  int n; // total number of particles in stage
-  int n_prev; // total number of particles in previousstage
-  int i;
-
-  // the total number of particles in the source bank at this stage
-  n = parameters->cnvg_n_particles[i_s];
-
-  // at first stage sample initial source particles
-  if(i_s == 0){
-    for(i_p=0; i_p<n; i_p++){
-      sample_source_particle(geometry, &(source_bank->p[i_p]));
-      source_bank->n++;
-    }
-  }
-
-  // At remaining stages add new particles
-  else{
-
-    n_prev = parameters->cnvg_n_particles[i_s-1];
-
-    // If the number of particles in the previous stage is greater than the
-    // number to be added in this stage, randomly select n - n_prev sites from
-    // the previous stage
-    if(n_prev >= n - n_prev){
-
-      // Copy first n - n_prev sites from previous stage
-      memcpy(&(source_bank->p[n_prev]), source_bank->p, (n-n_prev)*sizeof(Particle));
-
-      // Replace elements with decreasing probability, such that after final
-      // iteration each particle from previous stage will have equal probability
-      // of being selected
-      for(i_p=n-n_prev; i_p<n_prev; i_p++){
-        i = rni(0, i_p+1);
-        if(i<n-n_prev){
-          memcpy(&(source_bank->p[n_prev+i]), &(source_bank->p[i_p]), sizeof(Particle));
-        }
-      }
-    }
-
-    // If the number of particles in the previous stage is less than the number
-    // to be added to this stage, use all particles from previous stage and
-    // randomly sample remaining particles from previous stage
-    else{
-
-      // First copy particles from previous stage
-      memcpy(&(source_bank->p[n_prev]), source_bank->p, n_prev*sizeof(Particle));
-
-      // Fill in remaining particles by sampling from previous stage
-      for(i_p=2*n_prev; i_p<n; i_p++){
-        i = rni(0, n_prev);
-        memcpy(&(source_bank->p[i_p]), &(source_bank->p[i]), sizeof(Particle));
-      }
-    }
-
-    source_bank->n = n;
-  }
 
   return;
 }
@@ -149,6 +86,7 @@ void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *materi
   int i_a = -1; // index over active batches
   int i_g; // index over generations
   unsigned long i_p; // index over particles
+  int n_gen; // number of generations in batch
   double keff_gen = 1; // keff of generation
   double keff_batch; // keff of batch
   double keff_mean; // keff mean over active batches
@@ -161,7 +99,20 @@ void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *materi
   // Loop over batches
   for(i_b=0; i_b<parameters->n_batches; i_b++){
 
+    // Switch RNG stream off tracking
+    set_stream(STREAM_OTHER);
+
     keff_batch = 0;
+
+    // Add particles for this stage if doing ramp up convergence method and set
+    // number of generations for this batch
+    if(parameters->ramp_up == TRUE && i_b < parameters->n_stages){
+      add_particles(parameters, geometry, source_bank, i_b);
+      n_gen = parameters->gen_per_stage[i_b];
+    }
+    else{
+      n_gen = parameters->n_generations;
+    }
 
     // Write coordinates of particles in source bank
     if(parameters->write_bank == TRUE){
@@ -177,13 +128,13 @@ void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *materi
     }
 
     // Loop over generations
-    for(i_g=0; i_g<parameters->n_generations; i_g++){
+    for(i_g=0; i_g<n_gen; i_g++){
 
       // Set RNG stream for tracking
       set_stream(STREAM_TRACK);
 
       // Loop over particles
-      for(i_p=0; i_p<parameters->n_particles; i_p++){
+      for(i_p=0; i_p<source_bank->n; i_p++){
 
 	// Set seed for particle i_p by skipping ahead in the random number
 	// sequence stride*(total particles simulated) numbers from the initial
@@ -229,7 +180,7 @@ void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *materi
     }
 
     // Calculate k_effective
-    keff_batch /= parameters->n_generations;
+    keff_batch /= n_gen;
     if(i_a >= 0){
       keff[i_a] = keff_batch;
     }
@@ -261,6 +212,69 @@ void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *materi
 
   if(parameters->save_source == TRUE){
     save_source(source_bank);
+  }
+
+  return;
+}
+
+void add_particles(Parameters *parameters, Geometry *geometry, Bank *source_bank, int i_s)
+{
+  unsigned long i_p;  // index over particles
+  int n; // total number of particles in stage
+  int n_prev; // total number of particles in previousstage
+  int i;
+
+  // the total number of particles in the source bank at this stage
+  n = parameters->particles_per_stage[i_s];
+
+  // at first stage sample initial source particles
+  if(i_s == 0){
+    for(i_p=0; i_p<n; i_p++){
+      sample_source_particle(geometry, &(source_bank->p[i_p]));
+      source_bank->n++;
+    }
+  }
+
+  // At remaining stages add new particles
+  else{
+
+    n_prev = parameters->particles_per_stage[i_s-1];
+
+    // If the number of particles in the previous stage is greater than the
+    // number to be added in this stage, randomly select n - n_prev sites from
+    // the previous stage
+    if(n_prev >= n - n_prev){
+
+      // Copy first n - n_prev sites from previous stage
+      memcpy(&(source_bank->p[n_prev]), source_bank->p, (n-n_prev)*sizeof(Particle));
+
+      // Replace elements with decreasing probability, such that after final
+      // iteration each particle from previous stage will have equal probability
+      // of being selected
+      for(i_p=n-n_prev; i_p<n_prev; i_p++){
+        i = rni(0, i_p+1);
+        if(i<n-n_prev){
+          memcpy(&(source_bank->p[n_prev+i]), &(source_bank->p[i_p]), sizeof(Particle));
+        }
+      }
+    }
+
+    // If the number of particles in the previous stage is less than the number
+    // to be added to this stage, use all particles from previous stage and
+    // randomly sample remaining particles from previous stage
+    else{
+
+      // First copy particles from previous stage
+      memcpy(&(source_bank->p[n_prev]), source_bank->p, n_prev*sizeof(Particle));
+
+      // Fill in remaining particles by sampling from previous stage
+      for(i_p=2*n_prev; i_p<n; i_p++){
+        i = rni(0, n_prev);
+        memcpy(&(source_bank->p[i_p]), &(source_bank->p[i]), sizeof(Particle));
+      }
+    }
+
+    source_bank->n = n;
   }
 
   return;

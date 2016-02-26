@@ -52,9 +52,9 @@ int main(int argc, char *argv[])
   // Start time
   t1 = timer();
 
-  if(parameters->ramp_up == TRUE){
-    ramp_up(parameters, geometry, material, source_bank, fission_bank, tally);
-  }
+//  if(parameters->ramp_up == TRUE){
+//    ramp_up(parameters, geometry, material, source_bank, fission_bank, tally);
+//  }
   run_eigenvalue(parameters, geometry, material, source_bank, fission_bank, tally, keff);
 
   // Stop time

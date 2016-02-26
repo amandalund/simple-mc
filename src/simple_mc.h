@@ -75,9 +75,9 @@ typedef struct Parameters_{
   char *source_file; // path to write source distribution to
   char *histories_file; // path to write total number of histories to
   int ramp_up; // whether to use ramp up method to converge source: true or false
-  int cnvg_n_stages; // number of stages in ramp up
-  int *cnvg_n_particles; // array of number of particles in each stage
-  int *cnvg_n_generations; // array of number of generations in each stage
+  int n_stages; // number of stages in ramp up
+  int *particles_per_stage; // array of number of particles in each stage
+  int *gen_per_stage; // array of number of generations in each stage
 } Parameters;
 
 typedef struct Particle_{

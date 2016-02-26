@@ -628,13 +628,14 @@ void read_convergence_parameters(Parameters *parameters)
 
     // Number of stages
     s = strtok(line, " \n");
-    parameters->cnvg_n_stages = atoi(s);
+    parameters->n_stages = atoi(s);
 
     break;
   }
 
-  parameters->cnvg_n_particles = malloc(parameters->cnvg_n_stages*sizeof(int));
-  parameters->cnvg_n_generations = malloc(parameters->cnvg_n_stages*sizeof(int));
+  parameters->particles_per_stage = malloc(parameters->n_stages*sizeof(int));
+  parameters->gen_per_stage = malloc(parameters->n_stages*sizeof(int));
+  parameters->n_batches = parameters->n_active + parameters->n_stages;
 
   while((s = fgets(line, sizeof(line), fp)) != NULL){
 
@@ -642,24 +643,20 @@ void read_convergence_parameters(Parameters *parameters)
 
     // Number of particles in stage
     s = strtok(line, " ");
-    parameters->cnvg_n_particles[i] = atoi(s);
+    parameters->particles_per_stage[i] = atoi(s);
 
     // Number of generations in stage
     s = strtok(NULL, " ");
-    parameters->cnvg_n_generations[i] = atoi(s);
+    parameters->gen_per_stage[i] = atoi(s);
 
     i++;
   }
 
   fclose(fp);
 
-  if(parameters->cnvg_n_particles[parameters->cnvg_n_stages-1] != parameters->n_particles){
+  if(parameters->particles_per_stage[parameters->n_stages-1] != parameters->n_particles){
     printf("WARNING: Number of particles in ramp-up does not match number of particles in parameters file.\n");
-    parameters->n_particles = parameters->cnvg_n_particles[parameters->cnvg_n_stages-1];
-  }
-  if(parameters->n_active < parameters->n_batches){
-    printf("WARNING: Setting number of active batches equal to number of total batches.\n"); 
-    parameters->n_active = parameters->n_batches;
+    parameters->n_particles = parameters->particles_per_stage[parameters->n_stages-1];
   }
 
   return;
