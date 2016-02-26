@@ -192,6 +192,7 @@ void sample_fission_particle(Particle *p, Particle *p_old);
 
 // eigenvalue.c function prototypes
 void ramp_up(Parameters *parameters, Geometry *geometry, Material *material, Bank *source_bank, Bank *fission_bank, Tally *tally);
+void add_particles(Parameters *parameters, Geometry *geometry, Bank *source_bank, int i_s);
 void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *material, Bank *source_bank, Bank *fission_bank, Tally *tally, double *keff);
 void synchronize_bank(Bank *source_bank, Bank *fission_bank);
 double shannon_entropy(Geometry *geometry, Bank *b, Parameters *parameters);

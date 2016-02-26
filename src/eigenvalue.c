@@ -8,9 +8,6 @@ void ramp_up(Parameters *parameters, Geometry *geometry, Material *material, Ban
   double keff_gen = 1; // keff of generation
   double keff_stage; // keff of stage
   double H; // shannon entropy
-  int n; // total number of particles in stage
-  int n_prev; // total number of particles in previousstage
-  int i;
   Particle p;
 
   printf("%-15s %-15s %-15s\n", "STAGE", "ENTROPY", "KEFF");
@@ -23,57 +20,7 @@ void ramp_up(Parameters *parameters, Geometry *geometry, Material *material, Ban
 
     keff_stage = 0;
 
-    n = parameters->cnvg_n_particles[i_s];
-
-    // At first stage sample initial source particles
-    if(i_s == 0){
-      for(i_p=0; i_p<n; i_p++){
-        sample_source_particle(geometry, &(source_bank->p[i_p]));
-        source_bank->n++;
-      }
-    }
-
-    // At remaining stages add new particles
-    else{
-
-      n_prev = parameters->cnvg_n_particles[i_s-1];
-
-      // If the number of particles in the previous stage is greater than the
-      // number to be added in this stage, randomly select n - n_prev sites from
-      // the previous stage
-      if(n_prev >= n - n_prev){
-
-        // Copy first n - n_prev sites from previous stage
-        memcpy(&(source_bank->p[n_prev]), source_bank->p, (n-n_prev)*sizeof(Particle));
-
-        // Replace elements with decreasing probability, such that after final
-        // iteration each particle from previous stage will have equal probability
-        // of being selected
-        for(i_p=n-n_prev; i_p<n_prev; i_p++){
-          i = rni(0, i_p+1);
-          if(i<n-n_prev){
-            memcpy(&(source_bank->p[n_prev+i]), &(source_bank->p[i_p]), sizeof(Particle));
-          }
-        }
-      }
-
-      // If the number of particles in the previous stage is less than the number
-      // to be added to this stage, use all particles from previous stage and
-      // randomly sample remaining particles from previous stage
-      else{
-
-        // First copy particles from previous stage
-        memcpy(&(source_bank->p[n_prev]), source_bank->p, n_prev*sizeof(Particle));
-
-        // Fill in remaining particles by sampling from previous stage
-        for(i_p=2*n_prev; i_p<n; i_p++){
-          i = rni(0, n_prev);
-          memcpy(&(source_bank->p[i_p]), &(source_bank->p[i]), sizeof(Particle));
-        }
-      }
-
-      source_bank->n = n;
-    }
+    add_particles(parameters, geometry, source_bank, i_s);
 
     // Loop over generations
     for(i_g=0; i_g<parameters->cnvg_n_generations[i_s]; i_g++){
@@ -129,6 +76,69 @@ void ramp_up(Parameters *parameters, Geometry *geometry, Material *material, Ban
   }
 
   printf("Converged after %lu histories.\n", parameters->n_histories);
+
+  return;
+}
+
+void add_particles(Parameters *parameters, Geometry *geometry, Bank *source_bank, int i_s)
+{
+  unsigned long i_p;  // index over particles
+  int n; // total number of particles in stage
+  int n_prev; // total number of particles in previousstage
+  int i;
+
+  // the total number of particles in the source bank at this stage
+  n = parameters->cnvg_n_particles[i_s];
+
+  // at first stage sample initial source particles
+  if(i_s == 0){
+    for(i_p=0; i_p<n; i_p++){
+      sample_source_particle(geometry, &(source_bank->p[i_p]));
+      source_bank->n++;
+    }
+  }
+
+  // At remaining stages add new particles
+  else{
+
+    n_prev = parameters->cnvg_n_particles[i_s-1];
+
+    // If the number of particles in the previous stage is greater than the
+    // number to be added in this stage, randomly select n - n_prev sites from
+    // the previous stage
+    if(n_prev >= n - n_prev){
+
+      // Copy first n - n_prev sites from previous stage
+      memcpy(&(source_bank->p[n_prev]), source_bank->p, (n-n_prev)*sizeof(Particle));
+
+      // Replace elements with decreasing probability, such that after final
+      // iteration each particle from previous stage will have equal probability
+      // of being selected
+      for(i_p=n-n_prev; i_p<n_prev; i_p++){
+        i = rni(0, i_p+1);
+        if(i<n-n_prev){
+          memcpy(&(source_bank->p[n_prev+i]), &(source_bank->p[i_p]), sizeof(Particle));
+        }
+      }
+    }
+
+    // If the number of particles in the previous stage is less than the number
+    // to be added to this stage, use all particles from previous stage and
+    // randomly sample remaining particles from previous stage
+    else{
+
+      // First copy particles from previous stage
+      memcpy(&(source_bank->p[n_prev]), source_bank->p, n_prev*sizeof(Particle));
+
+      // Fill in remaining particles by sampling from previous stage
+      for(i_p=2*n_prev; i_p<n; i_p++){
+        i = rni(0, n_prev);
+        memcpy(&(source_bank->p[i_p]), &(source_bank->p[i]), sizeof(Particle));
+      }
+    }
+
+    source_bank->n = n;
+  }
 
   return;
 }
