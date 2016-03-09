@@ -761,7 +761,7 @@ void init_output(Parameters *parameters)
 
   // Set up file to output total number of histories at each generation
   if(parameters->write_histories == TRUE){
-    fp = fopen(parameters->source_file, "w");
+    fp = fopen(parameters->histories_file, "w");
     fclose(fp);
   }
 
