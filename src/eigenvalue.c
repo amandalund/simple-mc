@@ -11,7 +11,8 @@ void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *materi
   double keff_batch; // keff of batch
   double keff_mean; // keff mean over active batches
   double keff_std; // keff standard deviation over active batches
-  double H; // shannon entropy
+  double H = 0; // shannon entropy
+  double msd; // mean-squared distance
   Particle p;
 
   // Loop over batches
@@ -74,6 +75,12 @@ void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *materi
       H = shannon_entropy(geometry, source_bank);
       if(parameters->write_entropy == TRUE){
         write_entropy(H, parameters->entropy_file);
+      }
+
+      // Calculate mean-squared distance
+      if(parameters->write_msd == TRUE){
+        msd = mean_squared_distance(source_bank);
+        write_msd(msd, parameters->msd_file);
       }
 
       // Write the source distribution
@@ -256,6 +263,33 @@ double shannon_entropy(Geometry *geometry, Bank *b)
   free(count);
 
   return H;
+}
+
+// Calculates the mean-squared distance
+double mean_squared_distance(Bank *b)
+{
+  unsigned long i, j;
+  unsigned long n_pairs;
+  double msd = 0.0;
+  Particle *p;
+  Particle *q;
+
+  // Iterate over each pair of particles once
+  for(i=0; i<b->n; i++){
+    for(j=i+1; j<b->n; j++){
+      p = &(b->p[i]);
+      q = &(b->p[j]);
+
+      // Accumulate square distance between particles
+      msd += (p->x - q->x)*(p->x - q->x) + (p->y - q->y)*(p->y - q->y)
+           + (p->z - q->z)*(p->z - q->z);
+    }
+  }
+
+  // Total number particle pairs
+  n_pairs = b->n*(b->n - 1)/2;
+
+  return msd/n_pairs;
 }
 
 void calculate_keff(double *keff, double *mean, double *std, int n)

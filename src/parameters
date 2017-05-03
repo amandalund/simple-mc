@@ -62,6 +62,10 @@ write_tally=false
 # write_entropy: whether to output entropy
 write_entropy=false
 
+# write_msd: whether to calculate and output mean-squared distance between
+# particle pairs at each generation
+write_msd=false
+
 # write_keff: whether to output keff
 write_keff=false
 
@@ -69,13 +73,16 @@ write_keff=false
 write_bank=false
 
 # tally_file: path to tally output
-tally_file=tally.dat
+tally_file=tally.txt
 
 # entropy_file: path to entropy output
-entropy_file=entropy.dat
+entropy_file=entropy.txt
+
+# msd_file: path to mean-squared distance output
+msd_file=msd.txt
 
 # keff_file: path to keff output
-keff_file=keff.dat
+keff_file=keff.txt
 
 # bank_file: path to particle bank output
-bank_file=bank.dat
+bank_file=bank.txt

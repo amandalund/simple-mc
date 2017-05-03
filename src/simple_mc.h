@@ -33,11 +33,13 @@ typedef struct Parameters_{
   int save_source; // save the source bank at end of simulation
   int write_tally; // whether to output tallies
   int write_entropy; // whether to output shannon entropy
+  int write_msd; // whether to output mean-squared distance
   int write_keff; // whether to output keff
   int write_bank; // whether to output particle bank
   int write_source; // whether to output source distribution
   char *tally_file; // path to write tallies to
   char *entropy_file; // path to write shannon entropy to
+  char *msd_file; // path to write mean-squared distance to
   char *keff_file; // path to write keff to
   char *bank_file; // path to write particle bank to
   char *source_file; // path to write source distribution to
@@ -110,6 +112,7 @@ void center_print(const char *s, int width);
 void init_output(Parameters *parameters);
 void write_tally(Tally *t, char *filename);
 void write_entropy(double H, char *filename);
+void write_msd(double msd, char *filename);
 void write_keff(double *keff, int n, char *filename);
 void write_bank(Bank *b, char *filename);
 void write_source(Parameters *parameters, Geometry *geometry, Bank *b, char *filename);
@@ -155,6 +158,7 @@ void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *materi
 void merge_fission_banks(void);
 void synchronize_bank(Bank *source_bank);
 double shannon_entropy(Geometry *geometry, Bank *b);
+double mean_squared_distance(Bank *b);
 void calculate_keff(double *keff, double *mean, double *std, int n);
 
 // tally.c function prototypes

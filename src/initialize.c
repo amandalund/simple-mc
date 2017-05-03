@@ -30,11 +30,13 @@ Parameters *init_parameters(void)
   p->save_source = FALSE;
   p->write_tally = FALSE;
   p->write_entropy = FALSE;
+  p->write_msd = FALSE;
   p->write_keff = FALSE;
   p->write_bank = FALSE;
   p->write_source = FALSE;
   p->tally_file = NULL;
   p->entropy_file = NULL;
+  p->msd_file = NULL;
   p->keff_file = NULL;
   p->bank_file = NULL;
   p->source_file = NULL;

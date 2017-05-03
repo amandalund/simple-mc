@@ -160,6 +160,17 @@ void parse_parameters(Parameters *parameters)
         print_error("Invalid option for parameter 'write_entropy': must be 'true' or 'false'");
     }
 
+    // Whether to output mean-squared distance
+    else if(strcmp(s, "write_msd") == 0){
+      s = strtok(NULL, "=\n");
+      if(strcasecmp(s, "true") == 0)
+        parameters->write_msd = TRUE;
+      else if(strcasecmp(s, "false") == 0)
+        parameters->write_msd = FALSE;
+      else
+        print_error("Invalid option for parameter 'write_msd': must be 'true' or 'false'");
+    }
+
     // Whether to output keff
     else if(strcmp(s, "write_keff") == 0){
       s = strtok(NULL, "=\n");
@@ -205,6 +216,13 @@ void parse_parameters(Parameters *parameters)
       s = strtok(NULL, "=\n");
       parameters->entropy_file = malloc(strlen(s)*sizeof(char)+1);
       strcpy(parameters->entropy_file, s);
+    }
+
+    // Path to write mean-squared distance to
+    else if(strcmp(s, "msd_file") == 0){
+      s = strtok(NULL, "=\n");
+      parameters->msd_file = malloc(strlen(s)*sizeof(char)+1);
+      strcpy(parameters->msd_file, s);
     }
 
     // Path to write keff to
@@ -421,6 +439,19 @@ void read_CLI(int argc, char *argv[], Parameters *parameters)
       else print_error("Error reading command line input '-write_entropy'");
     }
 
+    // Whether to output mean-squared distance (-write_msd)
+    else if(strcmp(arg, "-write_msd") == 0){
+      if(++i < argc){
+        if(strcasecmp(argv[i], "true") == 0)
+          parameters->write_msd = TRUE;
+        else if(strcasecmp(argv[i], "false") == 0)
+          parameters->write_msd = FALSE;
+        else
+          print_error("Invalid option for parameter 'write_msd': must be 'true' or 'false'");
+      }
+      else print_error("Error reading command line input '-write_msd'");
+    }
+
     // Whether to output keff (-write_keff)
     else if(strcmp(arg, "-write_keff") == 0){
       if(++i < argc){
@@ -480,6 +511,16 @@ void read_CLI(int argc, char *argv[], Parameters *parameters)
       else print_error("Error reading command line input '-entropy_file'");
     }
 
+    // Path to write mean-squared distance to (-msd_file)
+    else if(strcmp(arg, "-msd_file") == 0){
+      if(++i < argc){
+        if(parameters->msd_file != NULL) free(parameters->msd_file);
+        parameters->msd_file = malloc(strlen(argv[i])*sizeof(char)+1);
+        strcpy(parameters->msd_file, argv[i]);
+      }
+      else print_error("Error reading command line input '-msd_file'");
+    }
+
     // Path to write keff to (-keff_file)
     else if(strcmp(arg, "-keff_file") == 0){
       if(++i < argc){
@@ -516,15 +557,17 @@ void read_CLI(int argc, char *argv[], Parameters *parameters)
 
   // Validate Inputs
   if(parameters->write_tally == TRUE && parameters->tally_file == NULL)
-    parameters->tally_file = "tally.dat";
+    parameters->tally_file = "tally.txt";
   if(parameters->write_entropy == TRUE && parameters->entropy_file == NULL)
-    parameters->entropy_file = "entropy.dat";
+    parameters->entropy_file = "entropy.txt";
+  if(parameters->write_msd == TRUE && parameters->msd_file == NULL)
+    parameters->msd_file = "msd.txt";
   if(parameters->write_keff == TRUE && parameters->keff_file == NULL)
-    parameters->keff_file = "keff.dat";
+    parameters->keff_file = "keff.txt";
   if(parameters->write_bank == TRUE && parameters->bank_file == NULL)
-    parameters->bank_file = "bank.dat";
+    parameters->bank_file = "bank.txt";
   if(parameters->write_source == TRUE && parameters->source_file == NULL)
-    parameters->source_file = "source.dat";
+    parameters->source_file = "source.txt";
   if(parameters->n_batches < 1 && parameters->n_generations < 1)
     print_error("Must have at least one batch or one generation");
   if(parameters->n_batches < 0)
@@ -621,6 +664,12 @@ void init_output(Parameters *parameters)
     fclose(fp);
   }
 
+  // Set up file to output mean-squared distance
+  if(parameters->write_msd == TRUE){
+    fp = fopen(parameters->msd_file, "w");
+    fclose(fp);
+  }
+
   // Set up file to output keff
   if(parameters->write_keff == TRUE){
     fp = fopen(parameters->keff_file, "w");
@@ -669,6 +718,17 @@ void write_entropy(double H, char *filename)
 
   fp = fopen(filename, "a");
   fprintf(fp, "%.10f\n", H);
+  fclose(fp);
+
+  return;
+}
+
+void write_msd(double msd, char *filename)
+{
+  FILE *fp;
+
+  fp = fopen(filename, "a");
+  fprintf(fp, "%.10e\n", msd);
   fclose(fp);
 
   return;
