@@ -136,7 +136,7 @@ Bank *init_source_bank(Parameters *parameters, Geometry *geometry)
   }
   else{
     for(i_p=0; i_p<parameters->n_particles; i_p++){
-      sample_source_particle(geometry, &(source_bank->p[i_p]));
+      sample_source_particle(parameters, geometry, &(source_bank->p[i_p]));
       source_bank->n++;
     }
   }
@@ -177,7 +177,7 @@ Bank *init_bank(unsigned long n_particles)
   return b;
 }
 
-void sample_source_particle(Geometry *geometry, Particle *p)
+void sample_source_particle(Parameters *parameters, Geometry *geometry, Particle *p)
 {
   p->alive = TRUE;
   p->energy = 1;

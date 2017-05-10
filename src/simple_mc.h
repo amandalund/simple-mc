@@ -143,7 +143,7 @@ Material *init_material(Parameters *parameters);
 void init_fission_bank(Parameters *parameters);
 Bank *init_source_bank(Parameters *parameters, Geometry *geometry);
 Bank *init_bank(unsigned long n_particles);
-void sample_source_particle(Geometry *geometry, Particle *p);
+void sample_source_particle(Parameters *parameters, Geometry *geometry, Particle *p);
 void resize_particles(Bank *b);
 void free_bank(Bank *b);
 void free_material(Material *m);
