@@ -107,13 +107,24 @@ void parse_parameters(Parameters *parameters)
     else if(strcmp(s, "bc") == 0){
       s = strtok(NULL, "=\n");
       if(strcasecmp(s, "vacuum") == 0)
-        parameters->bc = 0;
+        parameters->bc = VACUUM;
       else if(strcasecmp(s, "reflective") == 0)
-        parameters->bc = 1;
+        parameters->bc = REFLECT;
       else if(strcasecmp(s, "periodic") == 0)
-        parameters->bc = 2;
+        parameters->bc = PERIODIC;
       else
         print_error("Invalid boundary condition");
+    }
+
+    // Source distribution
+    else if(strcmp(s, "source") == 0){
+      s = strtok(NULL, "=\n");
+      if(strcasecmp(s, "flat") == 0)
+        parameters->bc = FLAT;
+      else if(strcasecmp(s, "point") == 0)
+        parameters->bc = POINT;
+      else
+        print_error("Invalid source");
     }
 
     // Whether to load source
@@ -158,6 +169,17 @@ void parse_parameters(Parameters *parameters)
         parameters->write_entropy = FALSE;
       else
         print_error("Invalid option for parameter 'write_entropy': must be 'true' or 'false'");
+    }
+
+    // Whether to output histories
+    else if(strcmp(s, "write_histories") == 0){
+      s = strtok(NULL, "=\n");
+      if(strcasecmp(s, "true") == 0)
+        parameters->write_histories = TRUE;
+      else if(strcasecmp(s, "false") == 0)
+        parameters->write_histories = FALSE;
+      else
+        print_error("Invalid option for parameter 'write_histories': must be 'true' or 'false'");
     }
 
     // Whether to output mean-squared distance
@@ -216,6 +238,13 @@ void parse_parameters(Parameters *parameters)
       s = strtok(NULL, "=\n");
       parameters->entropy_file = malloc(strlen(s)*sizeof(char)+1);
       strcpy(parameters->entropy_file, s);
+    }
+
+    // Path to write histories to
+    else if(strcmp(s, "histories_file") == 0){
+      s = strtok(NULL, "=\n");
+      parameters->histories_file = malloc(strlen(s)*sizeof(char)+1);
+      strcpy(parameters->histories_file, s);
     }
 
     // Path to write mean-squared distance to
@@ -303,15 +332,28 @@ void read_CLI(int argc, char *argv[], Parameters *parameters)
     else if(strcmp(arg, "-bc") == 0){
       if(++i < argc){
         if(strcasecmp(argv[i], "vacuum") == 0)
-          parameters->bc = 0;
+          parameters->bc = VACUUM;
         else if(strcasecmp(argv[i], "reflective") == 0)
-          parameters->bc = 1;
+          parameters->bc = REFLECT;
         else if(strcasecmp(argv[i], "periodic") == 0)
-          parameters->bc = 2;
+          parameters->bc = PERIODIC;
         else
           print_error("Invalid boundary condition");
       }
       else print_error("Error reading command line input '-bc'");
+    }
+
+    // Initial source distribution (-source)
+    else if(strcmp(arg, "-source") == 0){
+      if(++i < argc){
+        if(strcasecmp(argv[i], "flat") == 0)
+          parameters->source = FLAT;
+        else if(strcasecmp(argv[i], "point") == 0)
+          parameters->source = POINT;
+        else
+          print_error("Invalid source");
+      }
+      else print_error("Error reading command line input '-source'");
     }
 
     // Number of nuclides in material (-nuclides)
@@ -381,7 +423,7 @@ void read_CLI(int argc, char *argv[], Parameters *parameters)
       else print_error("Error reading command line input '-Ly'");
     }
 
-    // Geometry size in z (-Lz)
+    // Domain length in z (-Lz)
     else if(strcmp(arg, "-Lz") == 0){
       if(++i < argc) parameters->Lz = atof(argv[i]);
       else print_error("Error reading command line input '-Lz'");
@@ -437,6 +479,19 @@ void read_CLI(int argc, char *argv[], Parameters *parameters)
           print_error("Invalid option for parameter 'write_entropy': must be 'true' or 'false'");
       }
       else print_error("Error reading command line input '-write_entropy'");
+    }
+
+    // Whether to output histories (-write_histories)
+    else if(strcmp(arg, "-write_histories") == 0){
+      if(++i < argc){
+        if(strcasecmp(argv[i], "true") == 0)
+          parameters->write_histories = TRUE;
+        else if(strcasecmp(argv[i], "false") == 0)
+          parameters->write_histories = FALSE;
+        else
+          print_error("Invalid option for parameter 'write_histories': must be 'true' or 'false'");
+      }
+      else print_error("Error reading command line input '-write_histories'");
     }
 
     // Whether to output mean-squared distance (-write_msd)
@@ -511,6 +566,16 @@ void read_CLI(int argc, char *argv[], Parameters *parameters)
       else print_error("Error reading command line input '-entropy_file'");
     }
 
+    // Path to write histories to (-histories_file)
+    else if(strcmp(arg, "-histories_file") == 0){
+      if(++i < argc){
+        if(parameters->histories_file != NULL) free(parameters->histories_file);
+        parameters->histories_file = malloc(strlen(argv[i])*sizeof(char)+1);
+        strcpy(parameters->histories_file, argv[i]);
+      }
+      else print_error("Error reading command line input '-histories_file'");
+    }
+
     // Path to write mean-squared distance to (-msd_file)
     else if(strcmp(arg, "-msd_file") == 0){
       if(++i < argc){
@@ -560,6 +625,8 @@ void read_CLI(int argc, char *argv[], Parameters *parameters)
     parameters->tally_file = "tally.txt";
   if(parameters->write_entropy == TRUE && parameters->entropy_file == NULL)
     parameters->entropy_file = "entropy.txt";
+  if(parameters->write_histories == TRUE && parameters->histories_file == NULL)
+    parameters->histories_file = "histories.txt";
   if(parameters->write_msd == TRUE && parameters->msd_file == NULL)
     parameters->msd_file = "msd.txt";
   if(parameters->write_keff == TRUE && parameters->keff_file == NULL)
@@ -591,9 +658,9 @@ void read_CLI(int argc, char *argv[], Parameters *parameters)
 void print_parameters(Parameters *parameters)
 {
   char *bc = NULL;
-  if(parameters->bc == 0) bc = "Vacuum";
-  else if(parameters->bc == 1) bc = "Reflective";
-  else if(parameters->bc == 2) bc = "Periodic";
+  if(parameters->bc == VACUUM) bc = "Vacuum";
+  else if(parameters->bc == REFLECT) bc = "Reflective";
+  else if(parameters->bc == PERIODIC) bc = "Periodic";
   border_print();
   center_print("INPUT SUMMARY", 79);
   border_print();
@@ -664,6 +731,12 @@ void init_output(Parameters *parameters)
     fclose(fp);
   }
 
+  // Set up file to output histories
+  if(parameters->write_histories == TRUE){
+    fp = fopen(parameters->histories_file, "w");
+    fclose(fp);
+  }
+
   // Set up file to output mean-squared distance
   if(parameters->write_msd == TRUE){
     fp = fopen(parameters->msd_file, "w");
@@ -717,7 +790,18 @@ void write_entropy(double H, char *filename)
   FILE *fp;
 
   fp = fopen(filename, "a");
-  fprintf(fp, "%.10f\n", H);
+  fprintf(fp, "%.10e\n", H);
+  fclose(fp);
+
+  return;
+}
+
+void write_histories(unsigned long histories, char *filename)
+{
+  FILE *fp;
+
+  fp = fopen(filename, "a");
+  fprintf(fp, "%lu\n", histories);
   fclose(fp);
 
   return;

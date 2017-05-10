@@ -11,10 +11,12 @@ Parameters *init_parameters(void)
 #else
   p->n_threads = 1;
 #endif
+  p->n_histories = 0;
   p->n_batches = 10;
   p->n_generations = 1;
   p->n_active = 10;
   p->bc = REFLECT;
+  p->source = FLAT;
   p->n_nuclides = 1;
   p->tally = TRUE;
   p->n_bins = 16;
@@ -30,6 +32,7 @@ Parameters *init_parameters(void)
   p->save_source = FALSE;
   p->write_tally = FALSE;
   p->write_entropy = FALSE;
+  p->write_histories = FALSE;
   p->write_msd = FALSE;
   p->write_keff = FALSE;
   p->write_bank = FALSE;
@@ -37,6 +40,7 @@ Parameters *init_parameters(void)
   p->tally_file = NULL;
   p->entropy_file = NULL;
   p->msd_file = NULL;
+  p->histories_file = NULL;
   p->keff_file = NULL;
   p->bank_file = NULL;
   p->source_file = NULL;
@@ -183,10 +187,16 @@ void sample_source_particle(Geometry *geometry, Particle *p)
   p->u = p->mu;
   p->v = sqrt(1 - p->mu*p->mu)*cos(p->phi);
   p->w = sqrt(1 - p->mu*p->mu)*sin(p->phi);
-  p->x = rn()*geometry->Lx;
-  p->y = rn()*geometry->Ly;
-  p->z = rn()*geometry->Lz;
-
+  if(parameters->source == POINT){
+    p->x = geometry->Lx/2;
+    p->y = geometry->Ly/2;
+    p->z = geometry->Lz/2;
+  }
+  else{
+    p->x = rn()*geometry->Lx;
+    p->y = rn()*geometry->Ly;
+    p->z = rn()*geometry->Lz;
+  }
   return;
 }
 

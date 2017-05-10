@@ -12,6 +12,10 @@
 #define REFLECT 1
 #define PERIODIC 2
 
+// Source distribution
+#define FLAT 0
+#define POINT 1
+
 // Reaction types
 #define TOTAL 0
 #define ABSORPTION 1

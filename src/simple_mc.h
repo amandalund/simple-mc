@@ -14,11 +14,13 @@
 typedef struct Parameters_{
   unsigned long long seed; // RNG seed
   unsigned long n_particles; // number of particles
+  unsigned long n_histories; // cumulative number of histories
   int n_threads; // number of openmp threads
   int n_batches; // number of batches
   int n_generations; // number of generations per batch
   int n_active; // number of active batches
   int bc; // boundary conditions
+  int source; // initial source distribution
   int n_nuclides; // number of nuclides in material
   int tally; // whether to tally
   int n_bins; // number of bins in each dimension of mesh
@@ -33,12 +35,14 @@ typedef struct Parameters_{
   int save_source; // save the source bank at end of simulation
   int write_tally; // whether to output tallies
   int write_entropy; // whether to output shannon entropy
+  int write_histories; // whether to output histories
   int write_msd; // whether to output mean-squared distance
   int write_keff; // whether to output keff
   int write_bank; // whether to output particle bank
   int write_source; // whether to output source distribution
   char *tally_file; // path to write tallies to
   char *entropy_file; // path to write shannon entropy to
+  char *histories_file; // path to write histories to
   char *msd_file; // path to write mean-squared distance to
   char *keff_file; // path to write keff to
   char *bank_file; // path to write particle bank to
@@ -112,6 +116,7 @@ void center_print(const char *s, int width);
 void init_output(Parameters *parameters);
 void write_tally(Tally *t, char *filename);
 void write_entropy(double H, char *filename);
+void write_histories(unsigned long histories, char *filename);
 void write_msd(double msd, char *filename);
 void write_keff(double *keff, int n, char *filename);
 void write_bank(Bank *b, char *filename);

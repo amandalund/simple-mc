@@ -77,6 +77,12 @@ void run_eigenvalue(Parameters *parameters, Geometry *geometry, Material *materi
         write_entropy(H, parameters->entropy_file);
       }
 
+      // Write number of histories
+      if(parameters->write_histories == TRUE){
+        parameters->n_histories += source_bank->n;
+        write_histories(parameters->n_histories, parameters->histories_file);
+      }
+
       // Calculate mean-squared distance
       if(parameters->write_msd == TRUE){
         msd = mean_squared_distance(source_bank);

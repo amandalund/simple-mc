@@ -41,6 +41,9 @@ xs_s=0.27
 # bc: boundary conditions (vacuum, reflective, periodic)
 bc=reflective
 
+# source: initial source distribution (flat, point)
+source=flat
+
 # Lx: length of domain in x dimension
 Lx=400
 
@@ -72,6 +75,9 @@ write_keff=false
 # write_bank: whether to output particle bank
 write_bank=false
 
+# write_histories: whether to output number of histories at each generation
+write_histories=false
+
 # tally_file: path to tally output
 tally_file=tally.txt
 
@@ -86,3 +92,6 @@ keff_file=keff.txt
 
 # bank_file: path to particle bank output
 bank_file=bank.txt
+
+# histories_file: path to histories output
+histories_file=histories.txt
